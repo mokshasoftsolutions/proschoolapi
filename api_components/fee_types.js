@@ -23,54 +23,22 @@ router.use(function(req, res, next) {
 router.route('/feetypes/:school_id')
     .post(function(req, res, next) {
         var status = 1;
-        var fee_fine = 0;
-        var fee_discount = 0;
         var item ={
-             fee_id : 'getauto',
-             school_id : req.params.school_id,
-             fee_category : req.body.fee_category,
-             fee_type : req.body.fee_type,
-             class_id : req.body.class_id,
-             fee_amount : req.body.fee_amount,
-             fee_description : req.body.fee_description,
-             fee_due_date : req.body.fee_due_date,
-             fee_fine : fee_fine,
-             fee_discount : fee_discount,
-             status : status,
+         school_id : req.params.school_id,
+         fee_category : req.body.fee_category,
+         fee_type : req.body.fee_type,
+         class_id : req.body.class_id,
+         fee_amount : req.body.fee_amount,
+         fee_description : req.body.fee_description,
+         fee_due_date : req.body.fee_due_date
 
         }
          
-        // mongo.connect(url, function(err, db) {
+        mongo.connect(url, function(err, db) {
             
-        //         var collection = db.collection('fee_types');
-                 
-        //             if (item.school_id == null || item.fee_category == null || item.fee_type == null || item.class_id == null || item.fee_amount == null ) {
-        //                 res.end('null');
-        //             } else {
-        //                 collection.insertOne(item, function(err, result) {
-        //                     if (err) {
-        //                         if (err.code == 11000) {
-        //                             res.end('false');
-        //                         }
-        //                         res.end('false');
-        //                     }
-        //                     db.close();
-        //                     res.send('true');
-                            
-        //                 });
-        //             }
-                  
-        // });
-
-         mongo.connect(url, function(err, db) {
-            autoIncrement.getNextSequence(db, 'fee_types', function(err, autoIndex) {
                 var collection = db.collection('fee_types');
-                collection.ensureIndex({
-                    "fee_id": 1,
-                }, {
-                    unique: true
-                }, function(err, result) {
-                    if (item.school_id == null || item.fee_category == null || item.fee_type == null || item.class_id == null || item.fee_amount == null) {
+                 
+                    if (item.school_id == null || item.fee_category == null || item.fee_type == null || item.class_id == null || item.fee_amount == null ) {
                         res.end('null');
                     } else {
                         collection.insertOne(item, function(err, result) {
@@ -80,20 +48,12 @@ router.route('/feetypes/:school_id')
                                 }
                                 res.end('false');
                             }
-                            collection.update({
-                                _id: item._id
-                            }, {
-                                $set: {
-                                    fee_id: 'FEE-'+autoIndex
-                                }
-                            }, function(err, result) {
-                                db.close();
-                                res.end('true');
-                            });
+                            db.close();
+                            res.send('true');
+                            
                         });
                     }
-                });
-            });
+                  
         });
 
     })
@@ -135,73 +95,6 @@ router.route('/feetypes/:school_id')
         });
     });
  
- // Fee Types
-router.route('feetypes')
-    .post(function(req, res, next) {
-       var status = 1;
-       var item = {
-        fee_types_id : 'getauto',
-        fee_type : req.body.fee_type,
-        fee_category : req.body.fee_category,
-        status : status,
-       }
-
-         mongo.connect(url, function(err, db) {
-            autoIncrement.getNextSequence(db, 'fee_type', function(err, autoIndex) {
-                var collection = db.collection('fee_type');
-                collection.ensureIndex({
-                    "fee_types_id": 1,
-                }, {
-                    unique: true
-                }, function(err, result) {
-                    if (item.fee_type == null || item.fee_category == null) {
-                        res.end('null');
-                    } else {
-                        collection.insertOne(item, function(err, result) {
-                            if (err) {
-                                if (err.code == 11000) {
-                                    res.end('false');
-                                }
-                                res.end('false');
-                            }
-                            collection.update({
-                                _id: item._id
-                            }, {
-                                $set: {
-                                    fee_types_id: 'FeeTypes-'+autoIndex
-                                }
-                            }, function(err, result) {
-                                db.close();
-                                res.end('true');
-                            });
-                        });
-                    }
-                });
-            });
-        });
-
-    })
-    .get(function(req, res, next) {
-        
-        var resultArray = [];
-        mongo.connect(url, function(err, db) {
-            assert.equal(null, err);
-            var cursor = db.collection('fee_type').find();
-            cursor.forEach(function(doc, err) {
-                assert.equal(null, err);
-                resultArray.push(doc);
-            }, function() {
-                db.close();
-                res.send({
-                    feetypes: resultArray
-                });
-            });
-        });
-    });
-
-
-
-
   
  //Add student fees
  
@@ -209,17 +102,17 @@ router.route('/student/feecollect/:school_id/:student_id')
     .post(function(req, res, next) {
        var status = 1;
        var academic_year = "2016-2017";
-       var fee_status = "unpaid";
+       var fee_status = "paid";
        var school_id = req.params.school_id;
        var student_id= req.params.student_id;
        var class_id = req.body.class_id;
        var section_id = req.body.section_id;
        var fee_type_id=req.body.fee_type_id;
          var  item = {
-                    school_id : school_id,
-                    student_id: student_id,
-                    class_id : class_id,
-                    section_id : section_id,
+                    school_id :  school_id,
+                    student_id:  student_id,
+                    class_id :  class_id,
+                    section_id :  section_id,
                     fee_category : req.body.fee_category,
                     fee_type : req.body.fee_type,
                     fee_amount : req.body.fee_amount,
@@ -281,39 +174,6 @@ router.route('/student/feecollect/:school_id/:student_id')
             });
         });
     });
-
-
-
-     router.route('/edit_fee/:fee_id')
-        .put(function(req, res, next){
-          var myquery = {fee_id:req.params.fee_id};
-          var req_fee_category = req.body.fee_category;
-          var req_fee_type = req.body.fee_type;
-          //var req_class_id = req.body.class_id;
-          var req_fee_amount = req.body.fee_amount;
-          var req_fee_description = req.body.fee_description;
-          var req_fee_fine = req.body.fee_fine;
-          var req_fee_due_date = req.body.fee_due_date;
-          var req_fee_discount = req.body.fee_discount;
-
-          mongo.connect(url, function(err, db){
-                db.collection('fee_types').update(myquery,{$set:{ fee_category:req_fee_category,
-                                              fee_type:req_fee_type,
-                                              fee_amount:req_fee_amount,
-                                              fee_fine:req_fee_fine,
-                                              fee_description:req_fee_description,
-                                              fee_fine:req_fee_due_date,                                              
-                                              fee_discount:req_fee_discount}}, function(err, result){
-                  assert.equal(null, err);
-                  if(err){
-                     res.send('false'); 
-                  }
-                   db.close();
-                   res.send('true');
-                });
-          });
-        });
-
 
 
 

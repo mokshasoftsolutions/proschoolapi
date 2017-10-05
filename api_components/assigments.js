@@ -20,17 +20,17 @@ router.use(function(req, res, next) {
 
 // Add Schools
 
-router.route('/assignment/:section_id/:lession_id')
+router.route('/assignment/:section_id/:lesson_id')
     .post(function(req, res, next) {
         var status = 1;
         var section_id = req.params.section_id;
-        var lession_id = req.params.lession_id;
+        var lesson_id = req.params.lesson_id;
        // var chapter_name = req.params.chapter_name;
         books = [];
         var item = {
             assignment_id: 'getauto',
             section_id : section_id,
-            lession_id : lession_id,
+           // course_id : course_id,
             chapter_name : req.body.chapter_name,
             assignment_title: req.body.assignment_title,           
             subject_name:req.body.subject_name,            
@@ -76,12 +76,10 @@ router.route('/assignment/:section_id/:lession_id')
 
     
     .get(function(req, res, next) {
-      var section_id = req.params.section_id;
-        var lession_id = req.params.lession_id;
         var resultArray = [];
         mongo.connect(url, function(err, db) {
             assert.equal(null, err);
-            var cursor = db.collection('assignments').find({section_id,lession_id});
+            var cursor = db.collection('assignments').find();
             cursor.forEach(function(doc, err) {
                 assert.equal(null, err);
                 resultArray.push(doc);

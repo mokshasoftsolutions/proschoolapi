@@ -115,7 +115,7 @@ router.route('/employee/:school_id')
             });
         });
     });
-router.route('/search_employee/:job_category/:gender/:search_key')
+router.route('/search_employee/:job_category/:gender')
     .get(function(req, res, next){
       var job_category = req.params.job_category;
       var gender = req.params.gender;
@@ -123,7 +123,7 @@ router.route('/search_employee/:job_category/:gender/:search_key')
       var resultArray = [];
       mongo.connect(url, function(err, db){
         assert.equal(null, err);
-        var cursor = db.collection('employee').find({job_category: job_category,gender, $text:{$search:search_key}});
+        var cursor = db.collection('employee').find({job_category,gender});
         cursor.forEach(function(doc, err){
           resultArray.push(doc);
         }, function(){

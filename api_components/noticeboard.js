@@ -53,10 +53,6 @@ router.route('/noticeboard/:school_id')
                                 }
                                 res.end('false');
                             }
-
-
-
-                            
                             collection.update({
                                 _id: item._id
                             }, {
