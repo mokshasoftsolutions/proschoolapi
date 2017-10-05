@@ -22,6 +22,7 @@ router.use(function(req, res, next) {
 
 router.route('/class_sections/:class_id')
     .post(function(req, res, next) {
+      
         var status = 1;
         var class_id = req.params.class_id;
         school_classes = [];
