@@ -111,7 +111,7 @@ router.route('/examevaluation/:exam_paper_id')
 
 
 
-router.route('/examevaluationlistbystudentid/:exam_schedule_id/:student_id/')
+router.route('/examevaluationlistbystudentid/:exam_schedule_id/:student_id')
     .get(function (req, res, next) {
         var exam_schedule_id = req.params.exam_schedule_id;
         var student_id = req.params.student_id;
