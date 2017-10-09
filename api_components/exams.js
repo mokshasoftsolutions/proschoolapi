@@ -6,6 +6,8 @@ var api_key = "api-key-KJFSI4924R23RFSDFSD7F94";
 var mongo = require('mongodb').MongoClient;
 var autoIncrement = require("mongodb-autoincrement");
 var assert = require('assert');
+var multer = require('multer');
+var xlstojson = require("xls-to-json-lc");
 var port = process.env.PORT || 4005;
 var router = express.Router();
 var url = 'mongodb://' + config.dbhost + ':27017/s_erp_data';
@@ -576,6 +578,254 @@ router.route('/exams/:subject_id/:exam_sch_id/:class_id/:section_id')
                 });
           });
         });
+
+
+
+//  Modified
+// Exams papers bulk upload via excel sheet
+
+
+var storage = multer.diskStorage({ //multers disk storage settings
+    destination: function(req, file, cb) {
+        cb(null, './uploads/')
+    },
+    filename: function(req, file, cb) {
+        var datetimestamp = Date.now();
+        cb(null, file.fieldname + '-' + datetimestamp + '.' + file.originalname.split('.')[file.originalname.split('.').length - 1])
+    }
+});
+
+var upload = multer({ //multer settings
+    storage: storage,
+    fileFilter: function(req, file, callback) { //file filter
+        if (['xls', 'xlsx'].indexOf(file.originalname.split('.')[file.originalname.split('.').length - 1]) === -1) {
+            return callback(new Error('Wrong extension type'));
+        }
+        callback(null, true);
+    }
+}).single('file');
+
+router.route('/bulk_upload_exampapers/:subject_id/:exam_sch_id/:class_id/:section_id')
+    .post(function(req, res, next) {
+       var subject_id = req.params.subject_id;
+        var exam_sch_id = req.params.exam_sch_id;
+        var class_id = req.params.class_id;
+        var section_id = req.params.section_id;       
+        var status = 1;
+        var exceltojson;
+        upload(req, res, function(err) {
+            if (err) {
+                res.json({ error_code: 1, err_desc: err });
+                return;
+            }
+            /** Multer gives us file info in req.file object */
+            if (!req.file) {
+                res.json({ error_code: 1, err_desc: "No file passed" });
+                return;
+            }
+            /** Check the extension of the incoming file and 
+             *  use the appropriate module
+             */
+            if (req.file.originalname.split('.')[req.file.originalname.split('.').length - 1] === 'xlsx') {
+                exceltojson = xlsxtojson;
+            } else {
+                exceltojson = xlstojson;
+            }
+            console.log(req.file.path);
+            try {
+                exceltojson({
+                    input: req.file.path,
+                    output: null, //since we don't need output.json
+                    lowerCaseHeaders: true
+                }, function(err, result) {
+                    if (err) {
+                        return res.json({ error_code: 1, err_desc: err, data: null });
+                    }
+                    res.json({ data: result });
+                    console.log(result[0]);
+                    var test = result;
+                    var count = 0;
+
+                    if (test.length > 0) {
+                        test.forEach(function(key, value) {
+
+                    var item = {
+                                exam_paper_id: 'getauto',
+                                subject_id: subject_id,
+                                exam_sch_id: exam_sch_id,
+                                subject_name: key.subjectname,
+                                exam_paper_title: key.exam_papertitle,
+                                date: key.date,
+                                start_time: key.starttime,
+                                end_time: key.endtime,
+                                max_marks: key.maxmarks,
+                                section_id: section_id,
+                                class_id: class_id,
+                                status: status,
+                            };
+                            mongo.connect(url, function(err, db) {
+                                autoIncrement.getNextSequence(db, 'exams', function(err, autoIndex) {
+
+                                    var collection = db.collection('exams');
+                                    collection.ensureIndex({
+                                        "exam_paper_id": 1,
+                                    }, {
+                                        unique: true
+                                    }, function(err, result) {
+                                        if (item.subject_id == null || item.exam_sch_id == null || item.exam_paper_title == null || item.date == null) {
+                                            res.end('null');
+                                        } else {
+                                            item.exam_paper_id = exam_sch_id +'-EXM-'+ autoIndex;
+                                            collection.insertOne(item, function(err, result) {
+                                                if (err) {
+                                                    console.log(err);
+                                                    if (err.code == 11000) {
+
+                                                        res.end('false');
+                                                    }
+                                                    res.end('false');
+                                                }
+                                                count++;
+                                                db.close();
+
+                                                if (count == test.length) {
+                                                    res.end('true');
+                                                }
+
+
+                                            });
+                                        }
+                                    });
+
+                                });
+                            });
+
+                        });
+
+
+                    } else {
+                        res.end('false');
+                    }
+
+
+                });
+            } catch (e) {
+                res.json({ error_code: 1, err_desc: "Corupted excel file" });
+            }
+        })
+    });
+
+
+
+//  Modified
+// Exam evaluation bulk upload via excel sheet
+
+
+router.route('/bulk_upload_exam_eval/:exam_sch_id/:exam_paper_id/:student_id/:section_id/:class_id')
+    .post(function(req, res, next) {
+        var subject_id = req.params.subject_id;
+        var status = 1;
+        var exceltojson;
+        upload(req, res, function(err) {
+            if (err) {
+                res.json({ error_code: 1, err_desc: err });
+                return;
+            }
+            /** Multer gives us file info in req.file object */
+            if (!req.file) {
+                res.json({ error_code: 1, err_desc: "No file passed" });
+                return;
+            }
+            /** Check the extension of the incoming file and 
+             *  use the appropriate module
+             */
+            if (req.file.originalname.split('.')[req.file.originalname.split('.').length - 1] === 'xlsx') {
+                exceltojson = xlsxtojson;
+            } else {
+                exceltojson = xlstojson;
+            }
+            console.log(req.file.path);
+            try {
+                exceltojson({
+                    input: req.file.path,
+                    output: null, //since we don't need output.json
+                    lowerCaseHeaders: true
+                }, function(err, result) {
+                    if (err) {
+                        return res.json({ error_code: 1, err_desc: err, data: null });
+                    }
+                    res.json({ data: result });
+                    console.log(result[0]);
+                    var test = result;
+                    var count = 0;
+
+                    if (test.length > 0) {
+                        test.forEach(function(key, value) {
+
+                     var item = {
+                                paper_result_id: 'getauto',
+                                exam_sch_id : exam_sch_id,
+                                exam_paper_id: exam_paper_id,
+                                student_id: student_id,
+                                class_id:class_id,
+                                section_id:section_id,                                
+                                marks: key.marks,
+                                percentage: key.percentage,
+                                conduct: key.conduct,                                
+                                status: status,
+                            }
+                            mongo.connect(url, function(err, db) {
+                                autoIncrement.getNextSequence(db, 'exam_evaluation', function(err, autoIndex) {
+
+                                    var collection = db.collection('exam_evaluation');
+                                    collection.ensureIndex({
+                                        "paper_result_id": 1,
+                                    }, {
+                                        unique: true
+                                    }, function(err, result) {
+                                        if (item.exam_paper_id == null || item.student_id == null || item.marks == null ) {
+                                            res.end('null');
+                                        } else {
+                                            item.paper_result_id =   exam_paper_id+'-'+student_id+'-EVAL-'+ autoIndex;
+                                            collection.insertOne(item, function(err, result) {
+                                                if (err) {
+                                                    console.log(err);
+                                                    if (err.code == 11000) {
+
+                                                        res.end('false');
+                                                    }
+                                                    res.end('false');
+                                                }
+                                                count++;
+                                                db.close();
+
+                                                if (count == test.length) {
+                                                    res.end('true');
+                                                }
+
+
+                                            });
+                                        }
+                                    });
+
+                                });
+                            });
+
+                        });
+
+
+                    } else {
+                        res.end('false');
+                    }
+
+
+                });
+            } catch (e) {
+                res.json({ error_code: 1, err_desc: "Corupted excel file" });
+            }
+        })
+    });
+
 
 
 

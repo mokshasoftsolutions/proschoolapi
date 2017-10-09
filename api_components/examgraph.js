@@ -59,7 +59,8 @@ router.route('/examevaluation/:exam_paper_id')
         //             }}
         //         ])
 
-         var cursor = db.collection('exam_evaluation').aggregate([{
+         var cursor = db.collection('exam_evaluation').aggregate([
+               {
                     "$lookup": {
                         "from": "students",
                         "localField": "student_id",
@@ -69,6 +70,17 @@ router.route('/examevaluation/:exam_paper_id')
                 },
                 {
                     "$unwind": "$student_doc"
+                },
+                 {
+                    "$lookup": {
+                        "from": "exams",
+                        "localField": "exam_paper_id",
+                        "foreignField": "exam_paper_id",
+                        "as": "exams_doc"
+                    }
+                },
+                {
+                    "$unwind": "$exams_doc"
                 },
                 {
                     "$redact": {
@@ -91,7 +103,8 @@ router.route('/examevaluation/:exam_paper_id')
                         "date": "$date",
                         "status": "$status",
                         "student_name": "$student_doc.first_name",
-                        "roll_no": "$student_doc.roll_no"
+                        "roll_no": "$student_doc.roll_no",
+                        "max_marks":"$exams_doc.max_marks",
 
                     }
                 }
