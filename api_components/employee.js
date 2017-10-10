@@ -318,41 +318,52 @@ router.route('/bulk_upload_employees/:school_id')
                             mongo.connect(url, function(err, db) {
                                 autoIncrement.getNextSequence(db, 'employee', function(err, autoIndex) {
 
-                                    var collection = db.collection('employee');
-                                    collection.ensureIndex({
-                                        "employee_id": 1,
-                                    }, {
-                                        unique: true
-                                    }, function(err, result) {
-                                        if (item.school_id == null || item.dob == null) {
-                                            res.end('null');
+                                    var count = db.collection('employee').find({ email: item.email }).count(function(e, count) {
+
+                                        if (count > 0) {
+
+                                             res.end('already submitted');
+                                            db.close();
+                                            
                                         } else {
-                                            item.employee_id = 'SCH-EMP-' + autoIndex;
-                                            collection.insertOne(item, function(err, result) {
-                                                if (err) {
-                                                    console.log(err);
-                                                    if (err.code == 11000) {
 
-                                                        res.end('false');
-                                                    }
-                                                    res.end('false');
+                                            var collection = db.collection('employee');
+                                            collection.createIndex({
+                                                "employee_id": 1,
+                                            }, {
+                                                unique: true
+                                            }, function(err, result) {
+                                                if (item.school_id == null || item.dob == null) {
+                                                    res.end('null');
+                                                } else {
+                                                    item.employee_id = 'SCH-EMP-' + autoIndex;
+                                                    collection.insertOne(item, function(err, result) {
+                                                        if (err) {
+                                                            console.log(err);
+                                                            if (err.code == 11000) {
+
+                                                                res.end('false');
+                                                            }
+                                                            res.end('false');
+                                                        }
+                                                        collection.update({
+                                                            _id: item._id
+                                                        }, {
+                                                            $push: {
+                                                                current_address,
+                                                                permanent_address
+                                                            }
+                                                        });
+                                                        count++;
+                                                        db.close();
+
+                                                        if (count == test.length) {
+                                                            res.end('true');
+                                                        }
+
+
+                                                    });
                                                 }
-                                                collection.update({
-                                                    _id: item._id
-                                                }, {
-                                                    $push: {
-                                                        current_address,
-                                                        permanent_address
-                                                    }
-                                                });
-                                                count++;
-                                                db.close();
-
-                                                if (count == test.length) {
-                                                    res.end('true');
-                                                }
-
-
                                             });
                                         }
                                     });

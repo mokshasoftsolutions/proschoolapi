@@ -220,7 +220,7 @@ router.route('/bulk_upload_subjects/:section_id')
                                 autoIncrement.getNextSequence(db, 'subjects', function(err, autoIndex) {
 
                                     var collection = db.collection('subjects');
-                                    collection.ensureIndex({
+                                    collection.createIndex({
                                         "subject_id": 1,
                                     }, {
                                         unique: true

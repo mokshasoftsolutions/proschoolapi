@@ -1,4 +1,5 @@
 // flow
+
 var express = require("express");
 var config = require("../config.json");
 var bodyParser = require("body-parser");
@@ -9,6 +10,7 @@ var multer = require('multer');
 var xlstojson = require("xls-to-json-lc");
 var xlsxtojson = require("xlsx-to-json-lc");
 var assert = require('assert');
+var parentModule = require('../api_components/parent_module');
 var port = process.env.PORT || 4005;
 var router = express.Router();
 var url = 'mongodb://' + config.dbhost + ':27017/s_erp_data';
@@ -29,6 +31,13 @@ router.route('/students/:section_id')
         var splited = section_id.split("-");
         var school_id = splited[0] + '-' + splited[1];
         var class_id = splited[0] + '-' + splited[1] + '-' + splited[2] + '-' + splited[3];
+        var parent_account_details = {};
+        parent_account_details.parent_account_create= req.body.parent_account_create;
+        parent_account_details.parent_account_new=req.body.parent_account_new;
+        parent_account_details.parent_id=req.body.parent_id;
+        parent_account_details.school_id=req.body.school_id;
+        console.log(parent_account_details);
+
 
 
         var status = 1;
@@ -138,6 +147,29 @@ router.route('/students/:section_id')
                                     parents: parent_gaurdian
                                 }
                             });
+                             // add parent
+                      if(parent_account_details.parent_account_create == true){
+                          console.log("testing");
+                          var requestData = {}
+                                requestData.name=parent_father.parent_name;
+                                requestData.student_id= class_id + '-STD-' + autoIndex;
+                                requestData.parent_id=parent_account_details.parent_id;
+                                requestData.school_id = parent_account_details.school_id;
+                                   console.log(requestData);
+                          if(parent_account_details.parent_account_new == true){
+                              console.log("newaccount")
+                             parentModule.addParent(requestData);
+
+                         }
+                         if(parent_account_details.parent_account_new == false){
+                             console.log("existing")
+                          parentModule.addStudentToParent(requestData);
+                         }
+ 
+                      }
+
+                    // add parent
+
                         });
                     }
                 });
@@ -637,56 +669,67 @@ router.route('/bulk_upload_students/:section_id')
                             mongo.connect(url, function(err, db) {
                                 autoIncrement.getNextSequence(db, 'students', function(err, autoIndex) {
 
-                                    var collection = db.collection('students');
-                                    collection.ensureIndex({
-                                        "student_id": 1,
-                                    }, {
-                                        unique: true
-                                    }, function(err, result) {
-                                        if (item.section_id == null || item.phone == null) {
-                                            res.end('null');
+                                    var count = db.collection('students').find({admission_no : item.admission_no}).count(function(e, count) {
+
+                                        if (count > 0) {
+
+                                            db.close();
+                                            res.end('already submitted');
                                         } else {
-                                            item.student_id = class_id + '-STD-' + autoIndex;
-                                            collection.insertOne(item, function(err, result) {
-                                                if (err) {
-                                                    console.log(err);
-                                                    if (err.code == 11000) {
 
-                                                        res.end('false');
-                                                    }
-                                                    res.end('false');
+
+                                            var collection = db.collection('students');
+                                            collection.ensureIndex({
+                                                "student_id": 1,
+                                            }, {
+                                                unique: true
+                                            }, function(err, result) {
+                                                if (item.section_id == null || item.phone == null) {
+                                                    res.end('null');
+                                                } else {
+                                                    item.student_id = class_id + '-STD-' + autoIndex;
+                                                    collection.insertOne(item, function(err, result) {
+                                                        if (err) {
+                                                            console.log(err);
+                                                            if (err.code == 11000) {
+
+                                                                res.end('false');
+                                                            }
+                                                            res.end('false');
+                                                        }
+                                                        collection.update({
+                                                            _id: item._id
+                                                        }, {
+                                                            $push: {
+                                                                current_address,
+                                                                permanent_address,
+                                                                parents: parent_father
+                                                            }
+                                                        });
+                                                        collection.update({
+                                                            _id: item._id
+                                                        }, {
+                                                            $push: {
+                                                                parents: parent_mother
+                                                            }
+                                                        });
+                                                        collection.update({
+                                                            _id: item._id
+                                                        }, {
+                                                            $push: {
+                                                                parents: parent_gaurdian
+                                                            }
+                                                        });
+                                                        count++;
+                                                        db.close();
+
+                                                        if (count == test.length) {
+                                                            res.end('true');
+                                                        }
+
+
+                                                    });
                                                 }
-                                                collection.update({
-                                                    _id: item._id
-                                                }, {
-                                                    $push: {
-                                                        current_address,
-                                                        permanent_address,
-                                                        parents: parent_father
-                                                    }
-                                                });
-                                                collection.update({
-                                                    _id: item._id
-                                                }, {
-                                                    $push: {
-                                                        parents: parent_mother
-                                                    }
-                                                });
-                                                collection.update({
-                                                    _id: item._id
-                                                }, {
-                                                    $push: {
-                                                        parents: parent_gaurdian
-                                                    }
-                                                });
-                                                count++;
-                                                db.close();
-
-                                                if (count == test.length) {
-                                                    res.end('true');
-                                                }
-
-
                                             });
                                         }
                                     });
