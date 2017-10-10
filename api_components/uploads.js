@@ -84,7 +84,7 @@
                             test.forEach(function(key, value) {
 
 
-                                var item = {
+                            var item = {
                                     book_id: '',
                                     book_title: key.booktitle,
                                     school_id: school_id,

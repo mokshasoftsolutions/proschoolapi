@@ -30,6 +30,7 @@ var uploads = require("./api_components/uploads.js");
 const Authentication = require('./controllers/authentication');
 const passportService = require('./services/passport');
 const passport = require('passport');
+var tracking = require("./api_components/tracking.js")
 
 const requireAuth = passport.authenticate('jwt',{ session: false });
 const requireSignin = passport.authenticate('local',{session: false});
@@ -42,6 +43,7 @@ var server = require('http').createServer(app);
 var api_key = "api-key-KJFSI4924R23RFSDFSD7F94";
 var mongo = require('mongodb').MongoClient;
 const mongoose = require('mongoose');
+var mysql = require("mysql");
 var objectId = require('mongodb').ObjectID;
 var assert = require('assert');
 var port = process.env.PORT || 4005;
@@ -56,6 +58,7 @@ app.use(cookieParser());
 app.use(bodyParser.urlencoded({
     extended: false
 }));
+
 
 app.use(express.static(__dirname + "/public"));
 app.use(bodyParser.json());
@@ -135,5 +138,6 @@ app.use('/api', attendance_charts);
 app.use('/api', examgraph);
 app.use('/api', noticeboard);
 app.use('/api', school_event);
+app.use('/api', tracking);
 app.use('/api', uploads);
 app.use('/api', router);
