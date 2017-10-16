@@ -14,7 +14,8 @@ var multer = require("multer");
 var mysql = require('mysql');
 
 var con = mysql.createConnection({
-    host: "localhost",
+    host: "ec2-54-213-118-72.us-west-2.compute.amazonaws.com",
+    port:"3306",
     user: "root",
     password: "moksha",
     database: "jelly",
@@ -35,33 +36,49 @@ router.route('/device_codes')
        // var status = 1;
         //var school_id = req.params.school_id;
         var item = {
-            // station_id: 'getauto',
-            // school_id: school_id,
-            deviceids: req.body.deviceids,
-            devicecode: req.body.devicecode,
+            
+            name: req.body.name,
+            uniqueid: req.body.uniqueid,
+            positionid: req.body.positionid,
+            phone: req.body.phone,
+            model: req.body.model,
+            category: req.body.category,
+
+
 
         }
-        // con.connect(function(err) {
-        //     if (err) throw err;
-            con.query('INSERT INTO devicecodes SET ?', item, function(error, results, fields) {
+       
+            con.query('INSERT INTO devices SET ?', item, function(error, results, fields) {
                 if (error) throw error;
                 res.end(JSON.stringify(results));
                 console.log(results);
             });
-        // });
+        
     })
 
     .get(function(req, res, next) {
-        //var resultArray = [];
-        // con.connect(function(err) {
-        //     if (err) throw err;
-            con.query('select * from devicecodes', function(error, results, fields) {
+       
+            con.query('SELECT positions.* FROM positions INNER JOIN devices ON positions.id = devices.positionid', function(error, results, fields) {
                 if (error) throw error;
                 res.end(JSON.stringify(results));
                 console.log(results);
             });
-        // });
+        
+    });
+
+router.route('/get_device_details/:devicecode')
+     .get(function(req, res, next) {
+       var devicecode=req.params.devicecode;
+       
+            con.query('select * from positions,devicecodes where devicecodes.devicecode and devicecodes.deviceid=positions.deviceid ORDER BY positions.id DESC limit 1', function(error, results, fields) {
+                if (error) throw error;
+                res.end(JSON.stringify(results));
+                console.log(results);
+            });
+        
     });
 
 
 module.exports = router;
+
+//select p from Positions p,DeviceCodes dc where dc.deviceCode=:campID and dc.deviceId=p.deviceId ORDER BY p.id DESC

@@ -3,7 +3,7 @@
   "version": "0.0.1",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "serve": "nodemon server.js"
+    "serve": "nodemon --max-old-space-size=10076 server.js"
   },
   "dependencies": {
     "async-foreach": "0.1.3",
@@ -22,6 +22,7 @@
     "mongoose": "*",
     "monk": "*",
     "multer": "^1.2.0",
+    "mysql": "^2.15.0",
     "nodemon": "^1.11.0",
     "passport": "^0.3.2",
     "passport-jwt": "^2.2.1",

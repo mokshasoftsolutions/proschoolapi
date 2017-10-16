@@ -72,6 +72,7 @@ router.route('/school_classes/:school_id')
         mongo.connect(url, function(err, db) {
             assert.equal(null, err);
             var cursor = db.collection('school_classes').find({school_id});
+            console.log(cursor);
             cursor.forEach(function(doc, err) {
                 assert.equal(null, err);
                 resultArray.push(doc);

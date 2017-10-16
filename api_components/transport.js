@@ -86,6 +86,25 @@ router.route('/transport_stations/:school_id')
             });
         });
     });
+router.route('/station_details/:station_id')
+    .get(function(req, res, next) {
+        var station_id = req.params.station_id;
+        var resultArray = [];
+        mongo.connect(url, function(err, db) {
+            assert.equal(null, err);
+            var cursor = db.collection('transport').find({station_id});
+            cursor.forEach(function(doc, err) {
+                assert.equal(null, err);
+                resultArray.push(doc);
+            }, function() {
+                db.close();
+                res.send({
+                    stations: resultArray
+                });
+            });
+        });
+    });
+
 
 
 

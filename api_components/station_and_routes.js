@@ -29,8 +29,8 @@ router.route('/station_to_bus_route/:route_id/:station_id')
             bus_route_id: 'getauto',
             route_id: route_id,
             station_id: station_id,
-						pickup_time: req.body.pickup_time,
-						dropping_time: req.body.dropping_time,
+			pickup_time: req.body.pickup_time,
+			dropping_time: req.body.dropping_time,
             status: status,
         }
         mongo.connect(url, function(err, db) {

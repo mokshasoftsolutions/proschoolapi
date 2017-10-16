@@ -8,6 +8,7 @@ var autoIncrement = require("mongodb-autoincrement");
 var assert = require('assert');
 var multer = require('multer');
 var xlstojson = require("xls-to-json-lc");
+var xlsxtojson = require("xlsx-to-json-lc");
 var port = process.env.PORT || 4005;
 var router = express.Router();
 var url = 'mongodb://' + config.dbhost + ':27017/s_erp_data';

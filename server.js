@@ -40,6 +40,7 @@ const requireSignin = passport.authenticate('local',{session: false});
 var config = require("./config.json");
 var express = require("express");
 var bodyParser = require("body-parser");
+
 var app = express();
 var server = require('http').createServer(app);
 var api_key = "api-key-KJFSI4924R23RFSDFSD7F94";
@@ -57,9 +58,11 @@ mongoose.connect('mongodb://localhost:auth/auth');
 var cookieParser = require('cookie-parser');
 app.use(cookieParser());
 
-app.use(bodyParser.urlencoded({
-    extended: false
-}));
+// app.use(bodyParser.urlencoded({
+//     extended: false
+// }));
+app.use(bodyParser.json({limit: '50mb'}));
+app.use(bodyParser.urlencoded({limit: '100mb', extended: false, parameterLimit: 10000}));
 
 
 app.use(express.static(__dirname + "/public"));

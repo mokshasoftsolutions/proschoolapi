@@ -14,9 +14,11 @@ var parentModule = require('../api_components/parent_module');
 var port = process.env.PORT || 4005;
 var router = express.Router();
 var url = 'mongodb://' + config.dbhost + ':27017/s_erp_data';
+router.use(bodyParser.json({ limit: '100mb' }));
+router.use(bodyParser.urlencoded({ limit: '100mb', extended: false, parameterLimit: 10000 }));
 
 var cookieParser = require('cookie-parser');
-router.use(function(req, res, next) {
+router.use(function (req, res, next) {
     // do logging
     res.header("Access-Control-Allow-Origin", "*");
     res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
@@ -26,16 +28,16 @@ router.use(function(req, res, next) {
 // Add Stundents
 
 router.route('/students/:section_id')
-    .post(function(req, res, next) {
+    .post(function (req, res, next) {
         var section_id = req.params.section_id;
         var splited = section_id.split("-");
         var school_id = splited[0] + '-' + splited[1];
         var class_id = splited[0] + '-' + splited[1] + '-' + splited[2] + '-' + splited[3];
         var parent_account_details = {};
-        parent_account_details.parent_account_create= req.body.parent_account_create;
-        parent_account_details.parent_account_new=req.body.parent_account_new;
-        parent_account_details.parent_id=req.body.parent_id;
-        parent_account_details.school_id=req.body.school_id;
+        parent_account_details.parent_account_create = req.body.parent_account_create;
+        parent_account_details.parent_account_new = req.body.parent_account_new;
+        parent_account_details.parent_id = req.body.parent_id;
+        parent_account_details.school_id = req.body.school_id;
         console.log(parent_account_details);
 
 
@@ -99,80 +101,81 @@ router.route('/students/:section_id')
             parent_address: req.body.gaurdian_address,
             occupation: req.body.gaurdian_occupation
         };
-        mongo.connect(url, function(err, db) {
-            autoIncrement.getNextSequence(db, 'students', function(err, autoIndex) {
+        mongo.connect(url, function (err, db) {
+            autoIncrement.getNextSequence(db, 'students', function (err, autoIndex) {
                 var collection = db.collection('students');
-                collection.ensureIndex({
+                collection.createIndex({
                     "student_id": 1
                 }, {
-                    unique: true
-                }, function(err, result) {
-                    if (item.section_id == null || item.dob == null || item.phone == null) {
-                        res.end('null');
-                    } else {
-                        collection.insertOne(item, function(err, result) {
-                            if (err) {
-                                if (err.code == 11000) {
+                        unique: true
+                    }, function (err, result) {
+                        if (item.section_id == null || item.dob == null || item.phone == null) {
+                            res.end('null');
+                        } else {
+                            collection.insertOne(item, function (err, result) {
+                                if (err) {
+                                    if (err.code == 11000) {
+                                        res.end('false');
+                                    }
                                     res.end('false');
                                 }
-                                res.end('false');
-                            }
-                            collection.update({
-                                _id: item._id
-                            }, {
-                                $set: {
-                                    student_id: class_id + '-STD-' + autoIndex
-                                },
-                                $push: {
-                                    current_address,
-                                    permanent_address,
-                                    parents: parent_father
-                                }
-                            }, function(err, result) {
-                                db.close();
-                                // res.end('true');
-                                res.send({ status: 'true', id: class_id + '-STD-' + autoIndex });
-                            });
-                            collection.update({
-                                _id: item._id
-                            }, {
-                                $push: {
-                                    parents: parent_mother
-                                }
-                            });
-                            collection.update({
-                                _id: item._id
-                            }, {
-                                $push: {
-                                    parents: parent_gaurdian
-                                }
-                            });
-                             // add parent
-                      if(parent_account_details.parent_account_create == true){
-                          console.log("testing");
-                          var requestData = {}
-                                requestData.name=parent_father.parent_name;
-                                requestData.student_id= class_id + '-STD-' + autoIndex;
-                                requestData.parent_id=parent_account_details.parent_id;
-                                requestData.school_id = parent_account_details.school_id;
-                                   console.log(requestData);
-                          if(parent_account_details.parent_account_new == true){
-                              console.log("newaccount")
-                             parentModule.addParent(requestData);
+                                collection.update({
+                                    _id: item._id
+                                }, {
+                                        $set: {
+                                            student_id: class_id + '-STD-' + autoIndex
+                                        },
+                                        $push: {
+                                            current_address,
+                                            permanent_address,
+                                            parents: parent_father
+                                        }
+                                    }, function (err, result) {
+                                        db.close();
+                                        // res.end('true');
+                                        res.send({ status: 'true', id: class_id + '-STD-' + autoIndex });
+                                    });
+                                collection.update({
+                                    _id: item._id
+                                }, {
+                                        $push: {
+                                            parents: parent_mother
+                                        }
+                                    });
+                                collection.update({
+                                    _id: item._id
+                                }, {
+                                        $push: {
+                                            parents: parent_gaurdian
+                                        }
+                                    });
+                                // add parent
+                                console.log(parent_account_details.parent_account_create);
+                                if (parent_account_details.parent_account_create == true) {
+                                    console.log("testing");
+                                    var requestData = {}
+                                    requestData.name = parent_father.parent_name;
+                                    requestData.student_id = class_id + '-STD-' + autoIndex;
+                                    requestData.parent_id = parent_account_details.parent_id;
+                                    requestData.school_id = parent_account_details.school_id;
+                                    console.log(requestData);
+                                    if (parent_account_details.parent_account_new == true) {
+                                        console.log("newaccount")
+                                        parentModule.addParent(requestData);
 
-                         }
-                         if(parent_account_details.parent_account_new == false){
-                             console.log("existing")
-                          parentModule.addStudentToParent(requestData);
-                         }
- 
-                      }
+                                    }
+                                    if (parent_account_details.parent_account_new == false) {
+                                        console.log("existing")
+                                        parentModule.addStudentToParent(requestData);
+                                    }
 
-                    // add parent
+                                }
 
-                        });
-                    }
-                });
+                                // add parent
+
+                            });
+                        }
+                    });
                 collection.ensureIndex({
                     "first_name": "text",
                     "last_name": "text"
@@ -235,35 +238,35 @@ router.route('/students/:section_id')
 //         });
 //     });
 router.route('/students/:section_id')
-    .get(function(req, res, next) {
+    .get(function (req, res, next) {
         var section_id = req.params.section_id;
         var resultArray = [];
-        mongo.connect(url, function(err, db) {
+        mongo.connect(url, function (err, db) {
             assert.equal(null, err);
             var cursor = db.collection('students').aggregate([{
-                    $match: {
-                        section_id: section_id
-                    }
-                },
-                {
-                    $lookup: {
-                        from: "school_classes",
-                        localField: "class_id",
-                        foreignField: "class_id",
-                        as: "school_classes"
-                    }
-                },
-                // {
-                //     $unwind: "$school_classes"
-                // }
-                {
-                    $lookup: {
-                        from: "class_sections",
-                        localField: "section_id",
-                        foreignField: "section_id",
-                        as: "sections"
-                    }
+                $match: {
+                    section_id: section_id
                 }
+            },
+            {
+                $lookup: {
+                    from: "school_classes",
+                    localField: "class_id",
+                    foreignField: "class_id",
+                    as: "school_classes"
+                }
+            },
+            // {
+            //     $unwind: "$school_classes"
+            // }
+            {
+                $lookup: {
+                    from: "class_sections",
+                    localField: "section_id",
+                    foreignField: "section_id",
+                    as: "sections"
+                }
+            }
                 // {
                 //     $unwind: "$sections"
                 // },
@@ -321,10 +324,10 @@ router.route('/students/:section_id')
                 //     }
                 // }
             ]);
-            cursor.forEach(function(doc, err) {
+            cursor.forEach(function (doc, err) {
                 assert.equal(null, err);
                 resultArray.push(doc);
-            }, function() {
+            }, function () {
                 db.close();
                 res.send({
                     students: resultArray
@@ -334,18 +337,18 @@ router.route('/students/:section_id')
     });
 
 router.route('/search_student/:academic_year/:class_id/:section/:search_key')
-    .get(function(req, res, next) {
+    .get(function (req, res, next) {
         var academic_year = req.params.academic_year;
         var class_id = req.params.class_id;
         var section = req.params.section.toUpperCase();
         var search_key = req.params.search_key;
         var resultArray = [];
-        mongo.connect(url, function(err, db) {
+        mongo.connect(url, function (err, db) {
             assert.equal(null, err);
             var cursor = db.collection('students').find({ academic_year, class_id, section, $text: { $search: search_key } });
-            cursor.forEach(function(doc, err) {
+            cursor.forEach(function (doc, err) {
                 resultArray.push(doc);
-            }, function() {
+            }, function () {
                 db.close();
                 res.send(resultArray);
             });
@@ -353,7 +356,7 @@ router.route('/search_student/:academic_year/:class_id/:section/:search_key')
     });
 
 router.route('/add_parent/:student_id')
-    .post(function(req, res, next) {
+    .post(function (req, res, next) {
         parents = [];
         var student_id = req.params.student_id;
         var parents = {
@@ -362,8 +365,8 @@ router.route('/add_parent/:student_id')
             parent_relation: req.body.parent_relation,
             occupation: req.body.occupation
         };
-        mongo.connect(url, function(err, db) {
-            db.collection('students').update({ student_id }, { $push: { parents } }, function(err, result) {
+        mongo.connect(url, function (err, db) {
+            db.collection('students').update({ student_id }, { $push: { parents } }, function (err, result) {
                 assert.equal(null, err);
                 db.close();
                 res.send('true');
@@ -372,7 +375,7 @@ router.route('/add_parent/:student_id')
     });
 
 router.route('/add_old_acadamic_details/:student_id')
-    .post(function(req, res, next) {
+    .post(function (req, res, next) {
         old_acadamic_details = [];
         var student_id = req.params.student_id;
         var old_acadamic_details = {
@@ -381,8 +384,8 @@ router.route('/add_old_acadamic_details/:student_id')
             percentage: req.body.percentage,
             rank: req.body.rank
         };
-        mongo.connect(url, function(err, db) {
-            db.collection('students').update({ student_id }, { $push: { old_acadamic_details } }, function(err, result) {
+        mongo.connect(url, function (err, db) {
+            db.collection('students').update({ student_id }, { $push: { old_acadamic_details } }, function (err, result) {
                 assert.equal(null, err);
                 db.close();
                 res.send('true');
@@ -391,7 +394,7 @@ router.route('/add_old_acadamic_details/:student_id')
     });
 
 router.route('/student_current_address/:student_id')
-    .post(function(req, res, next) {
+    .post(function (req, res, next) {
         current_address = [];
         var student_id = req.params.student_id;
         var cur_address = req.body.cur_address;
@@ -408,8 +411,8 @@ router.route('/student_current_address/:student_id')
             cur_long: cur_long,
             cur_lat: cur_lat
         };
-        mongo.connect(url, function(err, db) {
-            db.collection('students').findOneAndUpdate({ student_id }, { $set: { current_address } }, function(err, result) {
+        mongo.connect(url, function (err, db) {
+            db.collection('students').findOneAndUpdate({ student_id }, { $set: { current_address } }, function (err, result) {
                 assert.equal(null, err);
                 db.close();
                 res.send('true');
@@ -417,7 +420,7 @@ router.route('/student_current_address/:student_id')
         });
     });
 router.route('/student_permanent_address/:student_id')
-    .post(function(req, res, next) {
+    .post(function (req, res, next) {
         permanent_address = [];
         var student_id = req.params.student_id;
         var perm_address = req.body.perm_address;
@@ -434,8 +437,8 @@ router.route('/student_permanent_address/:student_id')
             perm_long: perm_long,
             perm_lat: perm_lat
         };
-        mongo.connect(url, function(err, db) {
-            db.collection('students').findOneAndUpdate({ student_id }, { $set: { permanent_address } }, function(err, result) {
+        mongo.connect(url, function (err, db) {
+            db.collection('students').findOneAndUpdate({ student_id }, { $set: { permanent_address } }, function (err, result) {
                 assert.equal(null, err);
                 db.close();
                 res.send('true');
@@ -445,16 +448,16 @@ router.route('/student_permanent_address/:student_id')
 
 
 router.route('/studentsdetails/:student_id')
-    .get(function(req, res, next) {
+    .get(function (req, res, next) {
         var student_id = req.params.student_id;
 
         var resultArray = [];
-        mongo.connect(url, function(err, db) {
+        mongo.connect(url, function (err, db) {
             assert.equal(null, err);
             var cursor = db.collection('students').find({ student_id });
-            cursor.forEach(function(doc, err) {
+            cursor.forEach(function (doc, err) {
                 resultArray.push(doc);
-            }, function() {
+            }, function () {
                 db.close();
                 res.send({ students: resultArray[0] });
             });
@@ -462,17 +465,17 @@ router.route('/studentsdetails/:student_id')
     });
 
 router.route('/employee_details/:employee_id')
-    .get(function(req, res, next) {
+    .get(function (req, res, next) {
         var employee_id = req.params.employee_id;
         var status = 1;
         var resultArray = [];
-        mongo.connect(url, function(err, db) {
+        mongo.connect(url, function (err, db) {
             assert.equal(null, err);
             var cursor = db.collection('employee').find({ employee_id, status });
-            cursor.forEach(function(doc, err) {
+            cursor.forEach(function (doc, err) {
                 assert.equal(null, err);
                 resultArray.push(doc);
-            }, function() {
+            }, function () {
                 db.close();
                 res.send({
                     employee: resultArray
@@ -485,15 +488,15 @@ router.route('/employee_details/:employee_id')
 
 
 router.route('/get_parents/:student_id/')
-    .get(function(req, res, next) {
+    .get(function (req, res, next) {
         var student_id = req.params.student_id;
         var resultArray = [];
-        mongo.connect(url, function(err, db) {
+        mongo.connect(url, function (err, db) {
             assert.equal(null, err);
             var cursor = db.collection('students').find({ student_id }, { 'parents': 1, '_id': 0 });
-            cursor.forEach(function(doc, err) {
+            cursor.forEach(function (doc, err) {
                 resultArray.push(doc);
-            }, function() {
+            }, function () {
                 db.close();
                 res.send(resultArray[0]);
             });
@@ -501,15 +504,15 @@ router.route('/get_parents/:student_id/')
     });
 
 router.route('/get_bus_route_by_student_id/:student_id/')
-    .get(function(req, res, next) {
+    .get(function (req, res, next) {
         var student_id = req.params.student_id;
         var resultArray = [];
-        mongo.connect(url, function(err, db) {
+        mongo.connect(url, function (err, db) {
             assert.equal(null, err);
             var cursor = db.collection('students').find({ student_id }, { 'bus_route_id': 1, '_id': 0 });
-            cursor.forEach(function(doc, err) {
+            cursor.forEach(function (doc, err) {
                 resultArray.push(doc);
-            }, function() {
+            }, function () {
                 db.close();
                 res.send(resultArray[0]);
             });
@@ -517,19 +520,19 @@ router.route('/get_bus_route_by_student_id/:student_id/')
     });
 
 router.route('/get_array_students/:student_id/:array_name')
-    .get(function(req, res, next) {
+    .get(function (req, res, next) {
         var student_id = req.params.student_id;
         var array_name = req.params.array_name;
         var resultArray = [];
-        mongo.connect(url, function(err, db) {
+        mongo.connect(url, function (err, db) {
             assert.equal(null, err);
             var cursor = db.collection('students').find({ student_id }, {
                 [array_name]: 1,
                 '_id': 0
             });
-            cursor.forEach(function(doc, err) {
+            cursor.forEach(function (doc, err) {
                 resultArray.push(doc);
-            }, function() {
+            }, function () {
                 db.close();
                 res.send(resultArray[0]);
             });
@@ -541,10 +544,10 @@ router.route('/get_array_students/:student_id/:array_name')
 // Student Bulk Upload via excel sheet
 
 var storage = multer.diskStorage({ //multers disk storage settings
-    destination: function(req, file, cb) {
+    destination: function (req, file, cb) {
         cb(null, './uploads/')
     },
-    filename: function(req, file, cb) {
+    filename: function (req, file, cb) {
         var datetimestamp = Date.now();
         cb(null, file.fieldname + '-' + datetimestamp + '.' + file.originalname.split('.')[file.originalname.split('.').length - 1])
     }
@@ -552,7 +555,7 @@ var storage = multer.diskStorage({ //multers disk storage settings
 
 var upload = multer({ //multer settings
     storage: storage,
-    fileFilter: function(req, file, callback) { //file filter
+    fileFilter: function (req, file, callback) { //file filter
         if (['xls', 'xlsx'].indexOf(file.originalname.split('.')[file.originalname.split('.').length - 1]) === -1) {
             return callback(new Error('Wrong extension type'));
         }
@@ -561,14 +564,14 @@ var upload = multer({ //multer settings
 }).single('file');
 
 router.route('/bulk_upload_students/:section_id')
-    .post(function(req, res, next) {
+    .post(function (req, res, next) {
         var section_id = req.params.section_id;
         var splited = section_id.split("-");
         var school_id = splited[0] + '-' + splited[1];
         var class_id = splited[0] + '-' + splited[1] + '-' + splited[2] + '-' + splited[3];
         var status = 1;
         var exceltojson;
-        upload(req, res, function(err) {
+        upload(req, res, function (err) {
             if (err) {
                 res.json({ error_code: 1, err_desc: err });
                 return;
@@ -592,162 +595,179 @@ router.route('/bulk_upload_students/:section_id')
                     input: req.file.path,
                     output: null, //since we don't need output.json
                     lowerCaseHeaders: true
-                }, function(err, result) {
+                }, function (err, result) {
                     if (err) {
                         return res.json({ error_code: 1, err_desc: err, data: null });
                     }
                     res.json({ data: result });
-                    console.log(result[0]);
+                    //console.log(result);
                     var test = result;
                     var count = 0;
+                    var existedAids = [];
+                    var recentSid = [];
+                    var splitted, collection;
 
-                    if (test.length > 0) {
-                        test.forEach(function(key, value) {
+                    //   var items = [];
+                    mongo.connect(url, function (err, db) {
+                        // collection = db.collection('students');
+                        assert.equal(null, err);
+                        //var last_value = collection.find().limit(1).sort({ $natural: -1 });
+                        // var cursor = db.collection('students').find({}, { admission_no: 1 });
+                        // cursor.forEach(function (doc, err) {
+                        //     assert.equal(null, err);
+                        //     existedAids.push(doc);
+                        //      //console.log(existedAids[0]);
+                        // });
+                        // console.log(existedAids[0]);
+                        
+                         var cursor = db.collection('students').find().limit(1).sort({ $natural: -1 });
+                         
+                       cursor.forEach(function (doc, err) {
+                            assert.equal(null, err);
+                            recentSid.push(doc.student_id);
+                            console.log(recent)
+                              });
+                       console.log(JSON.stringify(cursor));
+                    });
+                            //  console.log(existedAids[0]);
+                    
+                    // mongo.connect(url, function (err, db) {
+                      
+                    //     assert.equal(null, err);
+                    //     //var last_value = collection.find().limit(1).sort({ $natural: -1 });
+                    //     // var cursor = db.collection('students').find({}, { admission_no: 1 });
 
+                    //    var  cursor = db.collection('students').find().limit(1).sort({ $natural: -1 });
+                    //     // console.log(collection.find().count);
+                    //     // existedAids = cursor;
+                    //     cursor.forEach(function (doc, err) {
+                    //         assert.equal(null, err);
+                    //         recentSid.push(doc);
+                    //     });
+                    //     console.log(recentSid);
 
-                            var item = {
-                                student_id: 'getauto',
-                                school_id: school_id,
-                                class_id: class_id,
-                                section_id: section_id,
-                                surname: key.surname,
-                                first_name: key.firstname,
-                                last_name: key.lastname,
-                                gender: key.gender,
-                                dob: key.dob,
-                                aadhar_no: key.aadharno,
-                                phone: key.phone,
-                                email: key.email,
-                                category: key.category,
-                                admission_date: key.admissiondate,
-                                admission_no: key.admissionno,
-                                roll_no: key.rollno,
-                                academic_year: key.academicyear,
-                                bus_route_id: key.busrouteid,
-                                status: status,
-
-
-                            };
-                            var current_address = {
-                                cur_address: key.curaddress,
-                                cur_city: key.curcity,
-                                cur_state: key.curstate,
-                                cur_pincode: key.curpincode,
-                                cur_long: key.curlong,
-                                cur_lat: key.curlat
-                            };
-                            var permanent_address = {
-                                perm_address: key.permaddress,
-                                perm_city: key.permcity,
-                                perm_state: key.permstate,
-                                perm_pincode: key.permpincode,
-                                perm_long: key.permlong,
-                                perm_lat: key.permlat
-                            };
-                            var parent_father = {
-                                parent_name: key.fathername,
-                                parent_contact: key.fathercontact,
-                                parent_relation: 'father',
-                                parent_address: key.curaddress + ' ' + key.permcity + ' ' + key.permstate + ' ' + key.permpincode,
-                                occupation: key.fatheroccupation
-                            };
-                            var parent_mother = {
-                                parent_name: key.mothername,
-                                parent_contact: key.mothercontact,
-                                parent_relation: 'mother',
-                                parent_address: key.curaddress + ' ' + key.permcity + ' ' + key.permstate + ' ' + key.permpincode,
-                                occupation: key.motheroccupation
-                            };
-                            var parent_gaurdian = {
-                                parent_name: key.gaurdianname,
-                                parent_contact: key.gaurdiancontact,
-                                parent_relation: key.gaurdianrelation,
-                                parent_address: key.gaurdianaddress,
-                                occupation: key.gaurdianoccupation
-                            };
-
-                            mongo.connect(url, function(err, db) {
-                                autoIncrement.getNextSequence(db, 'students', function(err, autoIndex) {
-
-                                    var count = db.collection('students').find({admission_no : item.admission_no}).count(function(e, count) {
-
-                                        if (count > 0) {
-
-                                            db.close();
-                                            res.end('already submitted');
-                                        } else {
+                    // });
+                    // var recent_id = 0;
+                    // if (existedAids != null) {
 
 
-                                            var collection = db.collection('students');
-                                            collection.ensureIndex({
-                                                "student_id": 1,
-                                            }, {
-                                                unique: true
-                                            }, function(err, result) {
-                                                if (item.section_id == null || item.phone == null) {
-                                                    res.end('null');
-                                                } else {
-                                                    item.student_id = class_id + '-STD-' + autoIndex;
-                                                    collection.insertOne(item, function(err, result) {
-                                                        if (err) {
-                                                            console.log(err);
-                                                            if (err.code == 11000) {
-
-                                                                res.end('false');
-                                                            }
-                                                            res.end('false');
-                                                        }
-                                                        collection.update({
-                                                            _id: item._id
-                                                        }, {
-                                                            $push: {
-                                                                current_address,
-                                                                permanent_address,
-                                                                parents: parent_father
-                                                            }
-                                                        });
-                                                        collection.update({
-                                                            _id: item._id
-                                                        }, {
-                                                            $push: {
-                                                                parents: parent_mother
-                                                            }
-                                                        });
-                                                        collection.update({
-                                                            _id: item._id
-                                                        }, {
-                                                            $push: {
-                                                                parents: parent_gaurdian
-                                                            }
-                                                        });
-                                                        count++;
-                                                        db.close();
-
-                                                        if (count == test.length) {
-                                                            res.end('true');
-                                                        }
+                    //     splited = recentSid.student_id;
+                    //     splited = splited.split("-");
+                    //     recent_id = splited[splited.length - 1];
+                    //     console.log(recent_id);
 
 
-                                                    });
-                                                }
-                                            });
-                                        }
-                                    });
-
-                                });
-                            });
-
-                        });
+                    // }
+                    // var itemArray = [];
+                    // //   var item_arrays = []; 
 
 
-                    } else {
-                        res.end('false');
-                    }
+                    // if (test.length > 0) {
+                    //     test.forEach(function (key, value) {
+                    //         recent_id = recent_id + 1;
+                    //         //console.log(recent_id);
+
+                    //         var item = {
+                    //             student_id: class_id + '-STD-' + recent_id,
+                    //             school_id: school_id,
+                    //             class_id: class_id,
+                    //             section_id: section_id,
+                    //             surname: key.surname,
+                    //             first_name: key.firstname,
+                    //             last_name: key.lastname,
+                    //             gender: key.gender,
+                    //             dob: key.dob,
+                    //             aadhar_no: key.aadharno,
+                    //             phone: key.phone,
+                    //             email: key.email,
+                    //             category: key.category,
+                    //             admission_date: key.admissiondate,
+                    //             admission_no: key.admissionno,
+                    //             roll_no: key.rollno,
+                    //             academic_year: key.academicyear,
+                    //             bus_route_id: key.busrouteid,
+                    //             status: status,
+                    //             current_address: {
+                    //                 cur_address: key.curaddress,
+                    //                 cur_city: key.curcity,
+                    //                 cur_state: key.curstate,
+                    //                 cur_pincode: key.curpincode,
+                    //                 cur_long: key.curlong,
+                    //                 cur_lat: key.curlat
+                    //             },
+                    //             permanent_address: {
+                    //                 perm_address: key.permaddress,
+                    //                 perm_city: key.permcity,
+                    //                 perm_state: key.permstate,
+                    //                 perm_pincode: key.permpincode,
+                    //                 perm_long: key.permlong,
+                    //                 perm_lat: key.permlat
+                    //             },
+                    //             parents: [
+                    //                 parent_father = {
+                    //                     parent_name: key.fathername,
+                    //                     parent_contact: key.fathercontact,
+                    //                     parent_relation: 'father',
+                    //                     parent_address: key.curaddress + ' ' + key.permcity + ' ' + key.permstate + ' ' + key.permpincode,
+                    //                     occupation: key.fatheroccupation
+                    //                 },
+                    //                 parent_mother = {
+                    //                     parent_name: key.mothername,
+                    //                     parent_contact: key.mothercontact,
+                    //                     parent_relation: 'mother',
+                    //                     parent_address: key.curaddress + ' ' + key.permcity + ' ' + key.permstate + ' ' + key.permpincode,
+                    //                     occupation: key.motheroccupation
+                    //                 },
+                    //                 parent_gaurdian = {
+                    //                     parent_name: key.gaurdianname,
+                    //                     parent_contact: key.gaurdiancontact,
+                    //                     parent_relation: key.gaurdianrelation,
+                    //                     parent_address: key.gaurdianaddress,
+                    //                     occupation: key.gaurdianoccupation
+                    //                 }
+
+                    //             ]
+
+                    //         };
+                    //         // itemArray.item = item;
+                    //         // itemArray.itemId = recent_id;
+                    //         // item_arrays.push(itemArray);
+                    //         itemArray.push(item);
+
+
+                    //     });
+                    // } else {
+                    //     res.end('false');
+                    // }
+                    // if (existedAids != null) {
+                    //     itemArray.forEach(function (x) {
+                    //         if (existedAids.indexOf(x.admission_no) > -1) {
+                    //             itemArray.remove(x);
+                    //         }
+
+
+                    //     });
+                    // }
+
+                    // mongo.connect(url, function (err, db) {
+                    //     var collection = db.collection('students');
+                    //     collection.insertMany(itemArray, function (err, result) {
+                    //         if (err) {
+                    //             if (err.code == 11000) {
+                    //                 res.end('false');
+                    //             }
+                    //             res.end('false');
+                    //         }
+                    //         console.log('file submitted');
+
+                    //     });
+
+                    // });
 
 
                 });
             } catch (e) {
-                res.json({ error_code: 1, err_desc: "Corupted excel file" });
+                res.json({ error_code: 1, err_desc: "duplicate data enterd" });
             }
         })
     });
@@ -755,7 +775,7 @@ router.route('/bulk_upload_students/:section_id')
 
 
 router.route('/edit_students/:student_id')
-    .put(function(req, res, next) {
+    .put(function (req, res, next) {
         var myquery = { student_id: req.params.student_id };
         // var req_class_id = req.body.class_id;
         // var req_section = req.body.section;         
@@ -773,7 +793,7 @@ router.route('/edit_students/:student_id')
         //  var splited = req_class_id.split("-");
         //  var req_class_name = req.body.class_name;
 
-        mongo.connect(url, function(err, db) {
+        mongo.connect(url, function (err, db) {
             db.collection('students').update(myquery, {
                 $set: {
                     //section:req_section,
@@ -789,7 +809,7 @@ router.route('/edit_students/:student_id')
                     //  admission_no:req_admission_no,
                     //   admission_date:req_admission_date,
                 }
-            }, function(err, result) {
+            }, function (err, result) {
                 assert.equal(null, err);
                 if (err) {
                     res.send('false');
@@ -803,11 +823,11 @@ router.route('/edit_students/:student_id')
 
 
 router.route('/delete_student/:student_id')
-    .delete(function(req, res, next) {
+    .delete(function (req, res, next) {
         var myquery = { student_id: req.params.student_id };
 
-        mongo.connect(url, function(err, db) {
-            db.collection('students').deleteOne(myquery, function(err, result) {
+        mongo.connect(url, function (err, db) {
+            db.collection('students').deleteOne(myquery, function (err, result) {
                 assert.equal(null, err);
                 if (err) {
                     res.send('false');
