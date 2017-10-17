@@ -90,6 +90,29 @@ router.route('/book/:school_id')
         });
     });
 
+      // Modified
+    // Get Book Details By BookId
+
+router.route('/book_details/:book_id')
+     .get(function(req, res, next) {
+        var book_id= req.params.book_id;
+        var status = 1;
+        var resultArray = [];
+          mongo.connect(url, function(err, db) {
+            assert.equal(null, err);
+            var cursor = db.collection('books').find({book_id});
+            cursor.forEach(function(doc, err) {
+                assert.equal(null, err);
+                resultArray.push(doc);
+            }, function() {
+                db.close();
+                res.send({
+                    books: resultArray
+                });
+            });
+        });
+    }); 
+
     router.route('/book_edit/:book_id/:name/:value')
         .post(function(req, res, next){
           var book_id = req.params.book_id;

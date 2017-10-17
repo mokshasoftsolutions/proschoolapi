@@ -29,10 +29,11 @@ var examgraph = require("./api_components/examgraph.js");
 var noticeboard = require("./api_components/noticeboard.js");
 var school_event = require("./api_components/schoolevent.js");
 var uploads = require("./api_components/uploads.js");
+var tasks = require("./api_components/tasks.js");
 const Authentication = require('./controllers/authentication');
 const passportService = require('./services/passport');
 const passport = require('passport');
-var tracking = require("./api_components/tracking.js")
+
 
 const requireAuth = passport.authenticate('jwt',{ session: false });
 const requireSignin = passport.authenticate('local',{session: false});
@@ -145,6 +146,6 @@ app.use('/api', attendance_charts);
 app.use('/api', examgraph);
 app.use('/api', noticeboard);
 app.use('/api', school_event);
-app.use('/api', tracking);
 app.use('/api', uploads);
+app.use('/api', tasks);
 app.use('/api', router);

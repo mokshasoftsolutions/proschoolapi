@@ -38,7 +38,7 @@ router.route('/students/:section_id')
         parent_account_details.parent_account_new = req.body.parent_account_new;
         parent_account_details.parent_id = req.body.parent_id;
         parent_account_details.school_id = req.body.school_id;
-        console.log(parent_account_details);
+      //  console.log(parent_account_details);
 
 
 
@@ -150,22 +150,23 @@ router.route('/students/:section_id')
                                         }
                                     });
                                 // add parent
-                                console.log(parent_account_details.parent_account_create);
+                              //  console.log(parent_account_details.parent_account_create);
+                              //  console.log(typeof(parent_account_details.parent_account_create)+'moksha');
                                 if (parent_account_details.parent_account_create == true) {
-                                    console.log("testing");
+                                  //  console.log("testing");
                                     var requestData = {}
                                     requestData.name = parent_father.parent_name;
                                     requestData.student_id = class_id + '-STD-' + autoIndex;
                                     requestData.parent_id = parent_account_details.parent_id;
                                     requestData.school_id = parent_account_details.school_id;
-                                    console.log(requestData);
+                                  //  console.log(requestData);
                                     if (parent_account_details.parent_account_new == true) {
-                                        console.log("newaccount")
+                                    //    console.log("newaccount")
                                         parentModule.addParent(requestData);
 
                                     }
                                     if (parent_account_details.parent_account_new == false) {
-                                        console.log("existing")
+                                     //   console.log("existing")
                                         parentModule.addStudentToParent(requestData);
                                     }
 
@@ -447,7 +448,7 @@ router.route('/student_permanent_address/:student_id')
     });
 
 
-router.route('/studentsdetails/:student_id')
+router.route('/student_details/:student_id')
     .get(function (req, res, next) {
         var student_id = req.params.student_id;
 
@@ -464,25 +465,6 @@ router.route('/studentsdetails/:student_id')
         });
     });
 
-router.route('/employee_details/:employee_id')
-    .get(function (req, res, next) {
-        var employee_id = req.params.employee_id;
-        var status = 1;
-        var resultArray = [];
-        mongo.connect(url, function (err, db) {
-            assert.equal(null, err);
-            var cursor = db.collection('employee').find({ employee_id, status });
-            cursor.forEach(function (doc, err) {
-                assert.equal(null, err);
-                resultArray.push(doc);
-            }, function () {
-                db.close();
-                res.send({
-                    employee: resultArray
-                });
-            });
-        });
-    });
 
 
 
@@ -589,7 +571,7 @@ router.route('/bulk_upload_students/:section_id')
             } else {
                 exceltojson = xlstojson;
             }
-            console.log(req.file.path);
+          //  console.log(req.file.path);
             try {
                 exceltojson({
                     input: req.file.path,
@@ -600,7 +582,7 @@ router.route('/bulk_upload_students/:section_id')
                         return res.json({ error_code: 1, err_desc: err, data: null });
                     }
                     res.json({ data: result });
-                    //console.log(result);
+                   
                     var test = result;
                     var count = 0;
                     var existedAids = [];
@@ -622,14 +604,14 @@ router.route('/bulk_upload_students/:section_id')
                         
                          var cursor = db.collection('students').find().limit(1).sort({ $natural: -1 });
                          
-                       cursor.forEach(function (doc, err) {
-                            assert.equal(null, err);
-                            recentSid.push(doc.student_id);
-                            console.log(recent)
-                              });
-                       console.log(JSON.stringify(cursor));
+                    //    cursor.forEach(function (doc, err) {
+                    //         assert.equal(null, err);
+                    //         recentSid.push(doc.student_id);
+                           
+                    //           });
+                   
                     });
-                            //  console.log(existedAids[0]);
+                          
                     
                     // mongo.connect(url, function (err, db) {
                       
@@ -640,7 +622,7 @@ router.route('/bulk_upload_students/:section_id')
                     //    var  cursor = db.collection('students').find().limit(1).sort({ $natural: -1 });
                     //     // console.log(collection.find().count);
                     //     // existedAids = cursor;
-                    //     cursor.forEach(function (doc, err) {
+                    //     cursor.forEach(function (doc, err) {8
                     //         assert.equal(null, err);
                     //         recentSid.push(doc);
                     //     });

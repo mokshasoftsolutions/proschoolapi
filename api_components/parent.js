@@ -22,10 +22,11 @@ router.use(function(req, res, next) {
  router.route('/getparentlist/:schoolid')
 .get(function(req, res, next) {
     var school_id = req.params.schoolid;
+   // var section_id=req.params.sectionid;
         var parents = [];
         mongo.connect(url, function(err, db) {
             assert.equal(null, err);
-            var cursor = db.collection('parents').find({school_id:school_id,status:1});
+            var cursor = db.collection('parents').find({school_id:school_id});
             cursor.forEach(function(doc, err) {
                 assert.equal(null, err);
                 parents.push(doc);

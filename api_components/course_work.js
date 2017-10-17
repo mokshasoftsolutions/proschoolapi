@@ -162,6 +162,31 @@ router.route('/topics/:lesson_id')
         });
     });
 
+    
+    // Modified
+    // Get Chapter Details By LessionId
+
+router.route('/course_details/:lession_id')
+     .get(function(req, res, next) {
+        var lession_id= req.params.lession_id;
+        var status = 1;
+        var resultArray = [];
+          mongo.connect(url, function(err, db) {
+            assert.equal(null, err);
+            var cursor = db.collection('coursework').find({lession_id});
+            cursor.forEach(function(doc, err) {
+                assert.equal(null, err);
+                resultArray.push(doc);
+            }, function() {
+                db.close();
+                res.send({
+                    coursework: resultArray
+                });
+            });
+        });
+    }); 
+
+
 
 router.route('/topic_notes/:topic_id')
     .post(function(req, res, next) {

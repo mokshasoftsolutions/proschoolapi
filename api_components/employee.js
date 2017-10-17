@@ -212,6 +212,26 @@ router.route('/employee_permanent_address/:employee_id')
         });
     });
 
+router.route('/employee_details/:employee_id')
+    .get(function (req, res, next) {
+        var employee_id = req.params.employee_id;
+        var status = 1;
+        var resultArray = [];
+        mongo.connect(url, function (err, db) {
+            assert.equal(null, err);
+            var cursor = db.collection('employee').find({ employee_id, status });
+            cursor.forEach(function (doc, err) {
+                assert.equal(null, err);
+                resultArray.push(doc);
+            }, function () {
+                db.close();
+                res.send({
+                    employee: resultArray
+                });
+            });
+        });
+    });
+
 
 // Modified
 
