@@ -13,34 +13,34 @@ var router = express.Router();
 var url = 'mongodb://' + config.dbhost + ':27017/s_erp_data';
 
 var cookieParser = require('cookie-parser');
-router.use(function(req, res, next) {
+router.use(function (req, res, next) {
     // do logging
     res.header("Access-Control-Allow-Origin", "*");
     res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
     next(); // make sure we go to the next routes and don't stop here
 });
- 
+
 router.route('/attendancechartbydate/:select_date/:class_id/:section_id')
- .get(function(req, res, next) {
-      var select_date = new Date (req.params.select_date);
-      var section_id = req.params.section_id;
-      var class_id = req.params.class_id;
-      var endDate = new Date(select_date);
-      endDate.setDate(endDate.getDate()+ 1)
-      
+    .get(function (req, res, next) {
+        var select_date = new Date(req.params.select_date);
+        var section_id = req.params.section_id;
+        var class_id = req.params.class_id;
+        var endDate = new Date(select_date);
+        endDate.setDate(endDate.getDate() + 1)
+
         var resultArray = [];
-        mongo.connect(url, function(err, db) {
+        mongo.connect(url, function (err, db) {
             assert.equal(null, err);
             var cursor = db.collection('attendance').aggregate([
-               {
-                    $match: {                       
+                {
+                    $match: {
                         'date': {
-                            $gte:  new Date(select_date.toISOString()),
+                            $gte: new Date(select_date.toISOString()),
                             $lt: new Date(endDate.toISOString())
                         }
                     }
                 },
-               {
+                {
                     "$lookup": {
                         "from": "students",
                         "localField": "student_id",
@@ -62,7 +62,7 @@ router.route('/attendancechartbydate/:select_date/:class_id/:section_id')
                 {
                     "$unwind": "$class_doc"
                 },
-                 {
+                {
                     "$lookup": {
                         "from": "class_sections",
                         "localField": "section_id",
@@ -73,39 +73,39 @@ router.route('/attendancechartbydate/:select_date/:class_id/:section_id')
                 {
                     "$unwind": "$section_doc"
                 },
-               {
+                {
                     "$redact": {
                         "$cond": [{
-                                "$eq": ["$section_id", section_id]
-                            },
+                            "$eq": ["$section_id", section_id]
+                        },
                             "$$KEEP",
                             "$$PRUNE"
                         ]
                     }
                 },
-                 {
+                {
                     "$project": {
                         "_id": "$_id",
                         "student_id": "$student_id",
                         "first_name": "$student_doc.first_name",
-                        "last_name": "$student_doc.last_name",                      
+                        "last_name": "$student_doc.last_name",
                         "status": "$status",
-                        "gender":"$student_doc.gender",
-                        "admission_no":"$student_doc.admission_no",
-                        "roll_no":"$student_doc.roll_no",
-                        "class_name":"$class_doc.name",
-                        "section_name":"$section_doc.name",
-                      //  "date": { $and: [{ $gte: ["$date", new Date(select_date.toISOString())] }, { $lt: ["$date", new Date(endDate.toISOString())] }] }
-                      //  "date": { $cond: { if : { $and: [{ $gte: ["$date", new Date(select_date.toISOString())] }, { $lt: ["$date", new Date(endDate.toISOString())] }] } },then: "$date"}
+                        "gender": "$student_doc.gender",
+                        "admission_no": "$student_doc.admission_no",
+                        "roll_no": "$student_doc.roll_no",
+                        "class_name": "$class_doc.name",
+                        "section_name": "$section_doc.name",
+                        //  "date": { $and: [{ $gte: ["$date", new Date(select_date.toISOString())] }, { $lt: ["$date", new Date(endDate.toISOString())] }] }
+                        //  "date": { $cond: { if : { $and: [{ $gte: ["$date", new Date(select_date.toISOString())] }, { $lt: ["$date", new Date(endDate.toISOString())] }] } },then: "$date"}
 
 
                     }
                 }
             ])
-            cursor.forEach(function(doc, err) {
+            cursor.forEach(function (doc, err) {
                 assert.equal(null, err);
                 resultArray.push(doc);
-            }, function() {
+            }, function () {
                 db.close();
                 res.send({
                     donutchart: resultArray
@@ -119,30 +119,30 @@ router.route('/attendancechartbydate/:select_date/:class_id/:section_id')
 
 
 router.route('/attendancechartbymonth/:select_month/:student_id')
- .get(function(req, res, next) {
-      var select_month = req.params.select_month;
-    //   var section_id = req.params.section_id;
-    //   var class_id = req.params.class_id;
-      var student_id = req.params.student_id;
-     var date = new Date();
-     
-        var firstDay = new Date(date.getFullYear(), select_month-1, 1);
+    .get(function (req, res, next) {
+        var select_month = req.params.select_month;
+        //   var section_id = req.params.section_id;
+        //   var class_id = req.params.class_id;
+        var student_id = req.params.student_id;
+        var date = new Date();
+
+        var firstDay = new Date(date.getFullYear(), select_month - 1, 1);
         var lastDay = new Date(date.getFullYear(), select_month, 0);
         //  console.log(firstDay);
         //  console.log(lastDay);
         var resultArray = [];
-        mongo.connect(url, function(err, db) {
+        mongo.connect(url, function (err, db) {
             assert.equal(null, err);
             var cursor = db.collection('attendance').aggregate([
-              {
-                    $match: {                       
+                {
+                    $match: {
                         'date': {
-                            $gte:  firstDay,
+                            $gte: firstDay,
                             $lt: lastDay
                         }
                     }
                 },
-               {
+                {
                     "$lookup": {
                         "from": "students",
                         "localField": "student_id",
@@ -164,7 +164,7 @@ router.route('/attendancechartbymonth/:select_month/:student_id')
                 {
                     "$unwind": "$class_doc"
                 },
-                 {
+                {
                     "$lookup": {
                         "from": "class_sections",
                         "localField": "section_id",
@@ -175,36 +175,37 @@ router.route('/attendancechartbymonth/:select_month/:student_id')
                 {
                     "$unwind": "$section_doc"
                 },
-               {
+                {
                     "$redact": {
                         "$cond": [{
-                                "$eq": ["$student_id", student_id]
-                            },
+                            "$eq": ["$student_id", student_id]
+                        },
                             "$$KEEP",
                             "$$PRUNE"
                         ]
                     }
                 },
-                 {
+                {
                     "$project": {
                         "_id": "$_id",
                         "student_id": "$student_id",
                         "first_name": "$student_doc.first_name",
-                        "last_name": "$student_doc.last_name",                      
+                        "last_name": "$student_doc.last_name",
                         "status": "$status",
-                        "gender":"$student_doc.gender",
-                        "admission_no":"$student_doc.admission_no",
-                        "roll_no":"$student_doc.roll_no",
-                        "class_name":"$class_doc.name",
-                        "section_name":"$section_doc.name",                     
+                        "gender": "$student_doc.gender",
+                        "admission_no": "$student_doc.admission_no",
+                        "roll_no": "$student_doc.roll_no",
+                        "class_name": "$class_doc.name",
+                        "section_name": "$section_doc.name",
+                        "date":"$date",
 
                     }
                 }
             ])
-            cursor.forEach(function(doc, err) {
+            cursor.forEach(function (doc, err) {
                 assert.equal(null, err);
                 resultArray.push(doc);
-            }, function() {
+            }, function () {
                 db.close();
                 res.send({
                     donutchart: resultArray

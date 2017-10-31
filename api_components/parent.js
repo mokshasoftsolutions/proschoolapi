@@ -11,26 +11,44 @@ var router = express.Router();
 var url = 'mongodb://' + config.dbhost + ':27017/s_erp_data';
 
 var cookieParser = require('cookie-parser');
-router.use(function(req, res, next) {
+router.use(function (req, res, next) {
     // do logging
     res.header("Access-Control-Allow-Origin", "*");
     res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
     next(); // make sure we go to the next routes and don't stop here
 });
 
- //List parents
- router.route('/getparentlist/:schoolid')
-.get(function(req, res, next) {
-    var school_id = req.params.schoolid;
-   // var section_id=req.params.sectionid;
+//List parents
+router.route('/getparentlist/:schoolid')
+    .get(function (req, res, next) {
+        var school_id = req.params.schoolid;
         var parents = [];
-        mongo.connect(url, function(err, db) {
+        mongo.connect(url, function (err, db) {
             assert.equal(null, err);
-            var cursor = db.collection('parents').find({school_id:school_id});
-            cursor.forEach(function(doc, err) {
+           // var cursor = db.collection('parents').find({ school_id: school_id, status: 1 });
+            var cursor = db.collection('parents').aggregate([
+                {
+                    $match: {                        
+                        school_id: school_id                        
+                    }
+                },
+                {
+                    $unwind: "$students"
+                },               
+                {
+                    $lookup: {
+                        from: "students",
+                        localField: "students.student_id",
+                        foreignField: "student_id",
+                        as: "student_doc"
+                    }
+                },
+            ]);
+
+            cursor.forEach(function (doc, err) {
                 assert.equal(null, err);
                 parents.push(doc);
-            }, function() {
+            }, function () {
                 db.close();
                 res.send({
                     parents: parents
@@ -39,18 +57,18 @@ router.use(function(req, res, next) {
         });
     });
 
-    //get Students by parent id
- router.route('/getstudentsbyparentid/:parentid')
-.get(function(req, res, next) {
-    var parent_id = req.params.parentid;
+//get Students by parent id
+router.route('/getstudentsbyparentid/:parentid')
+    .get(function (req, res, next) {
+        var parent_id = req.params.parentid;
         var parents = [];
-        mongo.connect(url, function(err, db) {
+        mongo.connect(url, function (err, db) {
             assert.equal(null, err);
-            var cursor = db.collection('parents').find({parent_id:parent_id,status:1});
-            cursor.forEach(function(doc, err) {
+            var cursor = db.collection('parents').find({ parent_id: parent_id, status: 1 });
+            cursor.forEach(function (doc, err) {
                 assert.equal(null, err);
                 parents.push(doc);
-            }, function() {
+            }, function () {
                 db.close();
                 res.send({
                     parents: parents
@@ -63,13 +81,13 @@ router.route('/addStudentToParent/:parentId/:studentId')
     .put(function (req, res, next) {
         var parent_id = req.params.parentId;
         var student_id = req.params.studentId;
-      mongo.connect(url, function (err, db) {
+        mongo.connect(url, function (err, db) {
             var collection = db.collection('parents');
 
             collection.find({
-                "parent_id": parent_id,             
+                "parent_id": parent_id,
                 "students.student_id": student_id
-                 
+
             }).toArray(function (err, results) {
                 if (err) {
                     res.send('false')
@@ -77,8 +95,8 @@ router.route('/addStudentToParent/:parentId/:studentId')
 
                 if (results.length == 0) {
                     collection.update({
-                            "parent_id": parent_id   
-                         }, {
+                        "parent_id": parent_id
+                    }, {
                             "$push": {
                                 "students": {
                                     student_id: student_id
@@ -100,7 +118,7 @@ router.route('/addStudentToParent/:parentId/:studentId')
                     res.send('false')
                 }
             });
-       
+
 
         });
     });
@@ -116,8 +134,8 @@ router.route('/removeStudentFromParent/:parentId/:studentId')
             var collection = db.collection('parents');
 
             collection.update({
-                      "parent_id": parent_id   
-                }, {
+                "parent_id": parent_id
+            }, {
                     "$pull": {
                         "students": {
                             student_id: student_id

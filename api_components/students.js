@@ -25,6 +25,30 @@ router.use(function (req, res, next) {
     next(); // make sure we go to the next routes and don't stop here
 });
 
+
+
+var storageImage = multer.diskStorage({ //multers disk storage settings
+    destination: function (req, file, cb) {
+        cb(null, './uploads/')
+    },
+    filename: function (req, file, cb) {
+        var datetimestamp = Date.now();
+        // cb(null, file.fieldname + '-' + datetimestamp + '.' + file.originalname.split('.')[file.originalname.split('.').length - 1])
+        cb(null, file.originalname);
+    }
+});
+
+var uploadImage = multer({ //multer settings
+    storage: storageImage,
+    fileFilter: function (req, file, callback) { //file filter
+        if (['jpg', 'png'].indexOf(file.originalname.split('.')[file.originalname.split('.').length - 1]) === -1) {
+            return callback(new Error('Wrong extension type'));
+        }
+        callback(null, true);
+    }
+}).single('file');
+
+
 // Add Stundents
 
 router.route('/students/:section_id')
@@ -33,158 +57,200 @@ router.route('/students/:section_id')
         var splited = section_id.split("-");
         var school_id = splited[0] + '-' + splited[1];
         var class_id = splited[0] + '-' + splited[1] + '-' + splited[2] + '-' + splited[3];
-        var parent_account_details = {};
-        parent_account_details.parent_account_create = req.body.parent_account_create;
-        parent_account_details.parent_account_new = req.body.parent_account_new;
-        parent_account_details.parent_id = req.body.parent_id;
-        parent_account_details.school_id = req.body.school_id;
-      //  console.log(parent_account_details);
+        // var parent_account_details = {};
+        // parent_account_details.parent_account_create = req.body.parent_account_create;
+        // parent_account_details.parent_account_new = req.body.parent_account_new;
+        // parent_account_details.parent_id = req.body.parent_id;
+        // parent_account_details.school_id = req.body.school_id;
+        //   console.log(parent_account_details);
+        //   console.log(req.body.parent_account_create);
+        //   console.log(req.body.parent_account_new);
+
+        uploadImage(req, res, function (err) {
+            if (err) {
+                res.json({ error_code: 1, err_desc: err });
+                return;
+            }
+            /** Multer gives us file info in req.file object */
+            if (!req.file) {
+                res.json({ error_code: 1, err_desc: "No file passed" });
+                return;
+            }
+            var studentImage = {
+                filename: req.file.filename,
+                originalname: req.file.originalname,
+                imagePath: req.file.path,
+                mimetype: req.file.mimetype,
+            }
+            var parent_account_details = {};
+            parent_account_details.parent_account_create = req.body.parent_account_create;
+            parent_account_details.parent_account_new = req.body.parent_account_new;
+            parent_account_details.parent_id = req.body.parent_id;
+            parent_account_details.school_id = school_id;
+            console.log(parent_account_details);
+            // console.log(req.body.parent_account_create);
+            // console.log(req.body.parent_account_new);
 
 
 
-        var status = 1;
-        var item = {
-            student_id: 'getauto',
-            school_id: school_id,
-            class_id: class_id,
-            section_id: section_id,
-            surname: req.body.surname,
-            first_name: req.body.first_name,
-            last_name: req.body.last_name,
-            gender: req.body.gender,
-            dob: req.body.dob,
-            aadhar_no: req.body.aadhar_no,
-            phone: req.body.phone,
-            email: req.body.email,
-            category: req.body.category,
-            admission_date: req.body.admission_date,
-            admission_no: req.body.admission_no,
-            roll_no: req.body.roll_no,
-            academic_year: req.body.academic_year,
-            bus_route_id: req.body.bus_route_id,
-            status: status,
-        };
-        var current_address = {
-            cur_address: req.body.cur_address,
-            cur_city: req.body.cur_city,
-            cur_state: req.body.cur_state,
-            cur_pincode: req.body.cur_pincode,
-            cur_long: req.body.cur_long,
-            cur_lat: req.body.cur_lat
-        };
-        var permanent_address = {
-            perm_address: req.body.perm_address,
-            perm_city: req.body.perm_city,
-            perm_state: req.body.perm_state,
-            perm_pincode: req.body.perm_pincode,
-            perm_long: req.body.perm_long,
-            perm_lat: req.body.perm_lat
-        };
-        var parent_father = {
-            parent_name: req.body.father_name,
-            parent_contact: req.body.father_contact,
-            parent_relation: 'father',
-            parent_address: req.body.cur_address + ' ' + req.body.perm_city + ' ' + req.body.perm_state + ' ' + req.body.perm_pincode,
-            occupation: req.body.father_occupation
-        };
-        var parent_mother = {
-            parent_name: req.body.mother_name,
-            parent_contact: req.body.mother_contact,
-            parent_relation: 'mother',
-            parent_address: req.body.cur_address + ' ' + req.body.perm_city + ' ' + req.body.perm_state + ' ' + req.body.perm_pincode,
-            occupation: req.body.mother_occupation
-        };
-        var parent_gaurdian = {
-            parent_name: req.body.gaurdian_name,
-            parent_contact: req.body.gaurdian_contact,
-            parent_relation: req.body.gaurdian_relation,
-            parent_address: req.body.gaurdian_address,
-            occupation: req.body.gaurdian_occupation
-        };
-        mongo.connect(url, function (err, db) {
-            autoIncrement.getNextSequence(db, 'students', function (err, autoIndex) {
-                var collection = db.collection('students');
-                collection.createIndex({
-                    "student_id": 1
-                }, {
-                        unique: true
-                    }, function (err, result) {
-                        if (item.section_id == null || item.dob == null || item.phone == null) {
-                            res.end('null');
-                        } else {
-                            collection.insertOne(item, function (err, result) {
-                                if (err) {
-                                    if (err.code == 11000) {
+            var status = 1;
+            var item = {
+                student_id: 'getauto',
+                school_id: school_id,
+                class_id: class_id,
+                section_id: section_id,
+                surname: req.body.surname,
+                first_name: req.body.first_name,
+                last_name: req.body.last_name,
+                gender: req.body.gender,
+                dob: req.body.dob,
+                aadhar_no: req.body.aadhar_no,
+                phone: req.body.phone,
+                email: req.body.email,
+                category: req.body.category,
+                admission_date: req.body.admission_date,
+                admission_no: req.body.admission_no,
+                roll_no: req.body.roll_no,
+                academic_year: req.body.academic_year,
+                bus_route_id: req.body.bus_route_id,
+
+            };
+            var current_address = {
+                cur_address: req.body.cur_address,
+                cur_city: req.body.cur_city,
+                cur_state: req.body.cur_state,
+                cur_pincode: req.body.cur_pincode,
+                cur_long: req.body.cur_long,
+                cur_lat: req.body.cur_lat
+            };
+            var permanent_address = {
+                perm_address: req.body.perm_address,
+                perm_city: req.body.perm_city,
+                perm_state: req.body.perm_state,
+                perm_pincode: req.body.perm_pincode,
+                perm_long: req.body.perm_long,
+                perm_lat: req.body.perm_lat
+            };
+            var parent_father = {
+                parent_name: req.body.father_name,
+                parent_contact: req.body.father_contact,
+                parent_relation: 'father',
+                parent_address: req.body.cur_address + ' ' + req.body.perm_city + ' ' + req.body.perm_state + ' ' + req.body.perm_pincode,
+                occupation: req.body.father_occupation
+            };
+            var parent_mother = {
+                parent_name: req.body.mother_name,
+                parent_contact: req.body.mother_contact,
+                parent_relation: 'mother',
+                parent_address: req.body.cur_address + ' ' + req.body.perm_city + ' ' + req.body.perm_state + ' ' + req.body.perm_pincode,
+                occupation: req.body.mother_occupation
+            };
+            var parent_gaurdian = {
+                parent_name: req.body.gaurdian_name,
+                parent_contact: req.body.gaurdian_contact,
+                parent_relation: req.body.gaurdian_relation,
+                parent_address: req.body.gaurdian_address,
+                occupation: req.body.gaurdian_occupation
+            };
+
+            // console.log(studentImage);
+            // console.log(item);
+            // console.log(cur_address);
+            // console.log(req.body);
+
+
+
+            mongo.connect(url, function (err, db) {
+                autoIncrement.getNextSequence(db, 'students', function (err, autoIndex) {
+                    var collection = db.collection('students');
+                    collection.createIndex({
+                        "student_id": 1
+                    }, {
+                            unique: true
+                        }, function (err, result) {
+                            if (item.section_id == null || item.dob == null || item.phone == null) {
+                                res.end('null');
+                            } else {
+                                collection.insertOne(item, function (err, result) {
+                                    if (err) {
+                                        if (err.code == 11000) {
+                                            res.end('false');
+                                        }
                                         res.end('false');
                                     }
-                                    res.end('false');
-                                }
-                                collection.update({
-                                    _id: item._id
-                                }, {
-                                        $set: {
-                                            student_id: class_id + '-STD-' + autoIndex
-                                        },
-                                        $push: {
-                                            current_address,
-                                            permanent_address,
-                                            parents: parent_father
+                                    collection.update({
+                                        _id: item._id
+                                    }, {
+                                            $set: {
+                                                student_id: class_id + '-STD-' + autoIndex
+                                            },
+                                            $push: {
+                                                current_address,
+                                                permanent_address,
+                                                studentImage,
+                                                parents: parent_father
+                                            }
+                                        }, function (err, result) {
+                                            db.close();
+                                            // res.end('true');
+                                            res.send({ status: 'true', id: class_id + '-STD-' + autoIndex });
+                                        });
+                                    collection.update({
+                                        _id: item._id
+                                    }, {
+                                            $push: {
+                                                parents: parent_mother
+                                            }
+                                        });
+                                    collection.update({
+                                        _id: item._id
+                                    }, {
+                                            $push: {
+                                                parents: parent_gaurdian
+                                            }
+                                        });
+                                    // add parent
+                                   // console.log(parent_account_details.parent_account_create);
+                                    // console.log(typeof (parent_account_details.parent_account_create) + 'moksha');
+
+                                    if (parent_account_details.parent_account_create == true || parent_account_details.parent_account_create == 'true') {
+                                        console.log("testing");
+                                        var requestData = {}
+                                        requestData.name = parent_father.parent_name;
+                                        requestData.student_id = class_id + '-STD-' + autoIndex;
+                                        requestData.parent_id = parent_account_details.parent_id;
+                                        requestData.school_id = parent_account_details.school_id;
+                                        console.log(requestData);
+                                       // console.log(parent_account_details.parent_account_new);
+                                        if (parent_account_details.parent_account_new == true || parent_account_details.parent_account_new == 'true') {
+                                            console.log("newaccount")
+                                            parentModule.addParent(requestData);
+
                                         }
-                                    }, function (err, result) {
-                                        db.close();
-                                        // res.end('true');
-                                        res.send({ status: 'true', id: class_id + '-STD-' + autoIndex });
-                                    });
-                                collection.update({
-                                    _id: item._id
-                                }, {
-                                        $push: {
-                                            parents: parent_mother
+                                        if (parent_account_details.parent_account_new == false || parent_account_details.parent_account_new == 'false') {
+                                            console.log("existing")
+                                            parentModule.addStudentToParent(requestData);
                                         }
-                                    });
-                                collection.update({
-                                    _id: item._id
-                                }, {
-                                        $push: {
-                                            parents: parent_gaurdian
-                                        }
-                                    });
-                                // add parent
-                              //  console.log(parent_account_details.parent_account_create);
-                              //  console.log(typeof(parent_account_details.parent_account_create)+'moksha');
-                                if (parent_account_details.parent_account_create == true) {
-                                  //  console.log("testing");
-                                    var requestData = {}
-                                    requestData.name = parent_father.parent_name;
-                                    requestData.student_id = class_id + '-STD-' + autoIndex;
-                                    requestData.parent_id = parent_account_details.parent_id;
-                                    requestData.school_id = parent_account_details.school_id;
-                                  //  console.log(requestData);
-                                    if (parent_account_details.parent_account_new == true) {
-                                    //    console.log("newaccount")
-                                        parentModule.addParent(requestData);
 
                                     }
-                                    if (parent_account_details.parent_account_new == false) {
-                                     //   console.log("existing")
-                                        parentModule.addStudentToParent(requestData);
-                                    }
 
-                                }
+                                    // add parent
 
-                                // add parent
-
-                            });
-                        }
+                                });
+                            }
+                        });
+                    collection.ensureIndex({
+                        "first_name": "text",
+                        "last_name": "text"
                     });
-                collection.ensureIndex({
-                    "first_name": "text",
-                    "last_name": "text"
                 });
             });
         });
 
     })
+
+
+
 // router.route('/students/:section_id')
 //     .get(function(req, res, next) {
 //         var section_id = req.params.section_id;
@@ -571,7 +637,7 @@ router.route('/bulk_upload_students/:section_id')
             } else {
                 exceltojson = xlstojson;
             }
-          //  console.log(req.file.path);
+            //  console.log(req.file.path);
             try {
                 exceltojson({
                     input: req.file.path,
@@ -582,7 +648,7 @@ router.route('/bulk_upload_students/:section_id')
                         return res.json({ error_code: 1, err_desc: err, data: null });
                     }
                     res.json({ data: result });
-                   
+
                     var test = result;
                     var count = 0;
                     var existedAids = [];
@@ -590,31 +656,31 @@ router.route('/bulk_upload_students/:section_id')
                     var splitted, collection;
 
                     //   var items = [];
-                    mongo.connect(url, function (err, db) {
-                        // collection = db.collection('students');
-                        assert.equal(null, err);
-                        //var last_value = collection.find().limit(1).sort({ $natural: -1 });
-                        // var cursor = db.collection('students').find({}, { admission_no: 1 });
-                        // cursor.forEach(function (doc, err) {
-                        //     assert.equal(null, err);
-                        //     existedAids.push(doc);
-                        //      //console.log(existedAids[0]);
-                        // });
-                        // console.log(existedAids[0]);
-                        
-                         var cursor = db.collection('students').find().limit(1).sort({ $natural: -1 });
-                         
+                    //  mongo.connect(url, function (err, db) {
+                    // collection = db.collection('students');
+                    //     assert.equal(null, err);
+                    //var last_value = collection.find().limit(1).sort({ $natural: -1 });
+                    // var cursor = db.collection('students').find({}, { admission_no: 1 });
+                    // cursor.forEach(function (doc, err) {
+                    //     assert.equal(null, err);
+                    //     existedAids.push(doc);
+                    //      //console.log(existedAids[0]);
+                    // });
+                    // console.log(existedAids[0]);
+
+                    //    var cursor = db.collection('students').find().limit(1).sort({ $natural: -1 });
+
                     //    cursor.forEach(function (doc, err) {
                     //         assert.equal(null, err);
                     //         recentSid.push(doc.student_id);
-                           
+
                     //           });
-                   
-                    });
-                          
-                    
+
+                    //  });
+
+
                     // mongo.connect(url, function (err, db) {
-                      
+
                     //     assert.equal(null, err);
                     //     //var last_value = collection.find().limit(1).sort({ $natural: -1 });
                     //     // var cursor = db.collection('students').find({}, { admission_no: 1 });
@@ -629,122 +695,122 @@ router.route('/bulk_upload_students/:section_id')
                     //     console.log(recentSid);
 
                     // });
-                    // var recent_id = 0;
+                    var recent_id = 0;
                     // if (existedAids != null) {
 
 
                     //     splited = recentSid.student_id;
                     //     splited = splited.split("-");
                     //     recent_id = splited[splited.length - 1];
-                    //     console.log(recent_id);
+                    //     //  console.log(recent_id);
 
 
                     // }
-                    // var itemArray = [];
-                    // //   var item_arrays = []; 
+                    var itemArray = [];
+                    //   var item_arrays = []; 
 
 
-                    // if (test.length > 0) {
-                    //     test.forEach(function (key, value) {
-                    //         recent_id = recent_id + 1;
-                    //         //console.log(recent_id);
+                    if (test.length > 0) {
+                        test.forEach(function (key, value) {
+                            recent_id = recent_id + 1;
+                            //console.log(recent_id);
 
-                    //         var item = {
-                    //             student_id: class_id + '-STD-' + recent_id,
-                    //             school_id: school_id,
-                    //             class_id: class_id,
-                    //             section_id: section_id,
-                    //             surname: key.surname,
-                    //             first_name: key.firstname,
-                    //             last_name: key.lastname,
-                    //             gender: key.gender,
-                    //             dob: key.dob,
-                    //             aadhar_no: key.aadharno,
-                    //             phone: key.phone,
-                    //             email: key.email,
-                    //             category: key.category,
-                    //             admission_date: key.admissiondate,
-                    //             admission_no: key.admissionno,
-                    //             roll_no: key.rollno,
-                    //             academic_year: key.academicyear,
-                    //             bus_route_id: key.busrouteid,
-                    //             status: status,
-                    //             current_address: {
-                    //                 cur_address: key.curaddress,
-                    //                 cur_city: key.curcity,
-                    //                 cur_state: key.curstate,
-                    //                 cur_pincode: key.curpincode,
-                    //                 cur_long: key.curlong,
-                    //                 cur_lat: key.curlat
-                    //             },
-                    //             permanent_address: {
-                    //                 perm_address: key.permaddress,
-                    //                 perm_city: key.permcity,
-                    //                 perm_state: key.permstate,
-                    //                 perm_pincode: key.permpincode,
-                    //                 perm_long: key.permlong,
-                    //                 perm_lat: key.permlat
-                    //             },
-                    //             parents: [
-                    //                 parent_father = {
-                    //                     parent_name: key.fathername,
-                    //                     parent_contact: key.fathercontact,
-                    //                     parent_relation: 'father',
-                    //                     parent_address: key.curaddress + ' ' + key.permcity + ' ' + key.permstate + ' ' + key.permpincode,
-                    //                     occupation: key.fatheroccupation
-                    //                 },
-                    //                 parent_mother = {
-                    //                     parent_name: key.mothername,
-                    //                     parent_contact: key.mothercontact,
-                    //                     parent_relation: 'mother',
-                    //                     parent_address: key.curaddress + ' ' + key.permcity + ' ' + key.permstate + ' ' + key.permpincode,
-                    //                     occupation: key.motheroccupation
-                    //                 },
-                    //                 parent_gaurdian = {
-                    //                     parent_name: key.gaurdianname,
-                    //                     parent_contact: key.gaurdiancontact,
-                    //                     parent_relation: key.gaurdianrelation,
-                    //                     parent_address: key.gaurdianaddress,
-                    //                     occupation: key.gaurdianoccupation
-                    //                 }
+                            var item = {
+                                student_id: class_id + '-STD-' + recent_id,
+                                school_id: school_id,
+                                class_id: class_id,
+                                section_id: section_id,
+                                surname: key.surname,
+                                first_name: key.firstname,
+                                last_name: key.lastname,
+                                gender: key.gender,
+                                dob: key.dob,
+                                aadhar_no: key.aadharno,
+                                phone: key.phone,
+                                email: key.email,
+                                category: key.category,
+                                admission_date: key.admissiondate,
+                                admission_no: key.admissionno,
+                                roll_no: key.rollno,
+                                academic_year: key.academicyear,
+                                bus_route_id: key.busrouteid,
+                                status: status,
+                                current_address: {
+                                    cur_address: key.curaddress,
+                                    cur_city: key.curcity,
+                                    cur_state: key.curstate,
+                                    cur_pincode: key.curpincode,
+                                    cur_long: key.curlong,
+                                    cur_lat: key.curlat
+                                },
+                                permanent_address: {
+                                    perm_address: key.permaddress,
+                                    perm_city: key.permcity,
+                                    perm_state: key.permstate,
+                                    perm_pincode: key.permpincode,
+                                    perm_long: key.permlong,
+                                    perm_lat: key.permlat
+                                },
+                                parents: [
+                                    parent_father = {
+                                        parent_name: key.fathername,
+                                        parent_contact: key.fathercontact,
+                                        parent_relation: 'father',
+                                        parent_address: key.curaddress + ' ' + key.permcity + ' ' + key.permstate + ' ' + key.permpincode,
+                                        occupation: key.fatheroccupation
+                                    },
+                                    parent_mother = {
+                                        parent_name: key.mothername,
+                                        parent_contact: key.mothercontact,
+                                        parent_relation: 'mother',
+                                        parent_address: key.curaddress + ' ' + key.permcity + ' ' + key.permstate + ' ' + key.permpincode,
+                                        occupation: key.motheroccupation
+                                    },
+                                    parent_gaurdian = {
+                                        parent_name: key.gaurdianname,
+                                        parent_contact: key.gaurdiancontact,
+                                        parent_relation: key.gaurdianrelation,
+                                        parent_address: key.gaurdianaddress,
+                                        occupation: key.gaurdianoccupation
+                                    }
 
-                    //             ]
+                                ]
 
-                    //         };
-                    //         // itemArray.item = item;
-                    //         // itemArray.itemId = recent_id;
-                    //         // item_arrays.push(itemArray);
-                    //         itemArray.push(item);
-
-
-                    //     });
-                    // } else {
-                    //     res.end('false');
-                    // }
-                    // if (existedAids != null) {
-                    //     itemArray.forEach(function (x) {
-                    //         if (existedAids.indexOf(x.admission_no) > -1) {
-                    //             itemArray.remove(x);
-                    //         }
+                            };
+                            // itemArray.item = item;
+                            // itemArray.itemId = recent_id;
+                            // item_arrays.push(itemArray);
+                            itemArray.push(item);
 
 
-                    //     });
-                    // }
+                        });
+                    } else {
+                        res.end('false');
+                    }
+                    if (existedAids != null) {
+                        itemArray.forEach(function (x) {
+                            if (existedAids.indexOf(x.admission_no) > -1) {
+                                itemArray.remove(x);
+                            }
 
-                    // mongo.connect(url, function (err, db) {
-                    //     var collection = db.collection('students');
-                    //     collection.insertMany(itemArray, function (err, result) {
-                    //         if (err) {
-                    //             if (err.code == 11000) {
-                    //                 res.end('false');
-                    //             }
-                    //             res.end('false');
-                    //         }
-                    //         console.log('file submitted');
 
-                    //     });
+                        });
+                    }
 
-                    // });
+                    mongo.connect(url, function (err, db) {
+                        var collection = db.collection('students');
+                        collection.insertMany(itemArray, function (err, result) {
+                            if (err) {
+                                if (err.code == 11000) {
+                                    res.end('false');
+                                }
+                                res.end('false');
+                            }
+                            console.log('file submitted');
+
+                        });
+
+                    });
 
 
                 });

@@ -23,18 +23,17 @@ router.use(function(req, res, next) {
 
 // Add Schools
 
-router.route('/assignment/:section_id/:lesson_id')
+router.route('/assignment/:section_id/:lession_id')
     .post(function(req, res, next) {
         var status = 1;
         var section_id = req.params.section_id;
-        var lesson_id = req.params.lesson_id;
+        var lession_id = req.params.lession_id;
         // var chapter_name = req.params.chapter_name;
         books = [];
         var item = {
             assignment_id: 'getauto',
             section_id: section_id,
-            lesson_id: lesson_id,
-            chapter_name: req.body.chapter_name,
+            lession_id: lession_id,            
             assignment_title: req.body.assignment_title,
             subject_name: req.body.subject_name,
             due_date: req.body.due_date,
@@ -80,9 +79,26 @@ router.route('/assignment/:section_id/:lesson_id')
 
     .get(function(req, res, next) {
         var resultArray = [];
+        var lession_id = req.params.lession_id;
         mongo.connect(url, function(err, db) {
             assert.equal(null, err);
-            var cursor = db.collection('assignments').find();
+            //var cursor = db.collection('assignments').find();
+            var cursor = db.collection('assignments').aggregate([
+                {
+                    $match: {
+                        'lession_id': lession_id
+                    }
+                },
+                {
+                    "$lookup": {
+                        "from": "coursework",
+                        "localField": "lession_id",
+                        "foreignField": "lession_id",
+                        "as": "chapter_doc"
+                    }
+                }
+            ])
+
             cursor.forEach(function(doc, err) {
                 assert.equal(null, err);
                 resultArray.push(doc);
@@ -94,6 +110,31 @@ router.route('/assignment/:section_id/:lesson_id')
             });
         });
     });
+
+
+// Modified
+// Get Assignments Details By AssignmentId
+
+router.route('/assignment_details/:assignment_id')
+.get(function (req, res, next) {
+    var assignment_id = req.params.assignment_id;
+    var status = 1;
+    var resultArray = [];
+    mongo.connect(url, function (err, db) {
+        assert.equal(null, err);
+        var cursor = db.collection('assignments').find({ assignment_id });
+        cursor.forEach(function (doc, err) {
+            assert.equal(null, err);
+            resultArray.push(doc);
+        }, function () {
+            db.close();
+            res.send({
+                assignment: resultArray
+            });
+        });
+    });
+});
+
 
 router.route('/assignment_edit/:assignment_id/:name/:value')
     .post(function(req, res, next) {
@@ -178,10 +219,10 @@ var upload = multer({ //multer settings
     }
 }).single('file');
 
-router.route('/bulk_upload_assignments/:section_id/:lesson_id')
+router.route('/bulk_upload_assignments/:section_id/:lession_id')
     .post(function(req, res, next) {
         var section_id = req.params.section_id;
-        var lesson_id = req.params.lesson_id;
+        var lession_id = req.params.lession_id;
         var status = 1;
         var exceltojson;
         upload(req, res, function(err) {
@@ -223,7 +264,7 @@ router.route('/bulk_upload_assignments/:section_id/:lesson_id')
                             var item = {
                                 assignment_id: 'getauto',
                                 section_id: section_id,
-                                lesson_id: lesson_id,
+                                lession_id: lession_id,
                                 chapter_name: key.chaptername,
                                 assignment_title: key.assignmenttitle,
                                 subject_name: key.subjectname,

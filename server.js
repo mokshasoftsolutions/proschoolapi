@@ -14,7 +14,7 @@ var subjects = require("./api_components/subject.js");
 var course_works = require("./api_components/course_work.js");
 var attendance = require("./api_components/attendance.js");
 var Emp_attendance = require("./api_components/Emp_attendance.js");
-var Employee_attendance_chart = require("./api_components/Employee_attendance_chart.js");
+ var Employee_attendance_chart = require("./api_components/Employee_attendance_chart.js");
 var employee = require("./api_components/employee.js");
 var staff_user = require("./api_components/staff_user.js");
 var teachers = require("./api_components/teacher.js");
@@ -97,6 +97,7 @@ app.get('/secure', requireAuth, function (req, res) {
 app.post('/signin', requireSignin, Authentication.signin);
 
 app.post('/signup', Authentication.signup);
+app.post('/checkemail', Authentication.checkEmail);
 
 router.route('/em')
     .get(function(req, res, next) {

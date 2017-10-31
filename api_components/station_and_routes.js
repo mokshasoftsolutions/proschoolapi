@@ -29,8 +29,8 @@ router.route('/station_to_bus_route/:route_id/:station_id')
             bus_route_id: 'getauto',
             route_id: route_id,
             station_id: station_id,
-			pickup_time: req.body.pickup_time,
-			dropping_time: req.body.dropping_time,
+						pickup_time: req.body.pickup_time,
+						dropping_time: req.body.dropping_time,
             status: status,
         }
         mongo.connect(url, function(err, db) {
@@ -88,5 +88,64 @@ router.route('/station_to_bus_route/:route_id/:station_id')
 
 
 
+// router.route('/addingparent/:schoolid')
+//     .post(function(req, res, next) {
+//         var status = 1;
+//         var parent_name = "test";
+//         var schoolid = req.params.schoolid;
+       
+//         var item = {
+//             parent_id: 'getauto',
+//             parent_name: parent_name,
+//             status: status,
+//         }
+//         mongo.connect(url, function(err, db) {
+//             autoIncrement.getNextSequence(db, 'parents', function(err, autoIndex) {
+//                 var collection = db.collection('parents');
+//                 collection.ensureIndex({
+//                     "parent_id": 1,
+//                 }, {
+//                     unique: true
+//                 }, function(err, result) {
+                   
+//                         collection.insertOne(item, function(err, result) {
+//                             if (err) {
+//                                 if (err.code == 11000) {
+//                                     res.end('false');
+//                                 }
+//                                 res.end('false');
+//                             }
+//                             collection.update({
+//                                 _id: item._id
+//                             }, {
+//                                 $set: {
+//                                     parent_id:  schoolid+'-PARENT-'+autoIndex
+//                                 }
+//                             }, function(err, result) {
+//                                 db.close();
+//                                 res.end('true');
+//                             });
+//                         });
+                    
+//                 });
+//             });
+//         });
+//     })
 
+//     .get(function(req, res, next) {
+//         var resultArray = [];
+//         mongo.connect(url, function(err, db) {
+//             assert.equal(null, err);
+//             var cursor = db.collection('parents').find();
+//             cursor.forEach(function(doc, err) {
+//                 assert.equal(null, err);
+//                 resultArray.push(doc);
+//             }, function() {
+//                 db.close();
+//                 res.send({
+//                     parents: resultArray
+//                 });
+//             });
+//         });
+//     });
 module.exports = router;

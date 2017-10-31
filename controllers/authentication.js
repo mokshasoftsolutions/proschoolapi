@@ -27,20 +27,22 @@ exports.signin = function (req, res, next) {
 	// we just need to give them a token
  
 	if (req.user.role == 'parent') {
-		 
-		if (req.user.users.length > 0) {
+	  mongo.connect(url, function (err, db) {
+		   var collection = db.collection('parents').findOne({"parent_id":  req.user.uniqueId},function(error,resultsData){
+         if(resultsData){
+			 if (resultsData.students.length > 0) {
 	  
 			var resultArray = [];
 			var count = 0;
-			mongo.connect(url, function (err, db) {
-				forEach(req.user.users, function (key, value) {
-					var cursor = db.collection('students').findOne({"_id": new ObjectID(key.student_id)
+			 
+				forEach(resultsData.students, function (key, value) {
+					var cursor = db.collection('students').findOne({"student_id": key.student_id 
 					},function (err, results) {
 						if(results){
 							resultArray.push(results);
 						}
                          count++;
-					  	if (count == req.user.users.length) {
+					  	if (count == resultsData.students.length) {
 							db.close();
 							res.send({
 								token: tokenForUser(req.user),
@@ -56,8 +58,7 @@ exports.signin = function (req, res, next) {
 
 				})
 
-			});
-
+ 
 		} else {
 			res.send({
 				token: tokenForUser(req.user),
@@ -65,11 +66,25 @@ exports.signin = function (req, res, next) {
 				uniqueId: req.user.uniqueId,
 				school_id: req.user.school_id,
 				_id : req.user._id,
-				users: req.user.users
+				users: resultsData.students
 			});
 
 		}
 
+		 }else{
+			 res.send({
+				token: tokenForUser(req.user),
+				role: req.user.role,
+				uniqueId: req.user.uniqueId,
+				school_id: req.user.school_id,
+				_id : req.user._id,
+				users: []
+			});
+
+		 }
+		
+			});
+  		});
 
 	} else {
 		res.send({
@@ -135,6 +150,34 @@ exports.signup = function (req, res, next) {
 				token: tokenForUser(user)
 			});
 		});
+	});
+
+}
+
+exports.checkEmail = function (req, res, next) {
+	const email = req.body.email;
+ 
+	// See if a user with the given email exists
+	User.findOne({
+		email: email
+	}, function (err, existingUser) {
+		if (err) {
+			return next(err);
+		}
+
+		// If a user with email does exist, return an error
+		if (existingUser) {
+			 
+			return res.status(200).send({
+				error: 'false'
+			});
+		}else{
+           return res.status(200).send({
+				error: 'true'
+			});
+		}
+
+		 
 	});
 
 }

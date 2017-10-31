@@ -42,6 +42,63 @@ router.route('/employee_attendancebydate/:select_date/:school_id')
             });
         });
     });
+
+    
+router.route('/employee_attendance_by_date/:select_date/:school_id')
+.get(function(req, res, next) {
+    var select_date = new Date(req.params.select_date);
+    var school_id = req.params.school_id;
+    var endDate = new Date(select_date);
+    endDate.setDate(endDate.getDate() + 1)
+
+    var resultArray = [];
+    mongo.connect(url, function(err, db) {
+        assert.equal(null, err);
+        var cursor = db.collection('employee_attendance').aggregate([
+            {
+                $match: {                       
+                    'date': {
+                        $gte:  new Date(select_date.toISOString()),
+                        $lt: new Date(endDate.toISOString())
+                    },
+                    'school_id' : school_id
+                }
+            },
+            {
+                "$lookup": {
+                    "from": "employee",
+                    "localField": "employee_id",
+                    "foreignField": "employee_id",
+                    "as": "employee_doc"
+                }
+            },
+            {
+                "$unwind": "$employee_doc"
+            },            
+            {
+                "$project": {
+                    "_id": "$_id",
+                    "employee_id": "$employee_id",
+                    "first_name": "$employee_doc.first_name",
+                    "last_name": "$employee_doc.last_name",
+                    "status": "$status",
+                    "gender": "$employee_doc.gender",
+                    "employee_type": "$employee_doc.job_category",
+                  
+                }
+            }
+        ])
+        cursor.forEach(function(doc, err) {
+            assert.equal(null, err);
+            resultArray.push(doc);
+        }, function() {
+            db.close();
+            res.send({
+                donutchart: resultArray
+            });
+        });
+    });
+});
  
 
 

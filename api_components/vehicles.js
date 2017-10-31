@@ -88,9 +88,9 @@ router.route('/vehicles/:school_id')
         });
     });
 
-router.route('/vehicle/:vehicle_id')
+router.route('/vehicle_details/:vehicle_id')
     .get(function (req, res, next) {
-        var _id = new ObjectID(req.params.vehicle_id);
+        var vehicle_id = req.params.vehicle_id;
         var resultArray = [];
 
         mongo.connect(url, function (err, db) {
@@ -315,10 +315,3 @@ module.exports = router;
 
 
 
-
-
-// collection = db.collection('entries');
-//    for (i = 0; i < entries.length; i++) {
-//        collection.insert(entries[i].entry);
-//    }
-//    db.close();

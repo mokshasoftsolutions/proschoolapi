@@ -38,7 +38,7 @@ router.route('/noticeboard/:school_id')
         mongo.connect(url, function(err, db) {
             autoIncrement.getNextSequence(db,'noticeboard', function(err, autoIndex) {
                 var collection = db.collection('noticeboard');
-                collection.ensureIndex({
+                collection.createIndex({
                     "messages_id": 1,
                 }, {
                     unique: true
@@ -89,49 +89,25 @@ router.route('/noticeboard/:school_id')
     });
 
 
-router.route('/noticeboard_details/:messages_id')
-     .get(function(req, res, next) {
-        var messages_id= req.params.messages_id;
-        var status = 1;
-        var resultArray = [];
-          mongo.connect(url, function(err, db) {
+router.route('/delete_notice_board/:messages_id')
+.delete(function (req, res, next) {
+    var myquery = { messages_id: req.params.messages_id };
+
+    mongo.connect(url, function (err, db) {
+        db.collection('noticeboard').deleteOne(myquery, function (err, result) {
             assert.equal(null, err);
-            var cursor = db.collection('noticeboard').find({messages_id});
-            cursor.forEach(function(doc, err) {
-                assert.equal(null, err);
-                resultArray.push(doc);
-            }, function() {
-                db.close();
-                res.send({
-                    noticeboard: resultArray
-                });
-            });
+            if (err) {
+                res.send('false');
+            }
+            db.close();
+            res.send('true');
         });
-    }); 
-
-
- // Modified 
- // delete NoticeBoard
-
-   router.route('/delete_notice_board/:messages_id')
-        .delete(function(req, res, next){
-          var myquery = {messages_id:req.params.messages_id};
-         
-          mongo.connect(url, function(err, db){
-                db.collection('noticeboard').deleteOne(myquery,function(err, result){
-                  assert.equal(null, err);
-                  if(err){
-                     res.send('false'); 
-                  }
-                   db.close();
-                   res.send('true');
-                });
-          });
-        });
-
+    });
+});
 
   
         
 
 
 module.exports = router;
+

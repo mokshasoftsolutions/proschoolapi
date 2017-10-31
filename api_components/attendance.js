@@ -28,9 +28,9 @@ router.route('/attendance/:student_id')
         var month = d.getMonth() + 1;
         var day = d.getDate()
         var year = d.getFullYear()
-        var select_date  =  new Date(year, d.getMonth(), day, 05, 30, 0, 0);
+        var select_date = new Date(year, d.getMonth(), day, 05, 30, 0, 0);
         var endDate = new Date(select_date);
-            endDate.setDate(endDate.getDate()+ 1)
+        endDate.setDate(endDate.getDate() + 1)
         var time = d.getHours();
         if (time >= 13) {
             var session = 'afternoon';
@@ -53,46 +53,46 @@ router.route('/attendance/:student_id')
         mongo.connect(url, function (err, db) {
             autoIncrement.getNextSequence(db, 'attendance', function (err, autoIndex) {
                 var collection = db.collection('attendance');
-                var data = collection.find({ 
-                    date:{$gte: new Date(select_date.toISOString()), $lt:new Date(endDate.toISOString())},
+                var data = collection.find({
+                    date: { $gte: new Date(select_date.toISOString()), $lt: new Date(endDate.toISOString()) },
                     student_id: item.student_id
                 }).count(function (e, triggerCount) {
-                   
+
                     if (triggerCount > 0) {
                         res.end('false');
                     } else {
                         collection.ensureIndex({
                             "attendance_id": 1,
                         }, {
-                            unique: true
-                        }, function (err, result) {
-                            if (item.class_id == null || item.section_id == null || item.date == null || item.session == null || item.status == null) {
-                                res.end('null');
-                            } else {
-                                collection.insertOne(item, function (err, result) {
-                                    if (err) {
-                                        if (err.code == 11000) {
-                                            console.log(err);
+                                unique: true
+                            }, function (err, result) {
+                                if (item.class_id == null || item.section_id == null || item.date == null || item.session == null || item.status == null) {
+                                    res.end('null');
+                                } else {
+                                    collection.insertOne(item, function (err, result) {
+                                        if (err) {
+                                            if (err.code == 11000) {
+                                                console.log(err);
+                                                res.end('false');
+                                            }
                                             res.end('false');
                                         }
-                                        res.end('false');
-                                    }
-                                    collection.update({
-                                        _id: item._id
-                                    }, {
-                                        $set: {
-                                            attendance_id: student_id + '-ATT-' + autoIndex
-                                        }
-                                    }, function (err, result) {
-                                        db.close();
-                                        res.send({
-                                            attendance_id: student_id + '-ATT-' + autoIndex
-                                        });
-                                        // res.end();
+                                        collection.update({
+                                            _id: item._id
+                                        }, {
+                                                $set: {
+                                                    attendance_id: student_id + '-ATT-' + autoIndex
+                                                }
+                                            }, function (err, result) {
+                                                db.close();
+                                                res.send({
+                                                    attendance_id: student_id + '-ATT-' + autoIndex
+                                                });
+                                                // res.end();
+                                            });
                                     });
-                                });
-                            }
-                        });
+                                }
+                            });
 
                     }
                 })
@@ -134,9 +134,9 @@ router.route('/attendancebulk/:class_id/:section_id/:school_id')
         var month = d.getMonth() + 1;
         var day = d.getDate()
         var year = d.getFullYear()
-        var select_date  =  new Date(year, d.getMonth(), day, 05, 30, 0, 0);
+        var select_date = new Date(year, d.getMonth(), day, 05, 30, 0, 0);
         var endDate = new Date(select_date);
-            endDate.setDate(endDate.getDate()+ 1)
+        endDate.setDate(endDate.getDate() + 1)
         var time = d.getHours();
         // if(!req.body.students){
         //     res.end('null');
@@ -173,10 +173,10 @@ router.route('/attendancebulk/:class_id/:section_id/:school_id')
                             //  console.log(new Date(select_date.toISOString()));
                             //  console.log(new Date(endDate.toISOString()))
                             var data = db.collection('attendance').find({
-                                 date:{$gte: new Date(select_date.toISOString()), $lt:new Date(endDate.toISOString())},
+                                date: { $gte: new Date(select_date.toISOString()), $lt: new Date(endDate.toISOString()) },
                                 student_id: item.student_id
                             }).count(function (e, triggerCount) {
-                              
+
                                 if (triggerCount > 0) {
                                     count++;
                                     if (count == req.body.students.length) {
@@ -188,32 +188,32 @@ router.route('/attendancebulk/:class_id/:section_id/:school_id')
                                     collection.ensureIndex({
                                         "attendance_id": 1,
                                     }, {
-                                        unique: true
-                                    }, function (err, result) {
-                                        if (item.class_id == null || item.section_id == null || item.date == null || item.session == null || item.status == null) {
-                                            res.end('null');
-                                        } else {
-                                            item.attendance_id = key.student_id + '-ATT-' + autoIndex;
-                                            collection.insertOne(item, function (err, result) {
-                                                if (err) {
-                                                    console.log(err);
-                                                    if (err.code == 11000) {
+                                            unique: true
+                                        }, function (err, result) {
+                                            if (item.class_id == null || item.section_id == null || item.date == null || item.session == null || item.status == null) {
+                                                res.end('null');
+                                            } else {
+                                                item.attendance_id = key.student_id + '-ATT-' + autoIndex;
+                                                collection.insertOne(item, function (err, result) {
+                                                    if (err) {
+                                                        console.log(err);
+                                                        if (err.code == 11000) {
 
+                                                            res.end('false');
+                                                        }
                                                         res.end('false');
                                                     }
-                                                    res.end('false');
-                                                }
-                                                count++;
-                                                db.close();
+                                                    count++;
+                                                    db.close();
 
-                                                if (count == req.body.students.length) {
-                                                    res.end('true');
-                                                }
+                                                    if (count == req.body.students.length) {
+                                                        res.end('true');
+                                                    }
 
 
-                                            });
-                                        }
-                                    });
+                                                });
+                                            }
+                                        });
 
                                 }
                             });
@@ -259,6 +259,68 @@ router.route('/attendancebulk/:class_id/:section_id/:school_id')
             });
         });
     });
+
+router.route('/section_Attendence_by_date/:section_id/:select_date')
+    .get(function (req, res, next) {
+        var resultArray = [];
+        var section_id = req.params.section_id;
+        var select_date = new Date(req.params.select_date);
+        var endDate = new Date(select_date);
+        endDate.setDate(endDate.getDate() + 1)
+        mongo.connect(url, function (err, db) {
+            assert.equal(null, err);
+            var data = db.collection('attendance').find({
+                date: { $gte: new Date(select_date.toISOString()), $lt: new Date(endDate.toISOString()) },
+                section_id: section_id
+            }).count(function (e, triggerCount) {
+
+                if (triggerCount > 0) {
+                    res.send("submitted");
+                    db.close();
+                }
+                else {
+                    res.send("not submitted");
+                    db.close();
+                }
+            });
+        });
+    });
+
+
+    router.route('/allClasses_Attendence_by_date:select_date')
+    .get(function (req, res, next) {
+        var resultArray = [];
+        
+        var select_date = new Date(req.params.select_date);
+        var endDate = new Date(select_date);
+        endDate.setDate(endDate.getDate() + 1)
+        mongo.connect(url, function (err, db) {
+            assert.equal(null, err);
+            var cursor = db.collection('attendance').aggregate([
+                {
+                    $match: {
+                        'date': {
+                            $gte: new Date(select_date.toISOString()),
+                            $lt: new Date(endDate.toISOString())
+                        }
+                        
+                    }
+                }
+            ])
+
+            cursor.forEach(function (doc, err) {
+                assert.equal(null, err);
+                resultArray.push(doc);
+            }, function () {
+                db.close();
+                res.send({
+                    clasaAttendence: resultArray
+                });
+            });
+        });
+    });
+ 
+
 
 
 router.route('/AttendenceDayWise')
@@ -306,14 +368,14 @@ router.route('/edit_attendance/:attendance_id/:name/:value')
             db.collection('attendance').update({
                 attendance_id
             }, {
-                $set: {
-                    [name]: value
-                }
-            }, function (err, result) {
-                assert.equal(null, err);
-                db.close();
-                res.send('true');
-            });
+                    $set: {
+                        [name]: value
+                    }
+                }, function (err, result) {
+                    assert.equal(null, err);
+                    db.close();
+                    res.send('true');
+                });
         });
     });
 
@@ -327,11 +389,11 @@ router.route('/get_attendance/:student_id/')
             var cursor = db.collection('attendance').find({
                 student_id
             }, {
-                'status': 1,
-                'session': 1,
-                'date': 1,
-                '_id': 0
-            });
+                    'status': 1,
+                    'session': 1,
+                    'date': 1,
+                    '_id': 0
+                });
             cursor.forEach(function (doc, err) {
                 resultArray.push(doc);
             }, function () {
@@ -352,11 +414,11 @@ router.route('/get_attendance_by_date/:student_id/:date')
                 student_id,
                 date
             }, {
-                'status': 1,
-                'session': 1,
-                'date': 1,
-                '_id': 0
-            });
+                    'status': 1,
+                    'session': 1,
+                    'date': 1,
+                    '_id': 0
+                });
             cursor.forEach(function (doc, err) {
                 resultArray.push(doc);
             }, function () {
@@ -379,9 +441,9 @@ router.route('/get_attendance_id_by_date_session/:student_id/:date/:session')
                 date,
                 session
             }, {
-                'attendance_id': 1,
-                '_id': 0
-            });
+                    'attendance_id': 1,
+                    '_id': 0
+                });
             cursor.forEach(function (doc, err) {
                 resultArray.push(doc);
             }, function () {

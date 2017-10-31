@@ -23,19 +23,19 @@ router.route('/schoolevents/:school_id')
     .post(function(req, res, next) {
         var status = 1;
         var school_id = req.params.school_id;
-
+        
         var item = {
             school_event_id: 'getauto',
             school_id: school_id,
             event_title: req.body.event_title,
-            date: req.body.date,
-            time: req.body.time,
-            description: req.body.description,
+            date:req.body.date,
+            time:req.body.time,
+            description:req.body.description,
             status: status
 
         };
         mongo.connect(url, function(err, db) {
-            autoIncrement.getNextSequence(db, 'schoolevents', function(err, autoIndex) {
+            autoIncrement.getNextSequence(db,'schoolevents', function(err, autoIndex) {
                 var collection = db.collection('schoolevents');
                 collection.ensureIndex({
                     "school_event_id": 1,
@@ -54,10 +54,10 @@ router.route('/schoolevents/:school_id')
                                 res.end('false');
                             }
                             collection.update({
-                                _id: item._id
+                                 _id: item._id
                             }, {
                                 $set: {
-                                    school_event_id: 'SCHOOL_EVENT-' + autoIndex
+                                    school_event_id: 'SCHOOL_EVENT-'+autoIndex
                                 }
                             }, function(err, result) {
                                 db.close();
@@ -71,12 +71,12 @@ router.route('/schoolevents/:school_id')
     })
     .get(function(req, res, next) {
         var resultArray = [];
-        var school_id = req.params.school_id;
-
+         var school_id = req.params.school_id;
+         
 
         mongo.connect(url, function(err, db) {
             assert.equal(null, err);
-            var cursor = db.collection('schoolevents').find({ school_id });
+            var cursor = db.collection('schoolevents').find({school_id});
             cursor.forEach(function(doc, err) {
                 assert.equal(null, err);
                 resultArray.push(doc);
@@ -89,8 +89,7 @@ router.route('/schoolevents/:school_id')
         });
     });
 
-
-
+  
     // Modified
     // Get SchoolEvents Details By school_event_Id
 
@@ -133,7 +132,7 @@ router.route('/school_events_details/:school_event_id')
           });
         });
 
-
+        
 
 
 module.exports = router;

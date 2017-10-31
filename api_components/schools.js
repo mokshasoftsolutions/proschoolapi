@@ -9,7 +9,7 @@ var assert = require('assert');
 var port = process.env.PORT || 4005;
 var router = express.Router();
 var url = 'mongodb://' + config.dbhost + ':27017/s_erp_data';
-
+var schoolUserModule = require('../api_components/school_registration_user');
 var cookieParser = require('cookie-parser');
 router.use(function(req, res, next) {
     // do logging
@@ -27,7 +27,7 @@ router.route('/schools/')
         var item = {
             school_id: 'getauto',
             name: req.body.name,
-            branch_type: req.body.branch_type,
+            // branch_type: req.body.branch_type,
             est_on: req.body.est_on,
             address: req.body.address,
             phone: req.body.phone,
@@ -43,7 +43,7 @@ router.route('/schools/')
                 }, {
                     unique: true
                 }, function(err, result) {
-                    if (item.name == null || item.branch_type == null) {
+                    if (item.name == null  ) {
                         res.end('null');
                     } else {
                         collection.insertOne(item, function(err, result) {
@@ -62,6 +62,13 @@ router.route('/schools/')
                             }, function(err, result) {
                                 db.close();
                                 res.end('true');
+                                var userData = {};
+                                     userData.email = item.email;
+                                     userData.password = item.email;
+                                     userData.uniqueId = 'SCH-927'+autoIndex;
+                                     userData.role = "admin";
+                                     userData.school_id = 'SCH-927'+autoIndex;
+                                schoolUserModule.addAdminToSchool(userData);
                             });
                         });
                     }
@@ -85,6 +92,8 @@ router.route('/schools/')
             });
         });
     });
+
+
 
     router.route('/school/:school_id')
         .post(function(req, res, next){
