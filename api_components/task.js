@@ -1,4 +1,4 @@
-var db=require('./dbconnection');
+var db = require('./dbconnection');
 
 
 var Task = {
@@ -9,12 +9,18 @@ var Task = {
 
     },
 
-    
-    getSingleDevice: function (devicecode,callback) {
-        
-                return db.query("select positions.* from positions,devicecodes where devicecodes.devicecode=? and devicecodes.deviceid=positions.deviceid ORDER BY positions.id DESC limit 1",[devicecode], callback);
-        
-            }
+
+    getSingleDevice: function (devicecode, callback) {
+
+        return db.query("select positions.* from positions,devicecodes where devicecodes.devicecode=? and devicecodes.deviceid=positions.deviceid ORDER BY positions.id DESC limit 1", [devicecode], callback);
+
+    }
+    // postSingleDevice: function (devicecode, callback) {
+
+    //     return db.query("insert into devicecodes(device_code,) values()", [devicecode], callback);
+
+    // }
+
     // getTaskById: function (id, callback) {
 
     //     return db.query("select * from task where Id=?", [id], callback);

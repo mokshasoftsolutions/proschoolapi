@@ -134,7 +134,8 @@ router.route('/addorupdatesubjectstoteacher/:school_id/:section_id')
         var subjects = {
             // subject_id: req.body.subject_id,
             section_id: section_id,
-            subject_id: req.body.subject_id
+            subject_id: req.body.subject_id,
+            teacher_id : teacher_id,
         };
 
         mongo.connect(url, function (err, db) {
@@ -199,7 +200,8 @@ router.route('/addorupdatesubjectstoteacher/:school_id/:section_id')
                                     "$addToSet": {
                                         "subjects": {
                                             subject_id: req.body.subject_id,
-                                            section_id: section_id
+                                            section_id: section_id,
+                                            teacher_id : teacher_id,
                                         }
                                     }
                                 },
@@ -322,7 +324,10 @@ router.route('/listsubjectstoteacher/:school_id')
                         "teacher_name": "$teacher_doc.teacher_name",
                         "school_id": "$school_id",
                         "employee_id": "$employee_id",
-                       
+                       "teacher_subject_id":"$teacher_subject_id",
+                       "teacher_id":"$teacher_id",
+                       "subject_id":"$subjects_doc.subject_id",
+                       "subject_id":"$subjects.subject_id",
                         "subjects": [{
                             "subjects": "$subjects_doc.name"
 
@@ -360,8 +365,8 @@ router.route('/addsubjectstoteacher/:section_id')
         };
 
         mongo.connect(url, function (err, db) {
-            autoIncrement.getNextSequence(db, 'teachers', function (err, autoIndex) {
-                var collection = db.collection('teachers');
+            autoIncrement.getNextSequence(db, 'teacher_subjects', function (err, autoIndex) {
+                var collection = db.collection('teacher_subjects');
                 collection.ensureIndex({
                     "teacher_id": 1,
                 }, {
@@ -399,7 +404,7 @@ router.route('/addsubjectstoteacher/:section_id')
         var resultArray = [];
         mongo.connect(url, function (err, db) {
             assert.equal(null, err);
-            var cursor = db.collection('teachers').find({ section_id });
+            var cursor = db.collection('teacher_subjects').find({ section_id });
             cursor.forEach(function (doc, err) {
                 assert.equal(null, err);
                 resultArray.push(doc);
@@ -421,7 +426,7 @@ router.route('/add_subjects_to_teacher/:teacher_id')
             subject_name: req.body.subject_name
         };
         mongo.connect(url, function (err, db) {
-            db.collection('teachers').update({ teacher_id }, { $push: { subjects } }, function (err, result) {
+            db.collection('teacher_subjects').update({ teacher_id }, { $push: { subjects } }, function (err, result) {
                 assert.equal(null, err);
                 db.close();
                 res.send('true');
@@ -567,4 +572,31 @@ router.route('/bulk_upload_teachers/:school_id')
             }
         })
     });
+
+    
+
+router.route('/delete_subject_teacher/:teacher_id/:subject_id')
+.put(function (req, res, next) {
+    var teacher_id = req.params.teacher_id;
+    var subject_id = req.params.subject_id;
+    //  var myquery = { bus_route_id: bus_route_id },{ stations: { $elemMatch: { station_name: station_name } } }
+
+    mongo.connect(url, function (err, db) {
+        //  var data = db.collection('bus_routes').find({bus_route_id});
+        db.collection('teacher_subjects').update({},
+            { $pull: { subjects: { teacher_id: teacher_id, subject_id: subject_id } } }, function (err, result) {
+
+                //   )
+                //     db.collection('bus_routes').deleteOne(myquery, function (err, result) {
+                // db.collection.deleteOne(  )
+                assert.equal(null, err);
+                if (err) {
+                    res.send('false');
+                }
+                db.close();
+                res.send('true');
+            });
+    });
+});
+
 module.exports = router;
