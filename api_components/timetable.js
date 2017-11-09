@@ -24,6 +24,9 @@ router.route('/class_timetable/:section_id/:subject_id')
     .post(function (req, res, next) {
         var status = 1;
         var section_id = req.params.section_id;
+        var splited = section_id.split("-");
+        var school_id = splited[0] + '-' + splited[1];
+        var class_id = splited[0] + '-' + splited[1] + '-' + splited[2] + '-' + splited[3];
         var subject_id = req.params.subject_id;
         var Day = ['sunday', 'monday', 'tuesday', 'wednesday', 'thrusday', 'friday', 'saturday'];
         var day = req.body.day;
@@ -51,9 +54,10 @@ router.route('/class_timetable/:section_id/:subject_id')
             day: day,
             start_time: req.body.start_time,
             end_time: req.body.end_time,
+            class_id: class_id,
             room_no: req.body.room_no,
             subject_id: subject_id,
-            date : date,
+            date: date,
             status: status,
         }
         mongo.connect(url, function (err, db) {
@@ -82,7 +86,7 @@ router.route('/class_timetable/:section_id/:subject_id')
                                         }
                                     }, function (err, result) {
                                         db.close();
-                                        res.end('true'); 
+                                        res.end('true');
                                     });
                             });
                         }
@@ -219,16 +223,99 @@ router.route('/class_timetables/:section_id')
 router.route('/classes_timetable_by_day/:select_day')
     .get(function (req, res, next) {
         var resultArray = [];
-       
+
         var Day = ['sunday', 'monday', 'tuesday', 'wednesday', 'thrusday', 'friday', 'saturday'];
-        var day = req.body.select_day;    
+        var day = req.params.select_day;
         day = Day[day - 1];
 
         mongo.connect(url, function (err, db) {
             assert.equal(null, err);
-           // var cursor = db.collection('timetable').find({date:select_date});
-            var cursor = db.collection('timetable').find({day:day});
-              
+            // var cursor = db.collection('timetable').find({date:select_date});
+            // var cursor = db.collection('timetable').find({day:day});
+            var cursor = db.collection('timetable').aggregate([
+                {
+                    $match: {
+                        day: day
+                    }
+                },
+                {
+                    $lookup: {
+                        from: "class_sections",
+                        localField: "section_id",
+                        foreignField: "section_id",
+                        as: "section_doc"
+                    }
+                },
+                {
+                    $unwind: "$section_doc"
+                },
+                {
+                    $lookup: {
+                        from: "school_classes",
+                        localField: "class_id",
+                        foreignField: "class_id",
+                        as: "class_doc"
+                    }
+                },
+                {
+                    $unwind: "$class_doc"
+                },
+                {
+                    $lookup: {
+                        from: "subjects",
+                        localField: "subject_id",
+                        foreignField: "subject_id",
+                        as: "subject_doc"
+                    }
+                },
+                {
+                    $unwind: "$subject_doc"
+                },
+
+                {
+                    $group: {
+                        _id: '$_id',
+                        class_name: {
+                            "$first": "$class_doc.name"
+                        },
+                        section_name: {
+                            "$first": "$section_doc.name"
+                        },
+                        day: {
+                            "$first": "$day"
+                        },
+                        subject_name: {
+                            "$first": "$subject_doc.name"
+                        },
+                        start_time: {
+                            "$first": "$start_time"
+                        }
+                        // paper_name: {
+                        //     "$first": "$exampaper_doc.exam_paper_title"
+                        // },
+                        // exam_sch_id: {
+                        //     "$first": "$exam_sch_id"
+                        // },
+                        // examschedule_name: {
+                        //     "$first": "$schedule_doc.exam_title"
+                        // },
+                        // marks: {
+                        //     "$first": "$marks"
+                        // },
+                        // percentage: {
+                        //     "$first": "$percentage"
+                        // },
+                        // max_marks: {
+                        //     "$first": "$exampaper_doc.max_marks"
+                        // },
+                        // conduct: {
+                        //     "$first": "$conduct"
+                        // }
+                    }
+                },
+            ])
+
+
             cursor.forEach(function (doc, err) {
                 assert.equal(null, err);
                 resultArray.push(doc);
@@ -241,4 +328,113 @@ router.route('/classes_timetable_by_day/:select_day')
         });
     });
 
+
+
+router.route('/class_timetable_by_day/:select_day/:section_id')
+    .get(function (req, res, next) {
+        var resultArray = [];
+        var section_id = req.params.section_id;
+        var Day = ['sunday', 'monday', 'tuesday', 'wednesday', 'thrusday', 'friday', 'saturday'];
+        var day = req.params.select_day;
+        day = Day[day - 1];
+
+        mongo.connect(url, function (err, db) {
+            assert.equal(null, err);
+            // var cursor = db.collection('timetable').find({date:select_date});
+            // var cursor = db.collection('timetable').find({day:day});
+            var cursor = db.collection('timetable').aggregate([
+                {
+                    $match: {
+                        day: day,
+                        section_id: section_id
+                    }
+                },
+                {
+                    $lookup: {
+                        from: "class_sections",
+                        localField: "section_id",
+                        foreignField: "section_id",
+                        as: "section_doc"
+                    }
+                },
+                {
+                    $unwind: "$section_doc"
+                },
+                {
+                    $lookup: {
+                        from: "school_classes",
+                        localField: "class_id",
+                        foreignField: "class_id",
+                        as: "class_doc"
+                    }
+                },
+                {
+                    $unwind: "$class_doc"
+                },
+                {
+                    $lookup: {
+                        from: "subjects",
+                        localField: "subject_id",
+                        foreignField: "subject_id",
+                        as: "subject_doc"
+                    }
+                },
+                {
+                    $unwind: "$subject_doc"
+                },
+                {
+                    $group: {
+                        _id: '$_id',
+                        class_name: {
+                            "$first": "$class_doc.name"
+                        },
+                        section_name: {
+                            "$first": "$section_doc.name"
+                        },
+                        day: {
+                            "$first": "$day"
+                        },
+                        subject_name: {
+                            "$first": "$subject_doc.name"
+                        },
+                        start_time: {
+                            "$first": "$start_time"
+                        }
+                        // paper_name: {
+                        //     "$first": "$exampaper_doc.exam_paper_title"
+                        // },
+                        // exam_sch_id: {
+                        //     "$first": "$exam_sch_id"
+                        // },
+                        // examschedule_name: {
+                        //     "$first": "$schedule_doc.exam_title"
+                        // },
+                        // marks: {
+                        //     "$first": "$marks"
+                        // },
+                        // percentage: {
+                        //     "$first": "$percentage"
+                        // },
+                        // max_marks: {
+                        //     "$first": "$exampaper_doc.max_marks"
+                        // },
+                        // conduct: {
+                        //     "$first": "$conduct"
+                        // }
+                    }
+                },
+            ])
+
+
+            cursor.forEach(function (doc, err) {
+                assert.equal(null, err);
+                resultArray.push(doc);
+            }, function () {
+                db.close();
+                res.send({
+                    timetable: resultArray
+                });
+            });
+        });
+    });
 module.exports = router;

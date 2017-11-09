@@ -162,7 +162,7 @@ router.route('/attendancebulk/:class_id/:section_id/:school_id')
                         student_id: key.student_id,
                         class_id: class_id,
                         section_id: section_id,
-                        scholl_id: school_id,
+                        school_id: school_id,
                         date: new Date(),
                         session: session,
                         status: key.status
@@ -180,7 +180,7 @@ router.route('/attendancebulk/:class_id/:section_id/:school_id')
                                 if (triggerCount > 0) {
                                     count++;
                                     if (count == req.body.students.length) {
-                                        res.end('true');
+                                        res.send('false');
                                     }
                                 } else {
 
@@ -260,7 +260,7 @@ router.route('/attendancebulk/:class_id/:section_id/:school_id')
         });
     });
 
-router.route('/section_Attendence_by_date/:section_id/:select_date')
+router.route('/sectionAttendenceByDate/:section_id/:select_date')
     .get(function (req, res, next) {
         var resultArray = [];
         var section_id = req.params.section_id;
@@ -287,10 +287,10 @@ router.route('/section_Attendence_by_date/:section_id/:select_date')
     });
 
 
-    router.route('/allClasses_Attendence_by_date:select_date')
+router.route('/allClasses_Attendence_by_date/:select_date/:school_id')
     .get(function (req, res, next) {
         var resultArray = [];
-        
+        var school_id = req.params.school_id;
         var select_date = new Date(req.params.select_date);
         var endDate = new Date(select_date);
         endDate.setDate(endDate.getDate() + 1)
@@ -299,11 +299,63 @@ router.route('/section_Attendence_by_date/:section_id/:select_date')
             var cursor = db.collection('attendance').aggregate([
                 {
                     $match: {
-                        'date': {
+                        date: {
                             $gte: new Date(select_date.toISOString()),
                             $lt: new Date(endDate.toISOString())
+                        },
+                        school_id: school_id
+
+                    },
+                },
+                {
+                    $lookup: {
+                        from: "class_sections",
+                        localField: "section_id",
+                        foreignField: "section_id",
+                        as: "section_doc"
+                    }
+                },
+                {
+                    $unwind: "$section_doc"
+                },
+                {
+                    $lookup: {
+                        from: "school_classes",
+                        localField: "class_id",
+                        foreignField: "class_id",
+                        as: "class_doc"
+                    }
+                },
+                {
+                    $unwind: "$class_doc"
+                },
+                {
+                    $lookup: {
+                        from: "students",
+                        localField: "student_id",
+                        foreignField: "student_id",
+                        as: "student_doc"
+                    }
+                },
+                {
+                    $unwind: "$student_doc"
+                },
+                {
+                    $group: {
+                        _id: '$_id',
+                        class_name: {
+                            "$first": "$class_doc.name"
+                        },
+                        section_name: {
+                            "$first": "$section_doc.name"
+                        },
+                        status: {
+                            "$first": "$status"
+                        },
+                        student_name: {
+                            "$first": "$student_doc.first_name"
                         }
-                        
+
                     }
                 }
             ])
@@ -314,12 +366,131 @@ router.route('/section_Attendence_by_date/:section_id/:select_date')
             }, function () {
                 db.close();
                 res.send({
-                    clasaAttendence: resultArray
+                    classAttendence: resultArray
                 });
             });
         });
     });
- 
+
+
+router.route('/section_attendence_by_Date/:select_date/:section_id')
+    .get(function (req, res, next) {
+        var resultArray = [];
+        var section_id = req.params.section_id;
+        var select_date = new Date(req.params.select_date);
+        var present = 0, absent = 0, onLeave = 0;
+        var endDate = new Date(select_date);
+        var count, dataCount;
+        endDate.setDate(endDate.getDate() + 1)
+        mongo.connect(url, function (err, db) {
+            assert.equal(null, err);
+            var data = db.collection('attendance').find({
+                date: { $gte: new Date(select_date.toISOString()), $lt: new Date(endDate.toISOString()) },
+                section_id: section_id
+            })
+            dataCount = data.count(function (e, triggerCount) {
+                if (triggerCount > 0) {
+                    count = triggerCount;
+                    // console.log(count);
+                }
+            });
+
+            data.forEach(function (doc, err) {
+                //  console.log("hema")
+                if (doc.status == "Present") {
+                    present += 1;
+                    //  console.log("babu" + present);
+                }
+                else if (doc.status == "Absent") {
+                    absent += 1;
+                    // console.log("babu1" + absent);
+                }
+                else if (doc.status == "On Leave") {
+                    onLeave += 1;
+                    // console.log("babu2" + onLeave);
+                }
+            })
+
+            var cursor = db.collection('attendance').aggregate([
+                {
+                    $match: {
+                        date: {
+                            $gte: new Date(select_date.toISOString()),
+                            $lt: new Date(endDate.toISOString())
+                        },
+                        section_id: section_id
+
+                    },
+                },
+                {
+                    $lookup: {
+                        from: "class_sections",
+                        localField: "section_id",
+                        foreignField: "section_id",
+                        as: "section_doc"
+                    }
+                },
+                {
+                    $unwind: "$section_doc"
+                },
+                {
+                    $lookup: {
+                        from: "school_classes",
+                        localField: "class_id",
+                        foreignField: "class_id",
+                        as: "class_doc"
+                    }
+                },
+                {
+                    $unwind: "$class_doc"
+                },
+                {
+                    $lookup: {
+                        from: "students",
+                        localField: "student_id",
+                        foreignField: "student_id",
+                        as: "student_doc"
+                    }
+                },
+                {
+                    $unwind: "$student_doc"
+                },
+                {
+                    $group: {
+                        _id: '$_id',
+                        class_name: {
+                            "$first": "$class_doc.name"
+                        },
+                        section_name: {
+                            "$first": "$section_doc.name"
+                        },
+                        status: {
+                            "$first": "$status"
+                        },
+                        student_name: {
+                            "$first": "$student_doc.first_name"
+                        }
+
+                    }
+                }
+            ])
+
+            cursor.forEach(function (doc, err) {
+                assert.equal(null, err);
+                resultArray.push(doc);
+            }, function () {
+                db.close();
+                res.send({
+                    sectionAttendence: resultArray,
+                    count: count,
+                    present: present,
+                    onleave: onLeave,
+                    absent: absent
+                });
+            });
+
+        });
+    });
 
 
 
@@ -455,3 +626,177 @@ router.route('/get_attendance_id_by_date_session/:student_id/:date/:session')
 
 
 module.exports = router;
+
+
+
+router.route('/sec_attendence_b/:select_date/:school_id')
+    .get(function (req, res, next) {
+        var resultArray = [];
+        var school_id = req.params.school_id;
+        var select_date = new Date(req.params.select_date);
+        var present = 0, absent = 0, onLeave = 0;
+        var endDate = new Date(select_date);
+        var count, dataCount;
+        var sectionArray = [];
+        var classArray = [];
+        var resultarray = [];
+        var attendenceSection = [];
+        var attendenceClass = [];
+        var sectionName, className;
+        endDate.setDate(endDate.getDate() + 1)
+        mongo.connect(url, function (err, db) {
+            assert.equal(null, err);
+            var classes = db.collection('school_classes').find({ school_id });
+            var sections = db.collection('class_sections').find({ school_id });
+            var data = db.collection('attendance').find({
+                date: { $gte: new Date(select_date.toISOString()), $lt: new Date(endDate.toISOString()) },
+                school_id: school_id
+            })
+            dataCount = data.count(function (e, triggerCount) {
+                if (triggerCount > 0) {
+                    count = triggerCount;
+                    console.log(count);
+                }
+            });
+
+            classes.forEach(function (cls, err) {
+                console.log("classes" + cls.class_id);
+                if (cls.school_id == school_id) {
+                    sections.forEach(function (sec, err) {
+                        console.log("sections");
+                        if (cls.class_id == sec.class_id) {
+                            console.log("classSection");
+                            present = absent = onLeave = 0;
+                            data.forEach(function (doc, err) {
+                                console.log("dta");
+                                if (sec.section_id == doc.section_id) {
+                                    if (doc.status == "Present") {
+                                        present += 1;
+                                        console.log("babu" + present);
+                                    }
+                                    else if (doc.status == "Absent") {
+                                        absent += 1;
+                                        console.log("babu1" + absent);
+                                    }
+                                    else if (doc.status == "On Leave") {
+                                        onLeave += 1;
+                                        console.log("babu2" + onLeave);
+                                    }
+
+                                }
+
+                            });
+                            sectionName = sec.name;
+                            attendenceSection.push(sectionName);
+                            attendenceSection.push(present);
+                            attendenceSection.push(absent);
+                            attendenceSection.push(onLeave);
+
+                            sectionArray.push(attendenceSection);
+                        }
+
+
+                    })
+                    className = cls.name;
+                    attendenceClass.push(className);
+                    attendenceClass.push(sectionArray);
+                }
+
+            })
+            classArray.push(attendenceClass);
+            //     console.log("hema")
+            //     if(doc.status == "Present"){
+
+            //         present += 1;
+            //         console.log("babu"+present);
+            //     }
+            //     else if(doc.status == "Absent"){
+            //         absent += 1;
+            //         console.log("babu1"+absent);
+            //     }
+            //     else if(doc.status == "On Leave"){
+            //         onLeave += 1; 
+            //         console.log("babu2"+onLeave);
+            //     // }
+            // })
+
+            var cursor = db.collection('attendance').aggregate([
+                {
+                    $match: {
+                        date: {
+                            $gte: new Date(select_date.toISOString()),
+                            $lt: new Date(endDate.toISOString())
+                        },
+                        school_id: school_id
+
+                    },
+                },
+                {
+                    $lookup: {
+                        from: "class_sections",
+                        localField: "section_id",
+                        foreignField: "section_id",
+                        as: "section_doc"
+                    }
+                },
+                {
+                    $unwind: "$section_doc"
+                },
+                {
+                    $lookup: {
+                        from: "school_classes",
+                        localField: "class_id",
+                        foreignField: "class_id",
+                        as: "class_doc"
+                    }
+                },
+                {
+                    $unwind: "$class_doc"
+                },
+                {
+                    $lookup: {
+                        from: "students",
+                        localField: "student_id",
+                        foreignField: "student_id",
+                        as: "student_doc"
+                    }
+                },
+                {
+                    $unwind: "$student_doc"
+                },
+                {
+                    $group: {
+                        _id: '$_id',
+                        class_name: {
+                            "$first": "$class_doc.name"
+                        },
+                        section_name: {
+                            "$first": "$section_doc.name"
+                        },
+                        status: {
+                            "$first": "$status"
+                        },
+                        student_name: {
+                            "$first": "$student_doc.first_name"
+                        }
+
+                    }
+                }
+            ])
+
+            cursor.forEach(function (doc, err) {
+                assert.equal(null, err);
+                resultArray.push(doc);
+            }, function () {
+                db.close();
+                res.send({
+                    sectionAttendence: resultArray,
+                    count: count,
+                    classes: classArray
+                });
+            });
+
+        });
+    });
+
+

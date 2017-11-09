@@ -13,28 +13,28 @@ var router = express.Router();
 var url = 'mongodb://' + config.dbhost + ':27017/s_erp_data';
 
 var cookieParser = require('cookie-parser');
-router.use(function(req, res, next) {
+router.use(function (req, res, next) {
     // do logging
     res.header("Access-Control-Allow-Origin", "*");
     res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
     next(); // make sure we go to the next routes and don't stop here
 });
- 
+
 router.route('/employee_attendancebydate/:select_date/:school_id')
- .get(function(req, res, next) {
-      var select_date = new Date (req.params.select_date);
-      school_id = req.params.school_id;
-      var endDate = new Date(select_date);
-      endDate.setDate(endDate.getDate()+ 1)
-      
+    .get(function (req, res, next) {
+        var select_date = new Date(req.params.select_date);
+        school_id = req.params.school_id;
+        var endDate = new Date(select_date);
+        endDate.setDate(endDate.getDate() + 1)
+
         var resultArray = [];
-        mongo.connect(url, function(err, db) {
+        mongo.connect(url, function (err, db) {
             assert.equal(null, err);
-            var cursor = db.collection('employee_attendance').find({date:new Date(select_date) ,school_id: school_id});
-            cursor.forEach(function(doc, err) {
+            var cursor = db.collection('employee_attendance').find({ date: new Date(select_date), school_id: school_id });
+            cursor.forEach(function (doc, err) {
                 assert.equal(null, err);
                 resultArray.push(doc);
-            }, function() {
+            }, function () {
                 db.close();
                 res.send({
                     donutchart: resultArray
@@ -43,86 +43,86 @@ router.route('/employee_attendancebydate/:select_date/:school_id')
         });
     });
 
-    
-router.route('/employee_attendance_by_date/:select_date/:school_id')
-.get(function(req, res, next) {
-    var select_date = new Date(req.params.select_date);
-    var school_id = req.params.school_id;
-    var endDate = new Date(select_date);
-    endDate.setDate(endDate.getDate() + 1)
 
-    var resultArray = [];
-    mongo.connect(url, function(err, db) {
-        assert.equal(null, err);
-        var cursor = db.collection('employee_attendance').aggregate([
-            {
-                $match: {                       
-                    'date': {
-                        $gte:  new Date(select_date.toISOString()),
-                        $lt: new Date(endDate.toISOString())
-                    },
-                    'school_id' : school_id
-                }
-            },
-            {
-                "$lookup": {
-                    "from": "employee",
-                    "localField": "employee_id",
-                    "foreignField": "employee_id",
-                    "as": "employee_doc"
-                }
-            },
-            {
-                "$unwind": "$employee_doc"
-            },            
-            {
-                "$project": {
-                    "_id": "$_id",
-                    "employee_id": "$employee_id",
-                    "first_name": "$employee_doc.first_name",
-                    "last_name": "$employee_doc.last_name",
-                    "status": "$status",
-                    "gender": "$employee_doc.gender",
-                    "employee_type": "$employee_doc.job_category",
-                  
-                }
-            }
-        ])
-        cursor.forEach(function(doc, err) {
+router.route('/employee_attendance_by_date/:select_date/:school_id')
+    .get(function (req, res, next) {
+        var select_date = new Date(req.params.select_date);
+        var school_id = req.params.school_id;
+        var endDate = new Date(select_date);
+        endDate.setDate(endDate.getDate() + 1)
+
+        var resultArray = [];
+        mongo.connect(url, function (err, db) {
             assert.equal(null, err);
-            resultArray.push(doc);
-        }, function() {
-            db.close();
-            res.send({
-                donutchart: resultArray
+            var cursor = db.collection('employee_attendance').aggregate([
+                {
+                    $match: {
+                        'date': {
+                            $gte: new Date(select_date.toISOString()),
+                            $lt: new Date(endDate.toISOString())
+                        },
+                        'school_id': school_id
+                    }
+                },
+                {
+                    "$lookup": {
+                        "from": "employee",
+                        "localField": "employee_id",
+                        "foreignField": "employee_id",
+                        "as": "employee_doc"
+                    }
+                },
+                {
+                    "$unwind": "$employee_doc"
+                },
+                {
+                    "$project": {
+                        "_id": "$_id",
+                        "employee_id": "$employee_id",
+                        "first_name": "$employee_doc.first_name",
+                        "last_name": "$employee_doc.last_name",
+                        "status": "$status",
+                        "gender": "$employee_doc.gender",
+                        "employee_type": "$employee_doc.job_category",
+
+                    }
+                }
+            ])
+            cursor.forEach(function (doc, err) {
+                assert.equal(null, err);
+                resultArray.push(doc);
+            }, function () {
+                db.close();
+                res.send({
+                    donutchart: resultArray
+                });
             });
         });
     });
-});
- 
+
 
 
 
 
 
 router.route('/employee_attendancebymonth/:select_month/:school_id')
- .get(function(req, res, next) {
-      var select_month = req.params.select_month;
-      var school_id = req.params.school_id;
-      var date = new Date();
-     
-        var firstDay = new Date(date.getFullYear(), select_month-1, 1);
+    .get(function (req, res, next) {
+        var select_month = req.params.select_month;
+        var school_id = req.params.school_id;
+        var date = new Date();
+
+        var firstDay = new Date(date.getFullYear(), select_month - 1, 1);
         var lastDay = new Date(date.getFullYear(), select_month, 0);
         //  console.log(firstDay);
         //  console.log(lastDay);
         var resultArray = [];
-        mongo.connect(url, function(err, db) {
+        mongo.connect(url, function (err, db) {
             assert.equal(null, err);
-            var cursor = db.collection('employee_attendance').find({date:{$gte: firstDay, $lt: lastDay}, school_id:school_id});
-            cursor.forEach(function(doc, err) {
+            var cursor = db.collection('employee_attendance').find({ date: { $gte: firstDay, $lt: lastDay }, school_id: school_id });
+            cursor.forEach(function (doc, err) {
                 assert.equal(null, err);
                 resultArray.push(doc);
-            }, function() {
+            }, function () {
                 db.close();
                 res.send({
                     donutchart: resultArray

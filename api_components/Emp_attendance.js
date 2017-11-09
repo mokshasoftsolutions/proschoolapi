@@ -130,7 +130,8 @@ router.route('/employee_attendancebulk/:school_id')
         var d = new Date();
         var month = d.getMonth() + 1;
         var day = d.getDate()
-        var year = d.getFullYear()
+        var year = d.getFullYear();
+       // var date = req.params.date;
         var select_date = new Date(year, d.getMonth(), day, 05, 30, 0, 0);
         var endDate = new Date(select_date);
         endDate.setDate(endDate.getDate() + 1)
@@ -171,7 +172,7 @@ router.route('/employee_attendancebulk/:school_id')
                                 if (triggerCount > 0) {
                                     count++;
                                     if (count == req.body.employees.length) {
-                                        res.end('true');
+                                        res.send('false');
                                     }
                                 } else {
 
@@ -189,7 +190,6 @@ router.route('/employee_attendancebulk/:school_id')
                                                     if (err) {
                                                         console.log(err);
                                                         if (err.code == 11000) {
-
                                                             res.end('false');
                                                         }
                                                         res.end('false');
@@ -297,7 +297,7 @@ router.route('/get_employee_attendance_by_date/:employee_id/:date')
     });
 
 
-router.route('/employee_Attendence_by_date/:category/:select_date')
+router.route('/employee_Attendance_by_category/:category/:select_date')
     .get(function (req, res, next) {
         var resultArray = [];
         var category = req.params.category;
@@ -306,7 +306,7 @@ router.route('/employee_Attendence_by_date/:category/:select_date')
         endDate.setDate(endDate.getDate() + 1)
         mongo.connect(url, function (err, db) {
             assert.equal(null, err);
-            var cursor = db.collection('employee_attendance').aggregate([
+            var cursor = db.collection('employee_attendance').aggregate([ 
                 {
                     $match: {
                         'date': {

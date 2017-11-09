@@ -24,11 +24,16 @@ router.route('/class_sections/:class_id')
     .post(function (req, res, next) {
         var status = 1;
         var class_id = req.params.class_id;
+        
+        var splited = class_id.split("-");
+        var school_id = splited[0] + '-' + splited[1];
+       
         school_classes = [];
         var item = {
             section_id: 'getauto',
             class_id: class_id,
             name: req.body.name,
+            school_id : school_id,
             status: status,
         };
         mongo.connect(url, function (err, db) {
