@@ -391,23 +391,18 @@ router.route('/section_attendence_by_Date/:select_date/:section_id')
             dataCount = data.count(function (e, triggerCount) {
                 if (triggerCount > 0) {
                     count = triggerCount;
-                    // console.log(count);
                 }
             });
 
             data.forEach(function (doc, err) {
-                //  console.log("hema")
                 if (doc.status == "Present") {
                     present += 1;
-                    //  console.log("babu" + present);
                 }
                 else if (doc.status == "Absent") {
                     absent += 1;
-                    // console.log("babu1" + absent);
                 }
                 else if (doc.status == "On Leave") {
                     onLeave += 1;
-                    // console.log("babu2" + onLeave);
                 }
             })
 
@@ -419,7 +414,6 @@ router.route('/section_attendence_by_Date/:select_date/:section_id')
                             $lt: new Date(endDate.toISOString())
                         },
                         section_id: section_id
-
                     },
                 },
                 {
@@ -470,7 +464,6 @@ router.route('/section_attendence_by_Date/:select_date/:section_id')
                         student_name: {
                             "$first": "$student_doc.first_name"
                         }
-
                     }
                 }
             ])
@@ -510,7 +503,6 @@ router.route('/AttendenceDayWise')
                 res.end('null');
             } else {
                 collection.insertOne(item, function (err, result) {
-
                     if (err) {
 
                         if (err.code == 11000) {
@@ -682,9 +674,7 @@ router.route('/sec_attendence_b/:select_date/:school_id')
                                         onLeave += 1;
                                         console.log("babu2" + onLeave);
                                     }
-
                                 }
-
                             });
                             sectionName = sec.name;
                             attendenceSection.push(sectionName);
@@ -694,31 +684,13 @@ router.route('/sec_attendence_b/:select_date/:school_id')
 
                             sectionArray.push(attendenceSection);
                         }
-
-
                     })
                     className = cls.name;
                     attendenceClass.push(className);
                     attendenceClass.push(sectionArray);
                 }
-
             })
-            classArray.push(attendenceClass);
-            //     console.log("hema")
-            //     if(doc.status == "Present"){
-
-            //         present += 1;
-            //         console.log("babu"+present);
-            //     }
-            //     else if(doc.status == "Absent"){
-            //         absent += 1;
-            //         console.log("babu1"+absent);
-            //     }
-            //     else if(doc.status == "On Leave"){
-            //         onLeave += 1; 
-            //         console.log("babu2"+onLeave);
-            //     // }
-            // })
+            classArray.push(attendenceClass);            
 
             var cursor = db.collection('attendance').aggregate([
                 {
