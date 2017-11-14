@@ -110,6 +110,150 @@ router.route('/course_works/:subject_id')
         });
     });
 
+// MOdified
+// New api of chapter completion result
+
+router.route('/no_of_classes_to_chapter/:subject_id')
+    .post(function (req, res, next) {
+
+        var status = 1;
+        var subject_id = req.params.subject_id;
+        var start_date = req.body.start_date;
+        var end_date = req.body.end_date;
+        start_date = new Date(start_date);
+        end_date = new Date(end_date);
+        var start_date_milliSeconds = start_date.getTime();
+        var end_date_milliSeconds = end_date.getTime();
+        var no_of_days = (end_date_milliSeconds - start_date_milliSeconds) / (1000 * 24 * 60 * 60);
+        var totalSundays = 0;
+        var class_status = count = 0;
+
+
+        for (var i = start_date; i <= end_date;) {
+            if (i.getDay() == 0) {
+                totalSundays++;
+            }
+            i.setTime(i.getTime() + 1000 * 60 * 60 * 24);
+        }
+        var no_of_days_except_sundays = no_of_days - totalSundays + 1;
+
+        var item = {
+            chapter_id: 'getauto',
+            lession_id: req.body.lession_id,
+            start_date: req.body.start_date,
+            end_date: req.body.end_date,
+            subject_id: subject_id,
+            title: req.body.title,
+            classes: no_of_days_except_sundays,
+            class_status: class_status,
+            count: count,
+            chapter_code: req.body.chapter_code,
+            no_of_topics: req.body.no_of_topics,
+            description: req.body.description,
+            status: status,
+
+        };
+        // console.log(no_of_days + "hema");
+        // console.log(totalSundays + "babu");
+        // console.log(no_of_days_except_sundays);
+
+        mongo.connect(url, function (err, db) {
+            autoIncrement.getNextSequence(db, 'chapters', function (err, autoIndex) {
+                var collection = db.collection('chapters');
+                collection.ensureIndex({
+                    "chapter_id": 1,
+                }, {
+                        unique: true
+                    }, function (err, result) {
+                        if (item.title == null || item.start_date == null || item.end_date == null) {
+                            res.end('null');
+                        } else {
+                            collection.insertOne(item, function (err, result) {
+                                if (err) {
+                                    if (err.code == 11000) {
+                                        console.log(err);
+                                        res.end('false');
+                                    }
+                                    res.end('false');
+                                }
+                                collection.update({
+                                    _id: item._id
+                                }, {
+                                        $set: {
+                                            chapter_id: subject_id + '-CHP-' + autoIndex
+                                        }
+                                    }, function (err, result) {
+                                        db.close();
+                                        res.end('true');
+                                    });
+                            });
+                        }
+                    });
+            });
+        });
+    })
+
+
+    .get(function (req, res, next) {
+        var subject_id = req.params.subject_id;
+        var resultArray = [];
+        mongo.connect(url, function (err, db) {
+            assert.equal(null, err);
+            //  var cursor = db.collection('coursework').find({ subject_id });
+            var cursor = db.collection('chapters').aggregate([
+                {
+                    $match: {
+                        'subject_id': subject_id
+                    }
+                },
+                {
+                    "$lookup": {
+                        "from": "subjects",
+                        "localField": "subject_id",
+                        "foreignField": "subject_id",
+                        "as": "subjects"
+                    }
+                }
+            ])
+            cursor.forEach(function (doc, err) {
+                assert.equal(null, err);
+                resultArray.push(doc);
+            }, function () {
+                db.close();
+                res.send({
+                    [subject_id]: resultArray
+                });
+            });
+        });
+    });
+
+
+router.route('/edit_chapters/:chapter_id')
+    .put(function (req, res, next) {
+        var myquery = { chapter_id: req.params.chapter_id };
+        var req_count = req.body.no_of_completed_classes;
+        var req_classes = req.body.classes;
+        var req_class_status = (req_count / req_classes) * 100;
+
+
+        mongo.connect(url, function (err, db) {
+            db.collection('chapters').update(myquery, {
+                $set: {
+                    count: req_count,
+                    class_status: req_class_status,
+
+                }
+            }, function (err, result) {
+                assert.equal(null, err);
+                if (err) {
+                    res.send('false');
+                }
+                db.close();
+                res.send('true');
+            });
+        });
+    });
+
 
 
 router.route('/topics/:lession_id')

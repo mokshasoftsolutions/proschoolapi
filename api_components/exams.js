@@ -284,45 +284,7 @@ router.route('/exam_eval/:exam_sch_id/:exam_paper_id/:student_id/:section_id/:cl
             // date: date,
             status: status,
         }
-        // mongo.connect(url, function(err, db) {
-        //     autoIncrement.getNextSequence(db, 'exam_evaluation', function(err, autoIndex) {
-        //       // var count = db.collection('exam_evaluation').find({ $and: [{exam_paper_id, student_id}]}).count(function (e, count){
-        //       //   if (count > 0) {
-        //       //     db.close();
-        //       //     res.end('already submitted');
-        //       //   }
-        //       // });
-        //         var collection = db.collection('exam_evaluation');
-        //         collection.ensureIndex({
-        //             "paper_result_id": 1,
-        //         }, {
-        //             unique: true
-        //         }, function(err, result) {
-        //             if (item.exam_paper_id == null || item.student_id == null || item.marks == null || item.comment == null) {
-        //                 res.end('null');
-        //             } else {
-        //                 collection.insertOne(item, function(err, result) {
-        //                     if (err) {
-        //                         if (err.code == 11000) {
-        //                            res.end('false');
-        //                         }
-        //                         res.end('false');
-        //                     }
-        //                     collection.update({
-        //                         _id: item._id
-        //                     }, {
-        //                         $set: {
-        //                             paper_result_id: exam_paper_id+'-EVAL-'+autoIndex
-        //                         }
-        //                     }, function(err, result) {
-        //                         db.close();
-        //                         res.end('true');
-        //                     });
-        //                 });
-        //             }
-        //         });
-        //     });
-        // });
+      
         mongo.connect(url, function (err, db) {
             autoIncrement.getNextSequence(db, 'exam_evaluation', function (err, autoIndex) {
                 var count = db.collection('exam_evaluation').find({ exam_paper_id, student_id }).count(function (e, count) {
@@ -374,27 +336,6 @@ router.route('/exam_eval/:exam_sch_id/:exam_paper_id/:student_id/:section_id/:cl
 
     });
 
-
-
-// router.route('/exam_eval/:exam_sch_id/:subject_id/:exam_sch_id')
-//    .get(function(req, res, next) {
-//   var subject_id = req.params.subject_id;
-//   var exam_sch_id = req.params.exam_sch_id;
-//     var resultArray = [];
-//     mongo.connect(url, function(err, db) {
-//         assert.equal(null, err);
-//         var cursor = db.collection('exams').find({subject_id, exam_sch_id});
-//         cursor.forEach(function(doc, err) {
-//             assert.equal(null, err);
-//             resultArray.push(doc);
-//         }, function() {
-//             db.close();
-//             res.send({
-//                 [exam_sch_id+'-'+subject_id]: resultArray
-//             });
-//         });
-//     });
-// });
 
 
 //add bulk marks 
@@ -454,7 +395,6 @@ router.route('/marksbulk_eval/:exam_sch_id/:exam_paper_id/:section_id/:class_id'
                             //         res.end('true');
                             //     }
                             // } else {
-
                             var collection = db.collection('exam_evaluation');
                             collection.ensureIndex({
                                 "paper_result_id": 1,

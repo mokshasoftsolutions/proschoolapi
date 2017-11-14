@@ -29,8 +29,8 @@ var storageImage = multer.diskStorage({ //multers disk storage settings
     },
     filename: function (req, file, cb) {
         var datetimestamp = Date.now();
-        // cb(null, file.fieldname + '-' + datetimestamp + '.' + file.originalname.split('.')[file.originalname.split('.').length - 1])
-        cb(null, file.originalname);
+         cb(null, file.fieldname + '-' + datetimestamp + '.' + file.originalname.split('.')[file.originalname.split('.').length - 1])
+        // cb(null, file.originalname);
     }
 });
 
@@ -79,9 +79,7 @@ router.route('/employee/:school_id')
                 job_category: req.body.job_category,
                 experience: req.body.experience,
                 phone: req.body.phone,
-                email: req.body.email,
-                // profile_image: req.body.profile_image,
-                website: req.body.website,
+                email: req.body.email,             
                 joined_on: req.body.joined_on,
                 status: status,
             };
@@ -109,7 +107,7 @@ router.route('/employee/:school_id')
                     }, {
                             unique: true
                         }, function (err, result) {
-                            if (item.first_name == null || item.dob == null || item.phone == null) {
+                            if (item.first_name == null || item.dob == null || item.phone == null ||item.job_category == null) {
                                 res.end('null');
                             } else {
                                 collection.insertOne(item, function (err, result) {

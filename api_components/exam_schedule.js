@@ -31,8 +31,7 @@ router.route('/exam_schedule/:school_id')
         var item = {
             exam_sch_id: 'getauto',
             school_id: school_id,
-            exam_title: req.body.exam_title,
-            exam_classes: req.body.exam_classes,
+            exam_title: req.body.exam_title,          
             from_date: req.body.from_date,
             status: status,
         };
