@@ -33,7 +33,7 @@ var storageImage = multer.diskStorage({ //multers disk storage settings
     },
     filename: function (req, file, cb) {
         var datetimestamp = Date.now();
-         cb(null, file.fieldname + '-' + datetimestamp + '.' + file.originalname.split('.')[file.originalname.split('.').length - 1])
+        cb(null, file.fieldname + '-' + datetimestamp + '.' + file.originalname.split('.')[file.originalname.split('.').length - 1])
         // cb(null, file.originalname);
     }
 });
@@ -210,7 +210,7 @@ router.route('/students/:section_id')
                                             }
                                         });
                                     // add parent
-                                   // console.log(parent_account_details.parent_account_create);
+                                    // console.log(parent_account_details.parent_account_create);
                                     // console.log(typeof (parent_account_details.parent_account_create) + 'moksha');
 
                                     if (parent_account_details.parent_account_create == true || parent_account_details.parent_account_create == 'true') {
@@ -221,7 +221,7 @@ router.route('/students/:section_id')
                                         requestData.parent_id = parent_account_details.parent_id;
                                         requestData.school_id = parent_account_details.school_id;
                                         console.log(requestData);
-                                       // console.log(parent_account_details.parent_account_new);
+                                        // console.log(parent_account_details.parent_account_new);
                                         if (parent_account_details.parent_account_new == true || parent_account_details.parent_account_new == 'true') {
                                             console.log("newaccount")
                                             parentModule.addParent(requestData);
@@ -521,7 +521,30 @@ router.route('/student_details/:student_id')
         var resultArray = [];
         mongo.connect(url, function (err, db) {
             assert.equal(null, err);
-            var cursor = db.collection('students').find({ student_id });
+            //var cursor = db.collection('students').find({ student_id });
+            var cursor = db.collection('students').aggregate([
+                {
+                    $match: {
+                        student_id: student_id
+                    }
+                },
+                {
+                    $lookup: {
+                        from: "school_classes",
+                        localField: "class_id",
+                        foreignField: "class_id",
+                        as: "school_classes"
+                    }
+                },
+                {
+                    $lookup: {
+                        from: "classe_sections",
+                        localField: "section_id",
+                        foreignField: "section_id",
+                        as: "sections"
+                    }
+                }
+            ]);
             cursor.forEach(function (doc, err) {
                 resultArray.push(doc);
             }, function () {
@@ -649,11 +672,11 @@ router.route('/bulk_upload_students/:section_id')
                     }
                     res.json({ data: result });
 
-                    var test = result;                    
+                    var test = result;
                     var count = 0;
 
                     if (test.length > 0) {
-                        test.forEach(function(key, value) {
+                        test.forEach(function (key, value) {
 
 
                             var item = {
@@ -717,62 +740,62 @@ router.route('/bulk_upload_students/:section_id')
                                 occupation: key.gaurdianoccupation
                             };
 
-                            mongo.connect(url, function(err, db) {
-                                autoIncrement.getNextSequence(db, 'students', function(err, autoIndex) {
+                            mongo.connect(url, function (err, db) {
+                                autoIncrement.getNextSequence(db, 'students', function (err, autoIndex) {
 
                                     var collection = db.collection('students');
                                     collection.ensureIndex({
                                         "student_id": 1,
                                     }, {
-                                        unique: true
-                                    }, function(err, result) {
-                                        if (item.section_id == null || item.phone == null) {
-                                            res.end('null');
-                                        } else {
-                                            item.student_id = class_id + '-STD-' + autoIndex;
-                                            collection.insertOne(item, function(err, result) {
-                                                if (err) {
-                                                    console.log(err);
-                                                    if (err.code == 11000) {
+                                            unique: true
+                                        }, function (err, result) {
+                                            if (item.section_id == null || item.phone == null) {
+                                                res.end('null');
+                                            } else {
+                                                item.student_id = class_id + '-STD-' + autoIndex;
+                                                collection.insertOne(item, function (err, result) {
+                                                    if (err) {
+                                                        console.log(err);
+                                                        if (err.code == 11000) {
 
+                                                            res.end('false');
+                                                        }
                                                         res.end('false');
                                                     }
-                                                    res.end('false');
-                                                }
-                                                collection.update({
-                                                    _id: item._id
-                                                }, {
-                                                    $push: {
-                                                        current_address,
-                                                        permanent_address,
-                                                        parents: parent_father
-                                                    }
-                                                });
-                                                collection.update({
-                                                    _id: item._id
-                                                }, {
-                                                    $push: {
-                                                        parents: parent_mother
-                                                    }
-                                                });
-                                                collection.update({
-                                                    _id: item._id
-                                                }, {
-                                                    $push: {
-                                                        parents: parent_gaurdian
-                                                    }
-                                                });
-                                                count++;
-                                                db.close();
+                                                    collection.update({
+                                                        _id: item._id
+                                                    }, {
+                                                            $push: {
+                                                                current_address,
+                                                                permanent_address,
+                                                                parents: parent_father
+                                                            }
+                                                        });
+                                                    collection.update({
+                                                        _id: item._id
+                                                    }, {
+                                                            $push: {
+                                                                parents: parent_mother
+                                                            }
+                                                        });
+                                                    collection.update({
+                                                        _id: item._id
+                                                    }, {
+                                                            $push: {
+                                                                parents: parent_gaurdian
+                                                            }
+                                                        });
+                                                    count++;
+                                                    db.close();
 
-                                                if (count == test.length) {
-                                                    res.end('true');
-                                                }
+                                                    if (count == test.length) {
+                                                        res.end('true');
+                                                    }
 
 
-                                            });
-                                        }
-                                    });
+                                                });
+                                            }
+                                        });
 
                                 });
                             });
@@ -792,125 +815,125 @@ router.route('/bulk_upload_students/:section_id')
         })
     });
 
-    //                 var count = 0;
-    //                 var existedAids = [];
-    //                 var recentSid = [];
-    //                 var splitted, collection;
-
-                   
-
-    //                 var recent_id = 0;
-                  
-    //                 var itemArray = [];
-                    
-
-    //                 if (test.length > 0) {
-    //                     test.forEach(function (key, value) {
-    //                         recent_id = recent_id + 1;
-                         
-
-    //                         var item = {
-    //                             student_id: class_id + '-STD-' + recent_id,
-    //                             school_id: school_id,
-    //                             class_id: class_id,
-    //                             section_id: section_id,
-    //                             surname: key.surname,
-    //                             first_name: key.firstname,
-    //                             last_name: key.lastname,
-    //                             gender: key.gender,
-    //                             dob: key.dob,
-    //                             aadhar_no: key.aadharno,
-    //                             phone: key.phone,
-    //                             email: key.email,
-    //                             category: key.category,
-    //                             admission_date: key.admissiondate,
-    //                             admission_no: key.admissionno,
-    //                             roll_no: key.rollno,
-    //                             academic_year: key.academicyear,
-    //                             bus_route_id: key.busrouteid,
-    //                             status: status,
-    //                             current_address: {
-    //                                 cur_address: key.curaddress,
-    //                                 cur_city: key.curcity,
-    //                                 cur_state: key.curstate,
-    //                                 cur_pincode: key.curpincode,
-    //                                 cur_long: key.curlong,
-    //                                 cur_lat: key.curlat
-    //                             },
-    //                             permanent_address: {
-    //                                 perm_address: key.permaddress,
-    //                                 perm_city: key.permcity,
-    //                                 perm_state: key.permstate,
-    //                                 perm_pincode: key.permpincode,
-    //                                 perm_long: key.permlong,
-    //                                 perm_lat: key.permlat
-    //                             },
-    //                             parents: [
-    //                                 parent_father = {
-    //                                     parent_name: key.fathername,
-    //                                     parent_contact: key.fathercontact,
-    //                                     parent_relation: 'father',
-    //                                     parent_address: key.curaddress + ' ' + key.permcity + ' ' + key.permstate + ' ' + key.permpincode,
-    //                                     occupation: key.fatheroccupation
-    //                                 },
-    //                                 parent_mother = {
-    //                                     parent_name: key.mothername,
-    //                                     parent_contact: key.mothercontact,
-    //                                     parent_relation: 'mother',
-    //                                     parent_address: key.curaddress + ' ' + key.permcity + ' ' + key.permstate + ' ' + key.permpincode,
-    //                                     occupation: key.motheroccupation
-    //                                 },
-    //                                 parent_gaurdian = {
-    //                                     parent_name: key.gaurdianname,
-    //                                     parent_contact: key.gaurdiancontact,
-    //                                     parent_relation: key.gaurdianrelation,
-    //                                     parent_address: key.gaurdianaddress,
-    //                                     occupation: key.gaurdianoccupation
-    //                                 }
-
-    //                             ]
-
-    //                         };
-                            
-    //                         itemArray.push(item);
+//                 var count = 0;
+//                 var existedAids = [];
+//                 var recentSid = [];
+//                 var splitted, collection;
 
 
-    //                     });
-    //                 } else {
-    //                     res.end('false');
-    //                 }
-    //                 if (existedAids != null) {
-    //                     itemArray.forEach(function (x) {
-    //                         if (existedAids.indexOf(x.admission_no) > -1) {
-    //                             itemArray.remove(x);
-    //                         }
+
+//                 var recent_id = 0;
+
+//                 var itemArray = [];
 
 
-    //                     });
-    //                 }
-
-    //                 mongo.connect(url, function (err, db) {
-    //                     var collection = db.collection('students');
-    //                     collection.insertMany(itemArray, function (err, result) {
-    //                         if (err) {
-    //                             if (err.code == 11000) {
-    //                                 res.end('false');
-    //                             }
-    //                             res.end('false');
-    //                         }
-    //                         console.log('file submitted');
-
-    //                     });
-
-    //                 });
+//                 if (test.length > 0) {
+//                     test.forEach(function (key, value) {
+//                         recent_id = recent_id + 1;
 
 
-    //             });
-    //         } catch (e) {
-    //             res.json({ error_code: 1, err_desc: "duplicate data enterd" });
-    //         }
-    //     })
-    // });
+//                         var item = {
+//                             student_id: class_id + '-STD-' + recent_id,
+//                             school_id: school_id,
+//                             class_id: class_id,
+//                             section_id: section_id,
+//                             surname: key.surname,
+//                             first_name: key.firstname,
+//                             last_name: key.lastname,
+//                             gender: key.gender,
+//                             dob: key.dob,
+//                             aadhar_no: key.aadharno,
+//                             phone: key.phone,
+//                             email: key.email,
+//                             category: key.category,
+//                             admission_date: key.admissiondate,
+//                             admission_no: key.admissionno,
+//                             roll_no: key.rollno,
+//                             academic_year: key.academicyear,
+//                             bus_route_id: key.busrouteid,
+//                             status: status,
+//                             current_address: {
+//                                 cur_address: key.curaddress,
+//                                 cur_city: key.curcity,
+//                                 cur_state: key.curstate,
+//                                 cur_pincode: key.curpincode,
+//                                 cur_long: key.curlong,
+//                                 cur_lat: key.curlat
+//                             },
+//                             permanent_address: {
+//                                 perm_address: key.permaddress,
+//                                 perm_city: key.permcity,
+//                                 perm_state: key.permstate,
+//                                 perm_pincode: key.permpincode,
+//                                 perm_long: key.permlong,
+//                                 perm_lat: key.permlat
+//                             },
+//                             parents: [
+//                                 parent_father = {
+//                                     parent_name: key.fathername,
+//                                     parent_contact: key.fathercontact,
+//                                     parent_relation: 'father',
+//                                     parent_address: key.curaddress + ' ' + key.permcity + ' ' + key.permstate + ' ' + key.permpincode,
+//                                     occupation: key.fatheroccupation
+//                                 },
+//                                 parent_mother = {
+//                                     parent_name: key.mothername,
+//                                     parent_contact: key.mothercontact,
+//                                     parent_relation: 'mother',
+//                                     parent_address: key.curaddress + ' ' + key.permcity + ' ' + key.permstate + ' ' + key.permpincode,
+//                                     occupation: key.motheroccupation
+//                                 },
+//                                 parent_gaurdian = {
+//                                     parent_name: key.gaurdianname,
+//                                     parent_contact: key.gaurdiancontact,
+//                                     parent_relation: key.gaurdianrelation,
+//                                     parent_address: key.gaurdianaddress,
+//                                     occupation: key.gaurdianoccupation
+//                                 }
+
+//                             ]
+
+//                         };
+
+//                         itemArray.push(item);
+
+
+//                     });
+//                 } else {
+//                     res.end('false');
+//                 }
+//                 if (existedAids != null) {
+//                     itemArray.forEach(function (x) {
+//                         if (existedAids.indexOf(x.admission_no) > -1) {
+//                             itemArray.remove(x);
+//                         }
+
+
+//                     });
+//                 }
+
+//                 mongo.connect(url, function (err, db) {
+//                     var collection = db.collection('students');
+//                     collection.insertMany(itemArray, function (err, result) {
+//                         if (err) {
+//                             if (err.code == 11000) {
+//                                 res.end('false');
+//                             }
+//                             res.end('false');
+//                         }
+//                         console.log('file submitted');
+
+//                     });
+
+//                 });
+
+
+//             });
+//         } catch (e) {
+//             res.json({ error_code: 1, err_desc: "duplicate data enterd" });
+//         }
+//     })
+// });
 
 
 

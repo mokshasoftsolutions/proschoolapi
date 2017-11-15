@@ -254,7 +254,6 @@ router.route('/fee_collection/:student_id')
 
     })
     .get(function(req, res, next) {
-
         var student_id = req.params.student_id;
         var resultArray = [];
         mongo.connect(url, function(err, db) {

@@ -131,7 +131,7 @@ router.route('/employee_attendancebulk/:school_id')
         var month = d.getMonth() + 1;
         var day = d.getDate()
         var year = d.getFullYear();
-       // var date = req.params.date;
+        // var date = req.params.date;
         var select_date = new Date(year, d.getMonth(), day, 05, 30, 0, 0);
         var endDate = new Date(select_date);
         endDate.setDate(endDate.getDate() + 1)
@@ -303,10 +303,34 @@ router.route('/employee_Attendance_by_category/:category/:select_date')
         var category = req.params.category;
         var select_date = new Date(req.params.select_date);
         var endDate = new Date(select_date);
+        var present = 0, absent = 0, onLeave = 0;
+        var count,dataCount;
         endDate.setDate(endDate.getDate() + 1)
         mongo.connect(url, function (err, db) {
             assert.equal(null, err);
-            var cursor = db.collection('employee_attendance').aggregate([ 
+            var data = db.collection('employee_attendance').find({
+                date: { $gte: new Date(select_date.toISOString()), $lt: new Date(endDate.toISOString()) },
+                category: category
+            })
+            dataCount = data.count(function (e, triggerCount) {
+                if (triggerCount > 0) {
+                    count = triggerCount;
+                }
+            });
+
+            data.forEach(function (doc, err) {
+                if (doc.status == "Present") {
+                    present += 1;
+                }
+                else if (doc.status == "Absent") {
+                    absent += 1;
+                }
+                else if (doc.status == "On Leave") {
+                    onLeave += 1;
+                }
+            })
+
+            var cursor = db.collection('employee_attendance').aggregate([
                 {
                     $match: {
                         'date': {
@@ -324,14 +348,19 @@ router.route('/employee_Attendance_by_category/:category/:select_date')
             }, function () {
                 db.close();
                 res.send({
-                    employeeAttendence: resultArray
+                    employeeAttendence: resultArray,
+                    count: count,
+                    present: present,
+                    onleave: onLeave,
+                    absent: absent
+
                 });
             });
         });
     });
- 
-       
-    
+
+
+
 
 
 router.route('/get_employeeattendance_id_by_date_session/:employee_id/:date/:session')

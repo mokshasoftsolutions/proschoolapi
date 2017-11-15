@@ -94,15 +94,15 @@ router.route('/schools')
                 from: "basinahemababu91@gmail.com",
                 to: username,
                 subject: "Authentication fields for PROSchool ",
-                text: "email: "+username+"password : "+username,
-                html: "<b> Username :</b>"+username+"<br>"+"<b> Password : </b>"+username
+                text: "email: " + username + "password : " + username,
+                html: "<b> Username :</b>" + username + "<br>" + "<b> Password : </b>" + username
             }
 
             smtpTransport.sendMail(mail, function (error, response) {
                 if (error) {
                     console.log(error);
                 } else {
-                    console.log("Message sent: ");
+                    //console.log("Message sent: ");
                 }
 
                 smtpTransport.close();
@@ -157,6 +157,25 @@ router.route('/schools')
         mongo.connect(url, function (err, db) {
             assert.equal(null, err);
             var cursor = db.collection('schools').find();
+            cursor.forEach(function (doc, err) {
+                assert.equal(null, err);
+                resultArray.push(doc);
+            }, function () {
+                db.close();
+                res.send({
+                    schools: resultArray
+                });
+            });
+        });
+    });
+
+router.route('/school_details/:school_id')
+    .get(function (req, res, next) {
+        var school_id = req.params.school_id;
+        var resultArray = [];
+        mongo.connect(url, function (err, db) {
+            assert.equal(null, err);
+            var cursor = db.collection('schools').find({school_id});
             cursor.forEach(function (doc, err) {
                 assert.equal(null, err);
                 resultArray.push(doc);

@@ -26,18 +26,42 @@ router.route('/attendancechartbydate/:select_date/:class_id/:section_id')
         var section_id = req.params.section_id;
         var class_id = req.params.class_id;
         var endDate = new Date(select_date);
-        endDate.setDate(endDate.getDate() + 1)
-
+        var present = 0, absent = 0, onLeave = 0;
+        endDate.setDate(endDate.getDate() + 1);
+        var count,dataCount;
         var resultArray = [];
         mongo.connect(url, function (err, db) {
             assert.equal(null, err);
+            var data = db.collection('attendance').find({
+                date: { $gte: new Date(select_date.toISOString()), $lt: new Date(endDate.toISOString()) },
+                section_id: section_id
+            })
+            dataCount = data.count(function (e, triggerCount) {
+                if (triggerCount > 0) {
+                    count = triggerCount;
+                }
+            });
+
+            data.forEach(function (doc, err) {
+                if (doc.status == "Present") {
+                    present += 1;
+                }
+                else if (doc.status == "Absent") {
+                    absent += 1;
+                }
+                else if (doc.status == "On Leave") {
+                    onLeave += 1;
+                }
+            })
+
             var cursor = db.collection('attendance').aggregate([
                 {
                     $match: {
                         'date': {
                             $gte: new Date(select_date.toISOString()),
                             $lt: new Date(endDate.toISOString())
-                        }
+                        },
+                        section_id:section_id
                     }
                 },
                 {
@@ -108,7 +132,11 @@ router.route('/attendancechartbydate/:select_date/:class_id/:section_id')
             }, function () {
                 db.close();
                 res.send({
-                    donutchart: resultArray
+                    donutchart: resultArray,
+                    count: count,
+                    present: present,
+                    onleave: onLeave,
+                    absent: absent
                 });
             });
         });
@@ -125,7 +153,8 @@ router.route('/attendancechartbymonth/:select_month/:student_id')
         //   var class_id = req.params.class_id;
         var student_id = req.params.student_id;
         var date = new Date();
-
+        var present = 0, absent = 0, onLeave = 0;
+        var count,dataCount;
         var firstDay = new Date(date.getFullYear(), select_month - 1, 1);
         var lastDay = new Date(date.getFullYear(), select_month, 0);
         //  console.log(firstDay);
@@ -133,13 +162,36 @@ router.route('/attendancechartbymonth/:select_month/:student_id')
         var resultArray = [];
         mongo.connect(url, function (err, db) {
             assert.equal(null, err);
+            var data = db.collection('attendance').find({
+                date: { $gte: firstDay, $lt: lastDay },
+                student_id: student_id
+            })
+            dataCount = data.count(function (e, triggerCount) {
+                if (triggerCount > 0) {
+                    count = triggerCount;
+                }
+            });
+
+            data.forEach(function (doc, err) {
+                if (doc.status == "Present") {
+                    present += 1;
+                }
+                else if (doc.status == "Absent") {
+                    absent += 1;
+                }
+                else if (doc.status == "On Leave") {
+                    onLeave += 1;
+                }
+            })
+
             var cursor = db.collection('attendance').aggregate([
                 {
                     $match: {
                         'date': {
                             $gte: firstDay,
                             $lt: lastDay
-                        }
+                        },
+                        student_id:student_id
                     }
                 },
                 {
@@ -197,7 +249,7 @@ router.route('/attendancechartbymonth/:select_month/:student_id')
                         "roll_no": "$student_doc.roll_no",
                         "class_name": "$class_doc.name",
                         "section_name": "$section_doc.name",
-                        "date":"$date",
+                        "date": "$date",
 
                     }
                 }
@@ -208,7 +260,11 @@ router.route('/attendancechartbymonth/:select_month/:student_id')
             }, function () {
                 db.close();
                 res.send({
-                    donutchart: resultArray
+                    donutchart: resultArray,
+                    count: count,
+                    present: present,
+                    onleave: onLeave,
+                    absent: absent
                 });
             });
         });

@@ -52,7 +52,7 @@ router.route('/questions/:class_id')
                 }, {
                         unique: true
                     }, function (err, result) {
-                        if (item.answer == null || item.question == null) {
+                        if (item.answer == null || item.question == null || item.subject_id == null) {
                             res.end('null');
                         } else {
                             collection.insertOne(item, function (err, result) {
