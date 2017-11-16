@@ -136,7 +136,7 @@ router.route('/schools')
                                             }
                                         }, function (err, result) {
                                             db.close();
-                                            res.end('true');
+                                            res.send('username and password sent to your email');
                                             var userData = {};
                                             userData.email = item.email;
                                             userData.password = item.email;

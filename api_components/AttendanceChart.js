@@ -28,7 +28,7 @@ router.route('/attendancechartbydate/:select_date/:class_id/:section_id')
         var endDate = new Date(select_date);
         var present = 0, absent = 0, onLeave = 0;
         endDate.setDate(endDate.getDate() + 1);
-        var count,dataCount;
+        var count, dataCount;
         var resultArray = [];
         mongo.connect(url, function (err, db) {
             assert.equal(null, err);
@@ -61,7 +61,7 @@ router.route('/attendancechartbydate/:select_date/:class_id/:section_id')
                             $gte: new Date(select_date.toISOString()),
                             $lt: new Date(endDate.toISOString())
                         },
-                        section_id:section_id
+                        section_id: section_id
                     }
                 },
                 {
@@ -142,9 +142,85 @@ router.route('/attendancechartbydate/:select_date/:class_id/:section_id')
         });
     });
 
+router.route('/attendancechartbyStudentAndDate/:select_date/:student_id')
+    .get(function (req, res, next) {
+        var select_date = new Date(req.params.select_date);
+        var student_id = req.params.student_id;
+        var endDate = new Date(select_date);
+        endDate.setDate(endDate.getDate() + 1);
+        var resultArray = [];
+        mongo.connect(url, function (err, db) {
+            assert.equal(null, err);
+            var cursor = db.collection('attendance').aggregate([
+                {
+                    $match: {
+                        'date': {
+                            $gte: new Date(select_date.toISOString()),
+                            $lt: new Date(endDate.toISOString())
+                        },
+                        student_id: student_id
+                    }
+                },
+                {
+                    "$lookup": {
+                        "from": "students",
+                        "localField": "student_id",
+                        "foreignField": "student_id",
+                        "as": "student_doc"
+                    }
+                },
+                {
+                    "$unwind": "$student_doc"
+                },
+                {
+                    "$lookup": {
+                        "from": "school_classes",
+                        "localField": "class_id",
+                        "foreignField": "class_id",
+                        "as": "class_doc"
+                    }
+                },
+                {
+                    "$unwind": "$class_doc"
+                },
+                {
+                    "$lookup": {
+                        "from": "class_sections",
+                        "localField": "section_id",
+                        "foreignField": "section_id",
+                        "as": "section_doc"
+                    }
+                },
+                {
+                    "$unwind": "$section_doc"
+                },
+                {
+                    "$project": {
+                        "_id": "$_id",
+                        "student_id": "$student_id",
+                        "first_name": "$student_doc.first_name",
+                        "last_name": "$student_doc.last_name",
+                        "status": "$status",
+                        "gender": "$student_doc.gender",
+                        "admission_no": "$student_doc.admission_no",
+                        "roll_no": "$student_doc.roll_no",
+                        "class_name": "$class_doc.name",
+                        "section_name": "$section_doc.name",
 
-
-
+                    }
+                }
+            ])
+            cursor.forEach(function (doc, err) {
+                assert.equal(null, err);
+                resultArray.push(doc);
+            }, function () {
+                db.close();
+                res.send({
+                    donutchart: resultArray
+                });
+            });
+        });
+    });
 
 router.route('/attendancechartbymonth/:select_month/:student_id')
     .get(function (req, res, next) {
@@ -154,7 +230,7 @@ router.route('/attendancechartbymonth/:select_month/:student_id')
         var student_id = req.params.student_id;
         var date = new Date();
         var present = 0, absent = 0, onLeave = 0;
-        var count,dataCount;
+        var count, dataCount;
         var firstDay = new Date(date.getFullYear(), select_month - 1, 1);
         var lastDay = new Date(date.getFullYear(), select_month, 0);
         //  console.log(firstDay);
@@ -191,7 +267,7 @@ router.route('/attendancechartbymonth/:select_month/:student_id')
                             $gte: firstDay,
                             $lt: lastDay
                         },
-                        student_id:student_id
+                        student_id: student_id
                     }
                 },
                 {

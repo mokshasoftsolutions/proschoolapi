@@ -99,7 +99,7 @@ router.route('/get_sections_ids/:class_id')
                 { $match: { class_id } },
                 {
                     $group: {
-                        _id: '$class_id', classes: { $push: '$section_id' }
+                        _id: '$class_id', sections: { $push: '$section_id' }
                     }
                 }
             ]);

@@ -87,7 +87,7 @@ router.route('/students/:section_id')
             parent_account_details.parent_account_new = req.body.parent_account_new;
             parent_account_details.parent_id = req.body.parent_id;
             parent_account_details.school_id = school_id;
-            console.log(parent_account_details);
+            // console.log(parent_account_details);
             // console.log(req.body.parent_account_create);
             // console.log(req.body.parent_account_new);
 
@@ -105,6 +105,7 @@ router.route('/students/:section_id')
                 gender: req.body.gender,
                 dob: req.body.dob,
                 aadhar_no: req.body.aadhar_no,
+                religion:req.body.religion,
                 phone: req.body.phone,
                 email: req.body.email,
                 category: req.body.category,
@@ -153,10 +154,7 @@ router.route('/students/:section_id')
                 occupation: req.body.gaurdian_occupation
             };
 
-            // console.log(studentImage);
-            // console.log(item);
-            // console.log(cur_address);
-            // console.log(req.body);
+
 
 
 
@@ -214,21 +212,21 @@ router.route('/students/:section_id')
                                     // console.log(typeof (parent_account_details.parent_account_create) + 'moksha');
 
                                     if (parent_account_details.parent_account_create == true || parent_account_details.parent_account_create == 'true') {
-                                        console.log("testing");
+                                        // console.log("testing");
                                         var requestData = {}
                                         requestData.name = parent_father.parent_name;
                                         requestData.student_id = class_id + '-STD-' + autoIndex;
                                         requestData.parent_id = parent_account_details.parent_id;
                                         requestData.school_id = parent_account_details.school_id;
-                                        console.log(requestData);
+                                        // console.log(requestData);
                                         // console.log(parent_account_details.parent_account_new);
                                         if (parent_account_details.parent_account_new == true || parent_account_details.parent_account_new == 'true') {
-                                            console.log("newaccount")
+                                            // console.log("newaccount")
                                             parentModule.addParent(requestData);
 
                                         }
                                         if (parent_account_details.parent_account_new == false || parent_account_details.parent_account_new == 'false') {
-                                            console.log("existing")
+                                            // console.log("existing")
                                             parentModule.addStudentToParent(requestData);
                                         }
 
@@ -251,59 +249,6 @@ router.route('/students/:section_id')
 
 
 
-// router.route('/students/:section_id')
-//     .get(function(req, res, next) {
-//         var section_id = req.params.section_id;
-//         var splited = section_id.split("-");
-//         var school_id = splited[0]+'-'+splited[1];
-//         var class_id = splited[0]+'-'+splited[1]+'-'+splited[2]+'-'+splited[3];
-//         var resultArray = [];
-//         mongo.connect(url, function(err, db) {
-//             assert.equal(null, err);
-//             var cursor = db.collection('students').aggregate([
-//                     { "$lookup": { 
-//                         "from": "school_classes", 
-//                         "localField": "class_id", 
-//                         "foreignField": "class_id", 
-//                         "as": "class_doc"
-//                     }}, 
-//                     { "$unwind": "$class_doc" },
-
-//                     { "$redact": { 
-//                         "$cond": [
-//                             { "$eq": [ class_id, "$class_doc.class_id" ] }, 
-//                             "$$KEEP", 
-//                             "$$PRUNE"
-//                         ]
-//                     }}, 
-
-
-//                     { "$project": { 
-//                         "_id": "$_id",
-//                         "first_name": "$first_name",
-//                         "last_name": "$last_name", 
-//                         "class_id": "$class_id",
-//                         "parents[0].parent_name": "$parents[0].parent_name",
-//                         "dob": "$dob",
-//                         "gender": "$gender",
-//                         "category": "$category",
-//                         "phone": "$phone",
-//                         "name": "$class_doc.name", 
-//                         "student_id":"student_id"
-
-//                      }}
-//                 ])
-//             cursor.forEach(function(doc, err) {
-//                 assert.equal(null, err);
-//                 resultArray.push(doc);
-//             }, function() {
-//                 db.close();
-//                 res.send({
-//                     students: resultArray
-//                 });
-//             });
-//         });
-//     });
 router.route('/students/:section_id')
     .get(function (req, res, next) {
         var section_id = req.params.section_id;
@@ -322,10 +267,7 @@ router.route('/students/:section_id')
                     foreignField: "class_id",
                     as: "school_classes"
                 }
-            },
-            // {
-            //     $unwind: "$school_classes"
-            // }
+            },          
             {
                 $lookup: {
                     from: "class_sections",
@@ -334,62 +276,7 @@ router.route('/students/:section_id')
                     as: "sections"
                 }
             }
-                // {
-                //     $unwind: "$sections"
-                // },
-                // { "$redact": { 
-                //        "$cond": [
-                //            { "$eq": [ section_id, "$section_id" ] }, 
-                //            "$$KEEP", 
-                //            "$$PRUNE"
-                //        ]
-                //    }
-                // }
-
-                // {
-                //     $group: {
-                //         _id: '$_id',
-                //         school_id: {
-                //             "$first": "$school_id"
-                //         },
-                //         first_name: {
-                //             "$first": "$first_name"
-                //         },
-                //         last_name: {
-
-                //             "$first": "$last_name"
-                //         },
-                //         parents: {
-                //             "$first": "$parents"
-                //         },
-                //         dob: {
-                //             "$first": "$dob"
-                //         },
-                //         gender: {
-                //             "$first": "$gender"
-                //         },
-                //         category: {
-                //             "$first": "$category"
-                //         },
-                //         phone: {
-                //             "$first": "$phone"
-                //         },
-                //         name: {
-                //             "$first": "$school_classes.name"
-                //         },
-                //         student_id: {
-                //             "$first": "$student_id"
-                //         },
-                //         roll_no: {
-                //             "$first": "$roll_no"
-                //         },
-                //         section_id: {
-                //             "$first": "$section"
-                //         },
-
-
-                //     }
-                // }
+                
             ]);
             cursor.forEach(function (doc, err) {
                 assert.equal(null, err);
@@ -538,7 +425,15 @@ router.route('/student_details/:student_id')
                 },
                 {
                     $lookup: {
-                        from: "classe_sections",
+                        from: "schools",
+                        localField: "school_id",
+                        foreignField: "school_id",
+                        as: "schools"
+                    }
+                },
+                {
+                    $lookup: {
+                        from: "class_sections",
                         localField: "section_id",
                         foreignField: "section_id",
                         as: "sections"

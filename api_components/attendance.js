@@ -690,7 +690,7 @@ router.route('/sec_attendence_b/:select_date/:school_id')
                     attendenceClass.push(sectionArray);
                 }
             })
-            classArray.push(attendenceClass);            
+            classArray.push(attendenceClass);
 
             var cursor = db.collection('attendance').aggregate([
                 {

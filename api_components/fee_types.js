@@ -273,11 +273,32 @@ router.route('/fee_collection/:student_id')
                     }
                 },
                 {
+                    "$unwind": "$feetype"
+                },
+                {
                     $lookup: {
                         from: "fee_types",
                         localField: "fee_type",
                         foreignField: "fee_type",
                         as: "feemaster"
+                    }
+                },
+                {
+                    "$unwind": "$feemaster"
+                },
+                {
+                    "$project": {
+                        "_id": "$_id",
+                        "student_fee_id": "$student_fee_id",
+                        "student_id": "$student_id",
+                        "fee_type": "$fee_type",
+                        "payment_mode": "$payment_mode",
+                        "discount": "$discount",
+                        "fine": "$fine",
+                        "current_date": "$current_date",
+                        "fee_category": "$feetype.fee_category",
+                        "fee_amount": "$feemaster.fee_amount",                       
+
                     }
                 }
             ])
@@ -287,7 +308,7 @@ router.route('/fee_collection/:student_id')
             }, function() {
                 db.close();
                 res.send({
-                    student_fee_deatils: resultArray
+                    student_fee_details: resultArray
                 });
             });
         });
