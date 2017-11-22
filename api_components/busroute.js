@@ -559,15 +559,15 @@ router.route('/delete_bus_route_station/:bus_route_id/:station_name')
 
         mongo.connect(url, function (err, db) {
             //  var data = db.collection('bus_routes').find({bus_route_id});
-            db.collection('bus_routes').update({},
+            db.collection('bus_routes').update({bus_route_id:bus_route_id},
                 { $pull: { stations: { station_name: station_name, bus_route_id: bus_route_id } } }, function (err, result) {
 
                     //   )
                     //     db.collection('bus_routes').deleteOne(myquery, function (err, result) {
                     // db.collection.deleteOne(  )
-                    assert.equal(null, err);
+                    
                     if (err) {
-                        res.send('false');
+                        res.send('false');      
                     }
                     db.close();
                     res.send('true');

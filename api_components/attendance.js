@@ -380,7 +380,7 @@ router.route('/section_attendence_by_Date/:select_date/:section_id')
         var select_date = new Date(req.params.select_date);
         var present = 0, absent = 0, onLeave = 0;
         var endDate = new Date(select_date);
-        var count, dataCount;
+        var count=0, dataCount;
         endDate.setDate(endDate.getDate() + 1)
         mongo.connect(url, function (err, db) {
             assert.equal(null, err);
@@ -647,7 +647,7 @@ router.route('/sec_attendence_b/:select_date/:school_id')
             dataCount = data.count(function (e, triggerCount) {
                 if (triggerCount > 0) {
                     count = triggerCount;
-                    console.log(count);
+                  //  console.log(count);
                 }
             });
 

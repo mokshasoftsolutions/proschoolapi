@@ -99,16 +99,25 @@ router.route('/teachers/:school_id')
 router.route('/teacherslistbyschoolid/:school_id')
     .get(function (req, res, next) {
         var resultArray = [];
+        var school_id = req.params.school_id;
+        var job_category = "teaching";
         mongo.connect(url, function (err, db) {
             assert.equal(null, err);
-            var cursor = db.collection('employee').find({ job_category: "teaching" });
+            var cursor = db.collection('employee').aggregate([
+                { $match: { school_id: school_id, job_category: job_category } },
+                {
+                    $group: {
+                        _id: '$school_id', teacher_names: { $push: '$first_name' }
+                    }
+                }
+            ]);
             cursor.forEach(function (doc, err) {
                 assert.equal(null, err);
                 resultArray.push(doc);
             }, function () {
                 db.close();
                 res.send({
-                    employee: resultArray
+                    teachers: resultArray
                 });
             });
         });
@@ -120,7 +129,7 @@ router.route('/addorupdatesubjectstoteacher/:school_id/:section_id')
         var school_id = req.params.school_id;
         var teacher_id = req.body.teacher_id;
         var subject_id = req.body.subject_id;
-       
+
         var section_id = req.params.section_id;
         subjects = [];
         var item = {
@@ -135,7 +144,7 @@ router.route('/addorupdatesubjectstoteacher/:school_id/:section_id')
             // subject_id: req.body.subject_id,
             section_id: section_id,
             subject_id: req.body.subject_id,
-            teacher_id : teacher_id,
+            teacher_id: teacher_id,
         };
 
         mongo.connect(url, function (err, db) {
@@ -201,7 +210,7 @@ router.route('/addorupdatesubjectstoteacher/:school_id/:section_id')
                                         "subjects": {
                                             subject_id: req.body.subject_id,
                                             section_id: section_id,
-                                            teacher_id : teacher_id,
+                                            teacher_id: teacher_id,
                                         }
                                     }
                                 },
@@ -233,7 +242,7 @@ router.route('/deleteassignedsubjects/:subject_id/:teacher_id')
         var teacher_id = req.params.teacher_id;
         var subject_id = req.params.subject_id;
         mongo.connect(url, function (err, db) {
-            var collection = db.collection('teachers');
+            var collection = db.collection('teacher_subjects');
 
             collection.update({
                 "teacher_id": teacher_id
@@ -324,10 +333,10 @@ router.route('/listsubjectstoteacher/:school_id')
                         "teacher_name": "$teacher_doc.teacher_name",
                         "school_id": "$school_id",
                         "employee_id": "$employee_id",
-                       "teacher_subject_id":"$teacher_subject_id",
-                       "teacher_id":"$teacher_id",
-                       "subject_id":"$subjects_doc.subject_id",
-                       "subject_id":"$subjects.subject_id",
+                        "teacher_subject_id": "$teacher_subject_id",
+                        "teacher_id": "$teacher_id",
+                        "subject_id": "$subjects_doc.subject_id",
+                        "subject_id": "$subjects.subject_id",
                         "subjects": [{
                             "subjects": "$subjects_doc.name"
 
@@ -435,168 +444,28 @@ router.route('/add_subjects_to_teacher/:teacher_id')
     });
 
 
-//  Modified
-// Chapters bulk upload via excel sheet
+router.route('/delete_subject_teacher/:teacher_id/:subject_id')
+    .put(function (req, res, next) {
+        var teacher_id = req.params.teacher_id;
+        var subject_id = req.params.subject_id;
+        //  var myquery = { bus_route_id: bus_route_id },{ stations: { $elemMatch: { station_name: station_name } } }
 
-
-var storage = multer.diskStorage({ //multers disk storage settings
-    destination: function (req, file, cb) {
-        cb(null, './uploads/')
-    },
-    filename: function (req, file, cb) {
-        var datetimestamp = Date.now();
-        cb(null, file.fieldname + '-' + datetimestamp + '.' + file.originalname.split('.')[file.originalname.split('.').length - 1])
-    }
-});
-
-var upload = multer({ //multer settings
-    storage: storage,
-    fileFilter: function (req, file, callback) { //file filter
-        if (['xls', 'xlsx'].indexOf(file.originalname.split('.')[file.originalname.split('.').length - 1]) === -1) {
-            return callback(new Error('Wrong extension type'));
-        }
-        callback(null, true);
-    }
-}).single('file');
-
-router.route('/bulk_upload_teachers/:school_id')
-    .post(function (req, res, next) {
-        var school_id = req.params.school_id;
-        var status = 1;
-        var exceltojson;
-        upload(req, res, function (err) {
-            if (err) {
-                res.json({ error_code: 1, err_desc: err });
-                return;
-            }
-            /** Multer gives us file info in req.file object */
-            if (!req.file) {
-                res.json({ error_code: 1, err_desc: "No file passed" });
-                return;
-            }
-            /** Check the extension of the incoming file and 
-             *  use the appropriate module
-             */
-            if (req.file.originalname.split('.')[req.file.originalname.split('.').length - 1] === 'xlsx') {
-                exceltojson = xlsxtojson;
-            } else {
-                exceltojson = xlstojson;
-            }
-            console.log(req.file.path);
-            try {
-                exceltojson({
-                    input: req.file.path,
-                    output: null, //since we don't need output.json
-                    lowerCaseHeaders: true
-                }, function (err, result) {
-                    if (err) {
-                        return res.json({ error_code: 1, err_desc: err, data: null });
-                    }
-                    res.json({ data: result });
-                    console.log(result[0]);
-                    var test = result;
-                    var count = 0;
-
-                    if (test.length > 0) {
-                        test.forEach(function (key, value) {
-
-                            var item = {
-                                teacher_id: 'getauto',
-                                school_id: school_id,
-                                employee_id: key.employeeid,
-                                added_on: key.addedon,
-                                status: status,
-                            };
-                            var subjects = {
-                                subject_id: key.subjectid,
-                                subject_name: key.subjectname
-                            };
-                            mongo.connect(url, function (err, db) {
-                                autoIncrement.getNextSequence(db, 'teachers', function (err, autoIndex) {
-
-                                    var collection = db.collection('teachers');
-                                    collection.ensureIndex({
-                                        "teacher_id": 1,
-                                    }, {
-                                            unique: true
-                                        }, function (err, result) {
-                                            if (item.school_id == null) {
-                                                res.end('null');
-                                            } else {
-                                                item.teacher_id = 'SCH-TCH-' + autoIndex;
-                                                collection.insertOne(item, function (err, result) {
-                                                    if (err) {
-                                                        console.log(err);
-                                                        if (err.code == 11000) {
-
-                                                            res.end('false');
-                                                        }
-                                                        res.end('false');
-                                                    }
-                                                    collection.update({
-                                                        _id: item._id
-                                                    }, {
-                                                            $set: {
-                                                                teacher_id: 'SCH-TCH-' + autoIndex
-                                                            },
-                                                            $push: {
-                                                                subjects
-                                                            }
-                                                        });
-                                                    count++;
-                                                    db.close();
-
-                                                    if (count == test.length) {
-                                                        res.end('true');
-                                                    }
-
-
-                                                });
-                                            }
-                                        });
-
-                                });
-                            });
-
-                        });
-
-
+        mongo.connect(url, function (err, db) {
+            //  var data = db.collection('bus_routes').find({bus_route_id});
+            db.collection('teacher_subjects').update({ teacher_id: teacher_id },
+                { $pull: { subjects: { teacher_id: teacher_id, subject_id: subject_id } } }, function (err, numAffected) {
+                    if (numAffected.result.nModified == 1) {
+                        db.close();
+                        res.send('true')
                     } else {
-                        res.end('false');
+                        db.close();
+                        res.send('false')
+
                     }
 
 
                 });
-            } catch (e) {
-                res.json({ error_code: 1, err_desc: "Corupted excel file" });
-            }
-        })
+        });
     });
-
-    
-
-router.route('/delete_subject_teacher/:teacher_id/:subject_id')
-.put(function (req, res, next) {
-    var teacher_id = req.params.teacher_id;
-    var subject_id = req.params.subject_id;
-    //  var myquery = { bus_route_id: bus_route_id },{ stations: { $elemMatch: { station_name: station_name } } }
-
-    mongo.connect(url, function (err, db) {
-        //  var data = db.collection('bus_routes').find({bus_route_id});
-        db.collection('teacher_subjects').update({},
-            { $pull: { subjects: { teacher_id: teacher_id, subject_id: subject_id } } }, function (err, result) {
-
-                //   )
-                //     db.collection('bus_routes').deleteOne(myquery, function (err, result) {
-                // db.collection.deleteOne(  )
-                assert.equal(null, err);
-                if (err) {
-                    res.send('false');
-                }
-                db.close();
-                res.send('true');
-            });
-    });
-});
 
 module.exports = router;

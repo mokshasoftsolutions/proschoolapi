@@ -304,7 +304,7 @@ router.route('/employee_Attendance_by_category/:category/:select_date')
         var select_date = new Date(req.params.select_date);
         var endDate = new Date(select_date);
         var present = 0, absent = 0, onLeave = 0;
-        var count,dataCount;
+        var count=0,dataCount;
         endDate.setDate(endDate.getDate() + 1)
         mongo.connect(url, function (err, db) {
             assert.equal(null, err);

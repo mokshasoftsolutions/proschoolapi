@@ -289,10 +289,8 @@ router.route('/edit_vehicle/:vehicle_id')
             });
         });
     });
-
-
-
-router.route('/delete_vehicle/:vehicle_id')
+    
+    router.route('/delete_vehicle/:vehicle_id')
     .delete(function (req, res, next) {
         var myquery = { vehicle_id: req.params.vehicle_id };
 

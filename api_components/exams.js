@@ -9,6 +9,7 @@ var assert = require('assert');
 var multer = require('multer');
 var xlstojson = require("xls-to-json-lc");
 var xlsxtojson = require("xlsx-to-json-lc");
+var forEach = require('async-foreach').forEach;
 var port = process.env.PORT || 4005;
 var router = express.Router();
 var url = 'mongodb://' + config.dbhost + ':27017/s_erp_data';
@@ -284,7 +285,7 @@ router.route('/exam_eval/:exam_sch_id/:exam_paper_id/:student_id/:section_id/:cl
             // date: date,
             status: status,
         }
-      
+
         mongo.connect(url, function (err, db) {
             autoIncrement.getNextSequence(db, 'exam_evaluation', function (err, autoIndex) {
                 var count = db.collection('exam_evaluation').find({ exam_paper_id, student_id }).count(function (e, count) {
@@ -347,19 +348,8 @@ router.route('/marksbulk_eval/:exam_sch_id/:exam_paper_id/:section_id/:class_id'
         var section_id = req.params.section_id;
         var exam_sch_id = req.params.exam_sch_id;
         var exam_paper_id = req.params.exam_paper_id;
-        // var d = new Date();
-        // var month = d.getMonth() + 1;
-        // var day = d.getDate()
-        // var year = d.getFullYear()
-        // var select_date  =  new Date(year, d.getMonth(), day, 05, 30, 0, 0);
-        // var endDate = new Date(select_date);
-        //     endDate.setDate(endDate.getDate()+ 1)
-        // var time = d.getHours();
 
-        // if(!req.body.students){
-        //     res.end('null');
-        // }
-        if (class_id == null || section_id == null || !req.body.studentsMarks) {
+        if (exam_paper_id == null || section_id == null || !req.body.studentsMarks) {
             res.end('null');
         } else {
             var count = 0;
@@ -377,57 +367,51 @@ router.route('/marksbulk_eval/:exam_sch_id/:exam_paper_id/:section_id/:class_id'
                         marks: key.marks,
                         percentage: key.percentage,
                         conduct: key.conduct,
-
                     };
 
                     mongo.connect(url, function (err, db) {
                         autoIncrement.getNextSequence(db, 'exam_evaluation', function (err, autoIndex) {
-                            //  console.log(new Date(select_date.toISOString()));
-                            //  console.log(new Date(endDate.toISOString()))
-                            // var data = db.collection('exam_evaluation').find({
-                            //      date:{$gte: new Date(select_date.toISOString()), $lt:new Date(endDate.toISOString())},
-                            //     student_id: item.student_id
-                            // }).count(function (e, triggerCount) {
+                            var data = db.collection('exam_evaluation').find({
+                                section_id: section_id,
+                                exam_paper_id: exam_paper_id
+                            }).count(function (e, triggerCount) {
+                                if (triggerCount > 0) {
+                                    db.close();
+                                    res.end('false');
+                                } else {
+                                    var collection = db.collection('exam_evaluation');
+                                    collection.ensureIndex({
+                                        "paper_result_id": 1,
+                                    }, {
+                                            unique: true
+                                        }, function (err, result) {
+                                            if (item.class_id == null || item.section_id == null || item.exam_paper_id == null || item.exam_sch_id == null || item.marks == null) {
+                                                res.end('null');
+                                            } else {
+                                                item.paper_result_id = item.exam_paper_id + '-' + item.student_id + '-EVAL-' + autoIndex;
+                                                collection.insertOne(item, function (err, result) {
+                                                    if (err) {
+                                                        console.log(err);
+                                                        if (err.code == 11000) {
 
-                            // if (triggerCount > 0) {
-                            //     count++;
-                            //     if (count == req.body.studentsMarks.length) {
-                            //         res.end('true');
-                            //     }
-                            // } else {
-                            var collection = db.collection('exam_evaluation');
-                            collection.ensureIndex({
-                                "paper_result_id": 1,
-                            }, {
-                                    unique: true
-                                }, function (err, result) {
-                                    if (item.class_id == null || item.section_id == null || item.exam_paper_id == null || item.exam_sch_id == null || item.marks == null) {
-                                        res.end('null');
-                                    } else {
-                                        item.paper_result_id = item.exam_paper_id + '-' + item.student_id + '-EVAL-' + autoIndex;
-                                        collection.insertOne(item, function (err, result) {
-                                            if (err) {
-                                                console.log(err);
-                                                if (err.code == 11000) {
+                                                            res.end('false');
+                                                        }
+                                                        res.end('false');
+                                                    }
+                                                    count++;
+                                                    db.close();
 
-                                                    res.end('false');
-                                                }
-                                                res.end('false');
+                                                    if (count == req.body.studentsMarks.length) {
+                                                        res.end('true');
+                                                    }
+
+
+                                                });
                                             }
-                                            count++;
-                                            db.close();
-
-                                            if (count == req.body.studentsMarks.length) {
-                                                res.end('true');
-                                            }
-
-
                                         });
-                                    }
-                                });
 
-                            // }
-                            // });
+                                }
+                            });
 
 
 
@@ -463,8 +447,7 @@ router.route('/exam_eval/:student_id/:exam_sch_id')
                     $match: {
                         // exam_paper_id: exam_paper_id,
                         student_id: student_id,
-                        exam_sch_id: exam_sch_id,
-                        status: 1
+                        exam_sch_id: exam_sch_id
                     }
                 },
                 {
@@ -500,7 +483,6 @@ router.route('/exam_eval/:student_id/:exam_sch_id')
                 {
                     $unwind: "$exampaper_doc"
                 },
-
                 {
                     $group: {
                         _id: '$_id',

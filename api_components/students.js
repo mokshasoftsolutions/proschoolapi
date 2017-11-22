@@ -453,7 +453,7 @@ router.route('/student_details/:student_id')
 
 
 
-router.route('/get_parents/:student_id/')
+router.route('/get_parents/:student_id')
     .get(function (req, res, next) {
         var student_id = req.params.student_id;
         var resultArray = [];

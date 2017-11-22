@@ -24,26 +24,26 @@ router.route('/questions/:class_id')
     .post(function (req, res, next) {
         var status = 1;
         var class_id = req.params.class_id;
-        
+
         var splited = class_id.split("-");
         var school_id = splited[0] + '-' + splited[1];
-       
-       var options = [];
+
+        var options = [ req.body.option1, req.body.option2, req.body.option3, req.body.option4];
         var item = {
             question_id: 'getauto',
             class_id: class_id,
-            question : req.body.question,
+            question: req.body.question,
             subject_id: req.body.subject_id,
-            answer : req.body.answer,
-            school_id : school_id,
+            answer: req.body.answer,
+            school_id: school_id,
             status: status,
         };
-        options = {
-            option_1 : req.body.option1,
-            option_2 : req.body.option2,
-            option_3 : req.body.option3,
-            option_4 : req.body.option4
-        }
+        // options = {
+        //     option_1: req.body.option1,
+        //     option_2: req.body.option2,
+        //     option_3: req.body.option3,
+        //     option_4: req.body.option4
+        // }
         mongo.connect(url, function (err, db) {
             autoIncrement.getNextSequence(db, 'questions', function (err, autoIndex) {
                 var collection = db.collection('questions');
@@ -67,9 +67,9 @@ router.route('/questions/:class_id')
                                     _id: item._id
                                 }, {
                                         $set: {
-                                            question_id:  'QUST-' + autoIndex
+                                            question_id: 'QUST-' + autoIndex
                                         },
-                                        $push:{
+                                        $push: {
                                             options
                                         }
                                     }, function (err, result) {
@@ -82,12 +82,14 @@ router.route('/questions/:class_id')
             });
         });
     })
+router.route('/questions/:subject_id/:class_id')
     .get(function (req, res, next) {
+        var subject_id = req.params.subject_id;
         var class_id = req.params.class_id;
         var resultArray = [];
         mongo.connect(url, function (err, db) {
             assert.equal(null, err);
-            var cursor = db.collection('questions').find({ class_id });
+            var cursor = db.collection('questions').find({ "subject_id":subject_id,"class_id":class_id });
             cursor.forEach(function (doc, err) {
                 assert.equal(null, err);
                 resultArray.push(doc);
@@ -107,70 +109,70 @@ router.route('/Quizz_question/:student_id')
         var student_id = req.params.student_id;
         var question_id = req.body.question_id;
         var submitted_answer = req.body.submitted_answer;
-        
+
         var splited = student_id.split("-");
         var school_id = splited[0] + '-' + splited[1];
-       
-       var questions = {};
+
+        var questions = {};
         var item = {
             quizz_id: 'getauto',
             student_id: student_id,
-            question_id : question_id,           
-            submitted_answer : submitted_answer,
-            school_id : school_id,
+            question_id: question_id,
+            submitted_answer: submitted_answer,
+            school_id: school_id,
             status: status,
         };
         questions.question_id = question_id;
-       
+
         mongo.connect(url, function (err, db) {
-            
+
             autoIncrement.getNextSequence(db, 'Quizz', function (err, autoIndex) {
-                var data = db.collection('questions').find({question_id});
-                data.forEach(function(doc,err){
-                    if(doc.answer == submitted_answer){
+                var data = db.collection('questions').find({ question_id });
+                data.forEach(function (doc, err) {
+                    if (doc.answer == submitted_answer) {
                         result = "yes";
                     }
-                    else{
+                    else {
                         result = "no";
                     }
-                    questions.result = result ;
-                    
-                var collection = db.collection('Quizz');
-                collection.ensureIndex({
-                    "quizz_id": 1,
-                }, {
-                        unique: true
-                    }, function (err, result) {
-                        if (item.question_id == null || item.submitted_answer == null) {
-                            res.end('null');
-                        } else {
-                            collection.insertOne(item, function (err, result) {
-                                if (err) {
-                                    if (err.code == 11000) {
-                                        console.log(err);
+                    questions.result = result;
+
+                    var collection = db.collection('Quizz');
+                    collection.ensureIndex({
+                        "quizz_id": 1,
+                    }, {
+                            unique: true
+                        }, function (err, result) {
+                            if (item.question_id == null || item.submitted_answer == null) {
+                                res.end('null');
+                            } else {
+                                collection.insertOne(item, function (err, result) {
+                                    if (err) {
+                                        if (err.code == 11000) {
+                                            console.log(err);
+                                            res.end('false');
+                                        }
                                         res.end('false');
                                     }
-                                    res.end('false');
-                                }
-                                collection.update({
-                                    _id: item._id
-                                }, {
-                                        $set: {
-                                            quizz_id:  'QUIZZ-' + autoIndex
-                                        },
-                                        $push:{
-                                            questions
-                                        }
-                                        
-                                    }, function (err, result) {
-                                        db.close();
-                                        res.end('true');
-                                    });
-                            });
-                        }
-                    });
+                                    collection.update({
+                                        _id: item._id
+                                    }, {
+                                            $set: {
+                                                quizz_id: 'QUIZZ-' + autoIndex
+                                            },
+                                            $push: {
+                                                questions
+                                            }
+
+                                        }, function (err, result) {
+                                            db.close();
+                                            res.end('true');
+                                        });
+                                });
+                            }
+                        });
+                });
             });
-        });
         });
     })
     .get(function (req, res, next) {
