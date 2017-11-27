@@ -88,6 +88,107 @@ router.route('/vehicles/:school_id')
         });
     });
 
+
+router.route('/vehicle_all_details/:school_id')
+    .post(function (req, res, next) {
+        var status = 1;
+        var school_id = req.params.school_id;
+        var item = {
+            vehicle_details_id: 'getauto',
+            vehicle_number: req.body.vehicle_number,
+            vehicle_name: req.body.vehicle_name,
+            chassis_number: req.body.chassis_number,
+            engine_number: req.body.engine_number,
+            school_id: school_id,
+            vehicle_type: req.body.vehicle_type,
+            status: status
+        };
+        var Insurence = [];
+        var Finance = [];
+        var Maintenence = [];
+
+        Insurence = {
+            number: req.body.number,
+            insurence_company_name: req.body.insurence_company_name,
+            valid_from: req.body.valid_from,
+            valid_to: req.body.valid_to,
+            amount: req.body.amount
+        }
+        Finance = {
+            finance_company_name: req.body.finance_company_name,
+            finance_amount: req.body.finance_amount,
+            finance_from: req.body.finance_from,
+            finance_to: req.body.finance_to,
+            emi: req.body.emi,
+            remind: req.body.finance_remind,
+            date: req.body.date
+        }
+        Maintenence = {
+            engine_oil: req.body.engine_oil,
+            filled_date: req.body.filled_date,
+            remind: req.body.maintenence_remind,
+        }
+
+
+        mongo.connect(url, function (err, db) {
+            autoIncrement.getNextSequence(db, 'vehicles_details', function (err, autoIndex) {
+                var collection = db.collection('vehicles_details');
+                collection.ensureIndex({
+                    "vehicle_details_id": 1,
+                }, {
+                        unique: true
+                    }, function (err, result) {
+                        if (item.vehicle_number == null || item.vehicle_name == null || item.chassis_number == null) {
+                            res.end('null');
+                        } else {
+                            collection.insertOne(item, function (err, result) {
+                                if (err) {
+                                    if (err.code == 11000) {
+                                        res.end('false');
+                                    }
+                                    res.end('false');
+                                }
+                                collection.update({
+                                    _id: item._id
+                                }, {
+                                        $set: {
+                                            vehicle_details_id: 'VEHICLE-' + autoIndex
+                                        },
+                                        $push: {
+                                            Finance,
+                                            Insurence,
+                                            Maintenence
+                                        }
+                                    }, function (err, result) {
+                                        db.close();
+                                        res.end('true');
+                                    });
+                            });
+                        }
+                    });
+            });
+        });
+    })
+    .get(function (req, res, next) {
+        var school_id = req.params.school_id;
+        var status = 1;
+        var resultArray = [];
+        mongo.connect(url, function (err, db) {
+            assert.equal(null, err);
+            var cursor = db.collection('vehicles_details').find({ school_id, status });
+            cursor.forEach(function (doc, err) {
+                assert.equal(null, err);
+                resultArray.push(doc);
+            }, function () {
+                db.close();
+                res.send({
+                    vehicles: resultArray
+                });
+            });
+        });
+    });
+
+
 router.route('/vehicle_details/:vehicle_id')
     .get(function (req, res, next) {
         var vehicle_id = req.params.vehicle_id;
@@ -267,17 +368,23 @@ router.route('/bulk_upload_vehicles/:school_id')
     });
 
 
-router.route('/edit_vehicle/:vehicle_id')
+router.route('/edit_vehicle/:vehicle_details_id')
     .put(function (req, res, next) {
-        var myquery = { vehicle_id: req.params.vehicle_id };
+        var myquery = { vehicle_details_id: req.params.vehicle_details_id };
         var req_vehicle_name = req.body.vehicle_name;
-        var req_vehicle_code = req.body.vehicle_code;
+        var req_vehicle_number = req.body.vehicle_number;
+        var req_engine_number = req.body.engine_number;
+        var req_chassis_number = req.body.chassis_number;
+        var req_vehicle_type = req.body.vehicle_type;
 
         mongo.connect(url, function (err, db) {
-            db.collection('vehicles').update(myquery, {
+            db.collection('vehicles_details').update(myquery, {
                 $set: {
                     vehicle_name: req_vehicle_name,
-                    vehicle_code: req_vehicle_code
+                    vehicle_number: req_vehicle_number,
+                    chassis_number: req_chassis_number,
+                    engine_number: req_engine_number,
+                    vehicle_type: req_vehicle_type,
                 }
             }, function (err, result) {
                 assert.equal(null, err);
@@ -289,13 +396,13 @@ router.route('/edit_vehicle/:vehicle_id')
             });
         });
     });
-    
-    router.route('/delete_vehicle/:vehicle_id')
+
+router.route('/delete_vehicle/:vehicle_details_id')
     .delete(function (req, res, next) {
-        var myquery = { vehicle_id: req.params.vehicle_id };
+        var myquery = { vehicle_details_id: req.params.vehicle_details_id };
 
         mongo.connect(url, function (err, db) {
-            db.collection('vehicles').deleteOne(myquery, function (err, result) {
+            db.collection('vehicles_details').deleteOne(myquery, function (err, result) {
                 assert.equal(null, err);
                 if (err) {
                     res.send('false');

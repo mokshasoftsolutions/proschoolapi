@@ -319,7 +319,6 @@ router.route('/addorupdatestationstobusroute/:bus_route_id')
 
                 if (results.length == 0) {
 
-
                     autoIncrement.getNextSequence(db, 'bus_routes', function (err, autoIndex) {
 
                         collection.ensureIndex({
@@ -358,7 +357,9 @@ router.route('/addorupdatestationstobusroute/:bus_route_id')
 
                 } else {
                     var data = collection.find({
-                        stations: { $elemMatch: { station_name: station_name } }
+                       
+                        stations: { $elemMatch: { station_name: station_name, bus_route_id:bus_route_id } }
+                       
                     }).count(function (e, triggerCount) {
 
                         if (triggerCount > 0) {

@@ -31,9 +31,6 @@ var smtpTransport = mailer.createTransport({
     }
 });
 
-
-
-
 var storageImage = multer.diskStorage({ //multers disk storage settings
     destination: function (req, file, cb) {
         cb(null, './uploads/')
@@ -78,18 +75,17 @@ router.route('/schools')
             }
             var item = {
                 school_id: 'getauto',
-                name: req.body.name,
-                // branch_type: req.body.branch_type,
+                name: req.body.name,               
                 est_on: req.body.est_on,
                 address: req.body.address,
                 phone: req.body.phone,
                 email: req.body.email,
                 website: req.body.website,
+                academic_year : req.body.academic_year,
+                description : req.body.description,
                 status: status,
             };
             var username = req.body.email;
-
-
             var mail = {
                 from: "basinahemababu91@gmail.com",
                 to: username,

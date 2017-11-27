@@ -32,7 +32,6 @@ router.route('/schoolevents/:school_id')
             time:req.body.time,
             description:req.body.description,
             status: status
-
         };
         mongo.connect(url, function(err, db) {
             autoIncrement.getNextSequence(db,'schoolevents', function(err, autoIndex) {

@@ -127,6 +127,7 @@ router.route('/employee_attendancebulk/:school_id')
     .post(function (req, res, next) {
 
         var school_id = req.params.school_id;
+       // console.log(school_id);
         var d = new Date();
         var month = d.getMonth() + 1;
         var day = d.getDate()
