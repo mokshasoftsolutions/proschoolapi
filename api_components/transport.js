@@ -13,7 +13,7 @@ var router = express.Router();
 var url = 'mongodb://' + config.dbhost + ':27017/s_erp_data';
 
 var cookieParser = require('cookie-parser');
-router.use(function(req, res, next) {
+router.use(function (req, res, next) {
     // do logging
     res.header("Access-Control-Allow-Origin", "*");
     res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
@@ -23,62 +23,62 @@ router.use(function(req, res, next) {
 // Add Timetable
 
 router.route('/transport_stations/:school_id')
-    .post(function(req, res, next) {
+    .post(function (req, res, next) {
         var status = 1;
         var school_id = req.params.school_id;
         var item = {
             station_id: 'getauto',
             school_id: school_id,
-						station_name: req.body.station_name,
-						station_code: req.body.station_code,
-						station_geo_location: req.body.station_geo_location,
+            station_name: req.body.station_name,
+            station_code: req.body.station_code,
+            station_geo_location: req.body.station_geo_location,
             status: status,
         }
-        mongo.connect(url, function(err, db) {
-            autoIncrement.getNextSequence(db, 'transport', function(err, autoIndex) {
+        mongo.connect(url, function (err, db) {
+            autoIncrement.getNextSequence(db, 'transport', function (err, autoIndex) {
                 var collection = db.collection('transport');
                 collection.ensureIndex({
                     "station_id": 1,
                 }, {
-                    unique: true
-                }, function(err, result) {
-                    if (item.station_name == null) {
-                        res.end('null');
-                    } else {
-                        collection.insertOne(item, function(err, result) {
-                            if (err) {
-                                if (err.code == 11000) {
+                        unique: true
+                    }, function (err, result) {
+                        if (item.station_name == null) {
+                            res.end('null');
+                        } else {
+                            collection.insertOne(item, function (err, result) {
+                                if (err) {
+                                    if (err.code == 11000) {
+                                        res.end('false');
+                                    }
                                     res.end('false');
                                 }
-                                res.end('false');
-                            }
-                            collection.update({
-                                _id: item._id
-                            }, {
-                                $set: {
-                                    station_id: 'STN-'+autoIndex
+                                collection.update({
+                                    _id: item._id
+                                }, {
+                                        $set: {
+                                            station_id: 'STN-' + autoIndex
 
-                                }
-                            }, function(err, result) {
-                                db.close();
-                                res.end('true');
+                                        }
+                                    }, function (err, result) {
+                                        db.close();
+                                        res.end('true');
+                                    });
                             });
-                        });
-                    }
-                });
+                        }
+                    });
             });
         });
     })
 
-    .get(function(req, res, next) {
+    .get(function (req, res, next) {
         var resultArray = [];
-        mongo.connect(url, function(err, db) {
+        mongo.connect(url, function (err, db) {
             assert.equal(null, err);
             var cursor = db.collection('transport').find();
-            cursor.forEach(function(doc, err) {
+            cursor.forEach(function (doc, err) {
                 assert.equal(null, err);
                 resultArray.push(doc);
-            }, function() {
+            }, function () {
                 db.close();
                 res.send({
                     stations: resultArray
@@ -87,16 +87,16 @@ router.route('/transport_stations/:school_id')
         });
     });
 router.route('/station_details/:station_id')
-    .get(function(req, res, next) {
+    .get(function (req, res, next) {
         var station_id = req.params.station_id;
         var resultArray = [];
-        mongo.connect(url, function(err, db) {
+        mongo.connect(url, function (err, db) {
             assert.equal(null, err);
-            var cursor = db.collection('transport').find({station_id});
-            cursor.forEach(function(doc, err) {
+            var cursor = db.collection('transport').find({ station_id });
+            cursor.forEach(function (doc, err) {
                 assert.equal(null, err);
                 resultArray.push(doc);
-            }, function() {
+            }, function () {
                 db.close();
                 res.send({
                     stations: resultArray
@@ -114,10 +114,10 @@ router.route('/station_details/:station_id')
 
 
 var storage = multer.diskStorage({ //multers disk storage settings
-    destination: function(req, file, cb) {
+    destination: function (req, file, cb) {
         cb(null, './uploads/')
     },
-    filename: function(req, file, cb) {
+    filename: function (req, file, cb) {
         var datetimestamp = Date.now();
         cb(null, file.fieldname + '-' + datetimestamp + '.' + file.originalname.split('.')[file.originalname.split('.').length - 1])
     }
@@ -125,7 +125,7 @@ var storage = multer.diskStorage({ //multers disk storage settings
 
 var upload = multer({ //multer settings
     storage: storage,
-    fileFilter: function(req, file, callback) { //file filter
+    fileFilter: function (req, file, callback) { //file filter
         if (['xls', 'xlsx'].indexOf(file.originalname.split('.')[file.originalname.split('.').length - 1]) === -1) {
             return callback(new Error('Wrong extension type'));
         }
@@ -134,11 +134,11 @@ var upload = multer({ //multer settings
 }).single('file');
 
 router.route('/bulk_upload_transport_stations/:school_id')
-    .post(function(req, res, next) {
+    .post(function (req, res, next) {
         var school_id = req.params.school_id;
         var status = 1;
         var exceltojson;
-        upload(req, res, function(err) {
+        upload(req, res, function (err) {
             if (err) {
                 res.json({ error_code: 1, err_desc: err });
                 return;
@@ -162,7 +162,7 @@ router.route('/bulk_upload_transport_stations/:school_id')
                     input: req.file.path,
                     output: null, //since we don't need output.json
                     lowerCaseHeaders: true
-                }, function(err, result) {
+                }, function (err, result) {
                     if (err) {
                         return res.json({ error_code: 1, err_desc: err, data: null });
                     }
@@ -172,9 +172,9 @@ router.route('/bulk_upload_transport_stations/:school_id')
                     var count = 0;
 
                     if (test.length > 0) {
-                        test.forEach(function(key, value) {
+                        test.forEach(function (key, value) {
 
-                    var item = {
+                            var item = {
                                 station_id: 'getauto',
                                 school_id: school_id,
                                 station_name: key.stationname,
@@ -182,39 +182,39 @@ router.route('/bulk_upload_transport_stations/:school_id')
                                 station_geo_location: key.stationgeolocation,
                                 status: status,
                             }
-                            mongo.connect(url, function(err, db) {
-                                autoIncrement.getNextSequence(db, 'transport', function(err, autoIndex) {
+                            mongo.connect(url, function (err, db) {
+                                autoIncrement.getNextSequence(db, 'transport', function (err, autoIndex) {
 
                                     var collection = db.collection('transport');
                                     collection.ensureIndex({
                                         "station_id": 1,
                                     }, {
-                                        unique: true
-                                    }, function(err, result) {
-                                        if (item.station_name == null) {
-                                            res.end('null');
-                                        } else {
-                                            item.station_id =  'STN-'+ autoIndex;
-                                            collection.insertOne(item, function(err, result) {
-                                                if (err) {
-                                                    console.log(err);
-                                                    if (err.code == 11000) {
+                                            unique: true
+                                        }, function (err, result) {
+                                            if (item.station_name == null) {
+                                                res.end('null');
+                                            } else {
+                                                item.station_id = 'STN-' + autoIndex;
+                                                collection.insertOne(item, function (err, result) {
+                                                    if (err) {
+                                                        console.log(err);
+                                                        if (err.code == 11000) {
 
+                                                            res.end('false');
+                                                        }
                                                         res.end('false');
                                                     }
-                                                    res.end('false');
-                                                }
-                                                count++;
-                                                db.close();
+                                                    count++;
+                                                    db.close();
 
-                                                if (count == test.length) {
-                                                    res.end('true');
-                                                }
+                                                    if (count == test.length) {
+                                                        res.end('true');
+                                                    }
 
 
-                                            });
-                                        }
-                                    });
+                                                });
+                                            }
+                                        });
 
                                 });
                             });
@@ -234,41 +234,41 @@ router.route('/bulk_upload_transport_stations/:school_id')
         })
     });
 
- router.route('/edit_station/:station_id')
-        .put(function(req, res, next){
-          var myquery = {station_id:req.params.station_id};
-          var req_station_name = req.body.station_name;
-          var req_station_code = req.body.station_code;
-          var req_station_geolocation = req.body.station_geo_location; 
-   
-          mongo.connect(url, function(err, db){
-                db.collection('transport').update(myquery,{$set:{station_name:req_station_name,station_code:req_station_code,station_geo_location:req_station_geolocation}}, function(err, result){
-                  assert.equal(null, err);
-                  if(err){
-                     res.send('false'); 
-                  }
-                   db.close();
-                   res.send('true');
-                });
-          });
+router.route('/edit_station/:station_id')
+    .put(function (req, res, next) {
+        var myquery = { station_id: req.params.station_id };
+        var req_station_name = req.body.station_name;
+        var req_station_code = req.body.station_code;
+        var req_station_geolocation = req.body.station_geo_location;
+
+        mongo.connect(url, function (err, db) {
+            db.collection('transport').update(myquery, { $set: { station_name: req_station_name, station_code: req_station_code, station_geo_location: req_station_geolocation } }, function (err, result) {
+                assert.equal(null, err);
+                if (err) {
+                    res.send('false');
+                }
+                db.close();
+                res.send('true');
+            });
         });
+    });
 
 
-    router.route('/delete_station/:station_id')
-        .delete(function(req, res, next){
-          var myquery = {station_id:req.params.station_id};
-         
-          mongo.connect(url, function(err, db){
-                db.collection('transport').deleteOne(myquery,function(err, result){
-                  assert.equal(null, err);
-                  if(err){
-                     res.send('false'); 
-                  }
-                   db.close();
-                   res.send('true');
-                });
-          });
+router.route('/delete_station/:station_id')
+    .delete(function (req, res, next) {
+        var myquery = { station_id: req.params.station_id };
+
+        mongo.connect(url, function (err, db) {
+            db.collection('transport').deleteOne(myquery, function (err, result) {
+                assert.equal(null, err);
+                if (err) {
+                    res.send('false');
+                }
+                db.close();
+                res.send('true');
+            });
         });
+    });
 
 
 module.exports = router;

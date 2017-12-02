@@ -144,7 +144,7 @@ router.route('/employee_attendance_by_month/:select_month/:employee_id/:school_i
         var date = new Date();
 
         var firstDay = new Date(date.getFullYear(), select_month - 1, 1);
-        var lastDay = new Date(date.getFullYear(), select_month, 0);
+        var lastDay = new Date(date.getFullYear(), select_month, 1);
         //  console.log(firstDay);
         //  console.log(lastDay);
         var present = 0, absent = 0, onLeave = 0;
@@ -153,7 +153,7 @@ router.route('/employee_attendance_by_month/:select_month/:employee_id/:school_i
         mongo.connect(url, function (err, db) {
             assert.equal(null, err);
             var data = db.collection('employee_attendance').find({
-                date: { $gte:firstDay, $lt: lastDay },
+                date: { $gt:firstDay, $lte: lastDay },
                 school_id: school_id,
                 employee_id:employee_id
             })

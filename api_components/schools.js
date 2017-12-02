@@ -75,14 +75,14 @@ router.route('/schools')
             }
             var item = {
                 school_id: 'getauto',
-                name: req.body.name,               
+                name: req.body.name,
                 est_on: req.body.est_on,
                 address: req.body.address,
                 phone: req.body.phone,
                 email: req.body.email,
                 website: req.body.website,
-                academic_year : req.body.academic_year,
-                description : req.body.description,
+                academic_year: req.body.academic_year,
+                description: req.body.description,
                 status: status,
             };
             var username = req.body.email;
@@ -171,7 +171,7 @@ router.route('/school_details/:school_id')
         var resultArray = [];
         mongo.connect(url, function (err, db) {
             assert.equal(null, err);
-            var cursor = db.collection('schools').find({school_id});
+            var cursor = db.collection('schools').find({ school_id });
             cursor.forEach(function (doc, err) {
                 assert.equal(null, err);
                 resultArray.push(doc);

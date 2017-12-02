@@ -20,28 +20,29 @@ router.use(function (req, res, next) {
 
 // Add Timetable
 
-router.route('/messages')
+router.route('/task/:school_id')
     .post(function (req, res, next) {
-        var status = 1;
+
         var date = new Date();
-        var receivers = [];
+        var assigned_to = [];
         var item = {
-            message_id: 'getauto',
-            message: req.body.message,
+            task_id: 'getauto',
+            task: req.body.task,
+            school_id: school_id,
             posted_by: req.body.posted_by,
-            posted_on: date,
-            status: status,
+            assigned_on: date,
+            status: "pending",
         }
-        receivers = req.body.receivers;
+        assigned_to = req.body.assigned_to;
         mongo.connect(url, function (err, db) {
-            autoIncrement.getNextSequence(db, 'messages', function (err, autoIndex) {
-                var collection = db.collection('messages');
+            autoIncrement.getNextSequence(db, 'tasks', function (err, autoIndex) {
+                var collection = db.collection('tasks');
                 collection.ensureIndex({
-                    "message_id": 1,
+                    "task_id": 1,
                 }, {
                         unique: true
                     }, function (err, result) {
-                        if (item.message == null) {
+                        if (item.task == null) {
                             res.end('null');
                         } else {
                             collection.insertOne(item, function (err, result) {
@@ -55,10 +56,10 @@ router.route('/messages')
                                     _id: item._id
                                 }, {
                                         $set: {
-                                            message_id: '-MSG-' + autoIndex
+                                            task_id: 'TASK-' + autoIndex
                                         },
                                         $push: {
-                                            receivers
+                                            assigned_to
                                         }
                                     }, function (err, result) {
                                         db.close();
@@ -70,43 +71,48 @@ router.route('/messages')
             });
         });
     })
-router.route('/messages/:receivers')
-    .get(function (req, res, next) {
-        var resultArray = [];
-        var receivers = req.params.receivers;
-        mongo.connect(url, function (err, db) {
-            assert.equal(null, err);
-            var cursor = db.collection('messages').find({ receivers });
-            cursor.forEach(function (doc, err) {
-                assert.equal(null, err);
-                resultArray.push(doc);
-            }, function () {
-                db.close();
-                res.send({
-                    messages: resultArray
-                });
-            });
-        });
-    });
-
-router.route('/no_of_messages/:sender_id')
+router.route('/tasks/:sender_id')
     .get(function (req, res, next) {
         var resultArray = [];
         var sender_id = req.params.sender_id;
         mongo.connect(url, function (err, db) {
             assert.equal(null, err);
-            var cursor = db.collection('messages').find({ sender_id });
+            var cursor = db.collection('tasks').find({ "assigned_to": { sender_id: sender_id } });
             cursor.forEach(function (doc, err) {
                 assert.equal(null, err);
                 resultArray.push(doc);
             }, function () {
                 db.close();
                 res.send({
-                    messages: resultArray
+                    tasks: resultArray
                 });
             });
         });
     });
+
+    router.route('/edit_task/:task_id')
+    .put(function (req, res, next) {
+        var myquery = { task_id: req.params.task_id };
+        var req_status = req.body.status;
+       
+
+        mongo.connect(url, function (err, db) {
+            db.collection('tasks').update(myquery, {
+                $set: {
+                    status: req_status,                    
+                }
+            }, function (err, result) {
+                assert.equal(null, err);
+                if (err) {
+                    res.send('false');
+                }
+                db.close();
+                res.send('true');
+            });
+        });
+    });
+
+
 
 
 module.exports = router;

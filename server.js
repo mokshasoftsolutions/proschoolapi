@@ -14,7 +14,7 @@ var subjects = require("./api_components/subject.js");
 var course_works = require("./api_components/course_work.js");
 var attendance = require("./api_components/attendance.js");
 var Emp_attendance = require("./api_components/Emp_attendance.js");
- var Employee_attendance_chart = require("./api_components/Employee_attendance_chart.js");
+var Employee_attendance_chart = require("./api_components/Employee_attendance_chart.js");
 var employee = require("./api_components/employee.js");
 var staff_user = require("./api_components/staff_user.js");
 var teachers = require("./api_components/teacher.js");
@@ -28,6 +28,8 @@ var parent_student = require("./api_components/parent_student.js");
 var examgraph = require("./api_components/examgraph.js");
 var messages = require("./api_components/messages.js");
 var quizz = require("./api_components/quizz.js");
+var store = require("./api_components/store.js");
+var assignTask = require("./api_components/AssignTask.js");
 var noticeboard = require("./api_components/noticeboard.js");
 var school_event = require("./api_components/schoolevent.js");
 var uploads = require("./api_components/uploads.js");
@@ -37,8 +39,8 @@ const passportService = require('./services/passport');
 const passport = require('passport');
 
 
-const requireAuth = passport.authenticate('jwt',{ session: false });
-const requireSignin = passport.authenticate('local',{session: false});
+const requireAuth = passport.authenticate('jwt', { session: false });
+const requireSignin = passport.authenticate('local', { session: false });
 
 var config = require("./config.json");
 var express = require("express");
@@ -55,7 +57,7 @@ var assert = require('assert');
 var port = process.env.PORT || 4005;
 var router = express.Router();
 var fs = require("fs");
-var url = 'mongodb://' +config.dbhost + ':27017/s_erp_data';
+var url = 'mongodb://' + config.dbhost + ':27017/s_erp_data';
 // DB Setup for Auth
 mongoose.connect('mongodb://localhost:auth/auth');
 var cookieParser = require('cookie-parser');
@@ -64,36 +66,36 @@ app.use(cookieParser());
 // app.use(bodyParser.urlencoded({
 //     extended: false
 // }));
-app.use(bodyParser.json({limit: '50mb'}));
-app.use(bodyParser.urlencoded({limit: '100mb', extended: false, parameterLimit: 10000}));
+app.use(bodyParser.json({ limit: '50mb' }));
+app.use(bodyParser.urlencoded({ limit: '100mb', extended: false, parameterLimit: 10000 }));
 
 
 app.use(express.static(__dirname + "/public"));
 app.use(bodyParser.json());
 
-router.use(function(req, res, next) {
+router.use(function (req, res, next) {
     // do logging
     res.header("Access-Control-Allow-Origin", "*");
     res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Authorization, Content-Type, Accept");
-    res.header("Access-Control-Allow-Methods" , "POST , GET , OPTIONS , DELETE , EDIT, PUT");
+    res.header("Access-Control-Allow-Methods", "POST , GET , OPTIONS , DELETE , EDIT, PUT");
     next(); // make sure we go to the next routes and don't stop here
 });
 
-app.use(function(req, res, next) {
+app.use(function (req, res, next) {
     // do logging
     res.header("Access-Control-Allow-Origin", "*");
     res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Authorization, Content-Type, Accept");
-    res.header("Access-Control-Allow-Methods" , "POST , GET , OPTIONS , DELETE , EDIT, PUT");
+    res.header("Access-Control-Allow-Methods", "POST , GET , OPTIONS , DELETE , EDIT, PUT");
     next(); // make sure we go to the next routes and don't stop here
 });
 
 app.get('/', function (req, res) {
-  res.send('School ERP API');
+    res.send('School ERP API');
 });
 
 
 app.get('/secure', requireAuth, function (req, res) {
-  res.send('School ERP API -  Authorised Page');
+    res.send('School ERP API -  Authorised Page');
 });
 
 app.post('/signin', requireSignin, Authentication.signin);
@@ -102,8 +104,8 @@ app.post('/signup', Authentication.signup);
 app.post('/checkemail', Authentication.checkEmail);
 
 router.route('/em')
-    .get(function(req, res, next) {
-        mongo.connect(url, function(err, db) {
+    .get(function (req, res, next) {
+        mongo.connect(url, function (err, db) {
             if (!err) {
                 res.send("Hay! We have a connection WOW Great");
                 return true;
@@ -116,8 +118,8 @@ router.route('/em')
     });
 
 
-app.listen(port, function(){
-   console.log('Express server listening on port ' + port);
+app.listen(port, function () {
+    console.log('Express server listening on port ' + port);
 });
 
 app.use('/api', schools);
@@ -141,6 +143,8 @@ app.use('/api', employee);
 app.use('/api', staff_user);
 app.use('/api', assesment);
 app.use('/api', quizz);
+app.use('/api', store);
+app.use('/api', assignTask);
 app.use('/api', fee_types);
 app.use('/api', assignment);
 app.use('/api', vehicles);

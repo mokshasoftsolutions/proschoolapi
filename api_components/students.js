@@ -91,8 +91,6 @@ router.route('/students/:section_id')
             // console.log(req.body.parent_account_create);
             // console.log(req.body.parent_account_new);
 
-
-
             var status = 1;
             var item = {
                 student_id: 'getauto',
@@ -105,7 +103,7 @@ router.route('/students/:section_id')
                 gender: req.body.gender,
                 dob: req.body.dob,
                 aadhar_no: req.body.aadhar_no,
-                religion:req.body.religion,
+                religion: req.body.religion,
                 phone: req.body.phone,
                 email: req.body.email,
                 category: req.body.category,
@@ -153,10 +151,6 @@ router.route('/students/:section_id')
                 parent_address: req.body.gaurdian_address,
                 occupation: req.body.gaurdian_occupation
             };
-
-
-
-
 
             mongo.connect(url, function (err, db) {
                 autoIncrement.getNextSequence(db, 'students', function (err, autoIndex) {
@@ -267,7 +261,7 @@ router.route('/students/:section_id')
                     foreignField: "class_id",
                     as: "school_classes"
                 }
-            },          
+            },
             {
                 $lookup: {
                     from: "class_sections",
@@ -276,7 +270,7 @@ router.route('/students/:section_id')
                     as: "sections"
                 }
             }
-                
+
             ]);
             cursor.forEach(function (doc, err) {
                 assert.equal(null, err);
@@ -572,7 +566,11 @@ router.route('/bulk_upload_students/:section_id')
 
                     if (test.length > 0) {
                         test.forEach(function (key, value) {
-
+                            var parent_account_details = {};
+                            parent_account_details.parent_account_create = key.parent_account_create;
+                            parent_account_details.parent_account_new = key.parent_account_new;
+                            parent_account_details.parent_id = key.parent_id;
+                            parent_account_details.school_id = school_id;
 
                             var item = {
                                 student_id: 'getauto',
@@ -594,9 +592,8 @@ router.route('/bulk_upload_students/:section_id')
                                 academic_year: key.academicyear,
                                 bus_route_id: key.busrouteid,
                                 status: status,
-
-
                             };
+
                             var current_address = {
                                 cur_address: key.curaddress,
                                 cur_city: key.curcity,
@@ -680,6 +677,27 @@ router.route('/bulk_upload_students/:section_id')
                                                                 parents: parent_gaurdian
                                                             }
                                                         });
+                                                    if (parent_account_details.parent_account_create == true || parent_account_details.parent_account_create == 'true' || parent_account_details.parent_account_create == 'TRUE') {
+                                                        // console.log("testing");
+                                                        var requestData = {}
+                                                        requestData.name = parent_father.parent_name;
+                                                        requestData.student_id = class_id + '-STD-' + autoIndex;
+                                                        requestData.parent_id = parent_account_details.parent_id;
+                                                        requestData.school_id = parent_account_details.school_id;
+                                                        // console.log(requestData);
+                                                        // console.log(parent_account_details.parent_account_new);
+                                                        if (parent_account_details.parent_account_new == true || parent_account_details.parent_account_new == 'true' || parent_account_details.parent_account_new == 'TRUE') {
+                                                            // console.log("newaccount")
+                                                            parentModule.addParent(requestData);
+
+                                                        }
+                                                        if (parent_account_details.parent_account_new == false || parent_account_details.parent_account_new == 'false' || parent_account_details.parent_account_new == 'FALSE') {
+                                                            // console.log("existing")
+                                                            parentModule.addStudentToParent(requestData);
+                                                        }
+
+                                                    }
+
                                                     count++;
                                                     db.close();
 
@@ -709,6 +727,11 @@ router.route('/bulk_upload_students/:section_id')
             }
         })
     });
+
+
+
+
+
 
 //                 var count = 0;
 //                 var existedAids = [];

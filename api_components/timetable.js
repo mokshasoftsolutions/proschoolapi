@@ -32,21 +32,7 @@ router.route('/class_timetable/:section_id/:subject_id')
         var day = req.body.day;
         var date = new Date();
         day = Day[day - 1];
-        //   if (day == 1)
-        //     day = Day[0];
-        // else  if (day == 2)
 
-        //     day = Day[1];
-        // else if (day == 3)
-        //     day = Day[2];
-        // else if (day == 4)
-        //     day  = Day[3];
-        // else if (day == 5)
-        //     day = Day[4];
-        // else if (day == 6)
-        //     day = Day[5];
-        // else if (day == 7)
-        //     day = Day[6];          
 
         var item = {
             timetable_id: 'getauto',
@@ -55,6 +41,7 @@ router.route('/class_timetable/:section_id/:subject_id')
             start_time: req.body.start_time,
             end_time: req.body.end_time,
             class_id: class_id,
+            school_id: school_id,
             room_no: req.body.room_no,
             subject_id: subject_id,
             date: date,
@@ -437,4 +424,5 @@ router.route('/class_timetable_by_day/:select_day/:section_id')
             });
         });
     });
+
 module.exports = router;

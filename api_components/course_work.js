@@ -241,7 +241,6 @@ router.route('/edit_chapters/:chapter_id')
                 $set: {
                     count: req_count,
                     class_status: req_class_status,
-
                 }
             }, function (err, result) {
                 assert.equal(null, err);

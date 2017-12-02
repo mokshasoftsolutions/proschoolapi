@@ -119,6 +119,7 @@ router.route('/attendancechartbydate/:select_date/:class_id/:section_id')
                         "roll_no": "$student_doc.roll_no",
                         "class_name": "$class_doc.name",
                         "section_name": "$section_doc.name",
+                        "date":"$date",
                         //  "date": { $and: [{ $gte: ["$date", new Date(select_date.toISOString())] }, { $lt: ["$date", new Date(endDate.toISOString())] }] }
                         //  "date": { $cond: { if : { $and: [{ $gte: ["$date", new Date(select_date.toISOString())] }, { $lt: ["$date", new Date(endDate.toISOString())] }] } },then: "$date"}
 
@@ -230,6 +231,7 @@ router.route('/attendancechartbyStudentAndDate/:select_date/:student_id')
                         "roll_no": "$student_doc.roll_no",
                         "class_name": "$class_doc.name",
                         "section_name": "$section_doc.name",
+                        "date":"$date",
 
                     }
                 }
@@ -260,14 +262,14 @@ router.route('/attendancechartbymonth/:select_month/:student_id')
         var present = 0, absent = 0, onLeave = 0;
         var count = 0, dataCount;
         var firstDay = new Date(date.getFullYear(), select_month - 1, 1);
-        var lastDay = new Date(date.getFullYear(), select_month, 0);
+        var lastDay = new Date(date.getFullYear(), select_month, 1);
         //  console.log(firstDay);
-        //  console.log(lastDay);
+         // console.log(lastDay);
         var resultArray = [];
         mongo.connect(url, function (err, db) {
             assert.equal(null, err);
             var data = db.collection('attendance').find({
-                date: { $gte: firstDay, $lt: lastDay },
+                date: { $gt: firstDay, $lte: lastDay },
                 student_id: student_id
             })
             dataCount = data.count(function (e, triggerCount) {

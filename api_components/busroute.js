@@ -522,8 +522,7 @@ router.route('/delete_bus_route_title/:bus_route_id')
 
 router.route('/edit_bus_route_station/:bus_route_id/:station_name')
     .put(function (req, res, next) {
-        var bus_route_id = req.params.bus_route_id;
-        var station_name = req.params.station_name;
+        var bus_route_id = req.params.bus_route_id;        
         var req_pickup_time = req.body.pickup_time;
         var req_drop_time = req.body.drop_time;
         var req_station_name = req.body.station_name;
