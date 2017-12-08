@@ -113,29 +113,6 @@ router.route('/assignment/:section_id/:lession_id')
     });
 
 
-// Modified
-// Get Assignments Details By AssignmentId
-
-router.route('/assignment_details/:assignment_id')
-    .get(function (req, res, next) {
-        var assignment_id = req.params.assignment_id;
-        var status = 1;
-        var resultArray = [];
-        mongo.connect(url, function (err, db) {
-            assert.equal(null, err);
-            var cursor = db.collection('assignments').find({ assignment_id });
-            cursor.forEach(function (doc, err) {
-                assert.equal(null, err);
-                resultArray.push(doc);
-            }, function () {
-                db.close();
-                res.send({
-                    assignment: resultArray
-                });
-            });
-        });
-    });
-
 
 router.route('/assignment_marksbulk_eval/:section_id/:subject_id/:lession_id/:assignment_id')
     .post(function (req, res, next) {

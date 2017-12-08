@@ -103,7 +103,6 @@ router.route('/class_timetable/:subject_id')
                     }
                 },
                 { "$unwind": "$subject_doc" },
-
                 {
                     "$redact": {
                         "$cond": [
@@ -113,8 +112,6 @@ router.route('/class_timetable/:subject_id')
                         ]
                     }
                 },
-
-
                 {
                     "$project": {
                         "_id": "$_id",

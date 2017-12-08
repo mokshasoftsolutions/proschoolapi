@@ -23,8 +23,7 @@ router.use(function(req, res, next) {
 router.route('/noticeboard/:school_id')
     .post(function(req, res, next) {
         var status = 1;
-        var school_id = req.params.school_id;
-       
+        var school_id = req.params.school_id;       
         
         var item = {
             messages_id: 'getauto',          

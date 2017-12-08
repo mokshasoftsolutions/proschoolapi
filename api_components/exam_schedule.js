@@ -89,25 +89,6 @@ router.route('/exam_schedule/:school_id')
     });
 
 router.route('/get_exam_schedule/:exam_sch_id')
-
-    .get(function(req, res, next) {
-        var exam_sch_id = req.params.exam_sch_id;
-        var resultArray = [];
-        mongo.connect(url, function(err, db) {
-            assert.equal(null, err);
-            var cursor = db.collection('exam_schedule').find({ exam_sch_id });
-            cursor.forEach(function(doc, err) {
-                assert.equal(null, err);
-                resultArray.push(doc);
-            }, function() {
-                db.close();
-                res.send({
-                    exam_schedule: resultArray
-                });
-            });
-        });
-    });
-router.route('/get_exam_schedule/:exam_sch_id')
     .get(function(req, res, next) {
       var exam_sch_id = req.params.exam_sch_id;
         var resultArray = [];
