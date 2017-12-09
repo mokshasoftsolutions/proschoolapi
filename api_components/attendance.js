@@ -9,6 +9,7 @@ var assert = require('assert');
 var forEach = require('async-foreach').forEach;
 var port = process.env.PORT || 4005;
 var router = express.Router();
+var async = require('async');
 var url = 'mongodb://' + config.dbhost + ':27017/s_erp_data';
 
 var cookieParser = require('cookie-parser');
@@ -287,15 +288,59 @@ router.route('/sectionAttendenceByDate/:section_id/:select_date')
     });
 
 
-router.route('/allClasses_Attendence_by_date/:select_date/:school_id')
+router.route('/allClasses_Attendence_by_date/:select_date/:class_id/:school_id')
     .get(function (req, res, next) {
         var resultArray = [];
         var school_id = req.params.school_id;
+        var class_id = req.params.class_id;
         var select_date = new Date(req.params.select_date);
         var endDate = new Date(select_date);
+        var present = 0, absent = 0, onLeave = 0;
+        var count = 0, dataCount;
         endDate.setDate(endDate.getDate() + 1)
         mongo.connect(url, function (err, db) {
             assert.equal(null, err);
+            var data = db.collection('attendance').find({
+                date: { $gte: new Date(select_date.toISOString()), $lt: new Date(endDate.toISOString()) },
+                class_id: class_id,
+                school_id: school_id
+            })
+            dataCount = data.count(function (e, triggerCount) {
+                if (triggerCount > 0) {
+                    count = triggerCount;
+                }
+            });
+
+            data.forEach(function (doc, err) {
+                if (doc.status == "Present") {
+                    present += 1;
+                    // console.log(present);
+                }
+                else if (doc.status == "Absent") {
+                    absent += 1;
+                }
+                else if (doc.status == "On Leave") {
+                    onLeave += 1;
+                }
+            })
+            // dataCount.then(function (result) {
+            //     console.log(result) //will log results.
+
+            // for (i = 0; i < result; i++) {
+            //     console.log("hema");
+            //     if (data[i].status == "Present") {
+            //         present += 1;
+            //         // console.log(present);
+            //     }
+            //     else if (data[i].status == "Absent") {
+            //         absent += 1;
+            //     }
+            //     else if (data[i].status == "On Leave") {
+            //         onLeave += 1;
+            //     }
+            // }
+            // })
+
             var cursor = db.collection('attendance').aggregate([
                 {
                     $match: {
@@ -303,8 +348,8 @@ router.route('/allClasses_Attendence_by_date/:select_date/:school_id')
                             $gte: new Date(select_date.toISOString()),
                             $lt: new Date(endDate.toISOString())
                         },
-                        school_id: school_id
-
+                        school_id: school_id,
+                        class_id: class_id,
                     },
                 },
                 {
@@ -366,6 +411,10 @@ router.route('/allClasses_Attendence_by_date/:select_date/:school_id')
             }, function () {
                 db.close();
                 res.send({
+                    count: count,
+                    present: present,
+                    onleave: onLeave,
+                    absent: absent,
                     classAttendence: resultArray
                 });
             });

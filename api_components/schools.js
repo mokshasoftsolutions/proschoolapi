@@ -98,7 +98,7 @@ router.route('/schools')
                 if (error) {
                     console.log(error);
                 } else {
-                    //console.log("Message sent: ");
+                    console.log("Message sent: ");
                 }
 
                 smtpTransport.close();

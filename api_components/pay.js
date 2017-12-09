@@ -81,64 +81,41 @@ router.route('/pay_details/:school_id')
 
         mongo.connect(url, function (err, db) {
             assert.equal(null, err);
-            var cursor = db.collection('vendor').find({ school_id });
+            var cursor = db.collection('pay_details').find({ school_id });
             cursor.forEach(function (doc, err) {
                 assert.equal(null, err);
                 resultArray.push(doc);
             }, function () {
                 db.close();
                 res.send({
-                    vendor: resultArray
+                    pay_details: resultArray
                 });
             });
         });
     });
 
+    
+router.route('/pay_details_by_basic/:basic')
+.get(function (req, res, next) {
+    var resultArray = [];
+    var basic = req.params.basic;
 
-
-router.route('/edit_material_out/:material_out_id')
-    .put(function (req, res, next) {
-        var myquery = { material_out_id: req.params.material_out_id };
-        var req_material = req.body.material;
-        var req_name = req.body.name;
-        var req_out_date = req.body.out_date;
-        var req_no_of_units = req.body.no_of_units;
-
-        mongo.connect(url, function (err, db) {
-            db.collection('material_out').update(myquery, {
-                $set: {
-                    material: req_material,
-                    name: req_name,
-                    out_date: req_out_date,
-                    no_of_units: req_no_of_units
-                }
-            }, function (err, result) {
-                assert.equal(null, err);
-                if (err) {
-                    res.send('false');
-                }
-                db.close();
-                res.send('true');
+    mongo.connect(url, function (err, db) {
+        assert.equal(null, err);
+        var cursor = db.collection('pay_details').find({ Basic:basic });
+        cursor.forEach(function (doc, err) {
+            assert.equal(null, err);
+            resultArray.push(doc);
+        }, function () {
+            db.close();
+            res.send({
+                pay_details: resultArray
             });
         });
     });
+});
 
 
-router.route('/delete_material_out/:material_out_id')
-    .delete(function (req, res, next) {
-        var myquery = { material_out_id: req.params.material_out_id };
-
-        mongo.connect(url, function (err, db) {
-            db.collection('material_out').deleteOne(myquery, function (err, result) {
-                assert.equal(null, err);
-                if (err) {
-                    res.send('false');
-                }
-                db.close();
-                res.send('true');
-            });
-        });
-    });
 
 
 

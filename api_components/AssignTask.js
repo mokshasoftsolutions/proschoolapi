@@ -22,13 +22,14 @@ router.use(function (req, res, next) {
 
 router.route('/task/:school_id')
     .post(function (req, res, next) {
-
         var date = new Date();
+        var school_id = req.params.school_id;
         var assigned_to = [];
         var item = {
             task_id: 'getauto',
             task: req.body.task,
             school_id: school_id,
+            priority: req.body.priority,
             posted_by: req.body.posted_by,
             assigned_on: date,
             status: "pending",
@@ -89,17 +90,35 @@ router.route('/tasks/:sender_id')
             });
         });
     });
+router.route('/tasks_manager/:school_id')
+    .get(function (req, res, next) {
+        var resultArray = [];
+        var school_id = req.params.school_id;
+        mongo.connect(url, function (err, db) {
+            assert.equal(null, err);
+            var cursor = db.collection('tasks').find({ school_id: school_id });
+            cursor.forEach(function (doc, err) {
+                assert.equal(null, err);
+                resultArray.push(doc);
+            }, function () {
+                db.close();
+                res.send({
+                    tasks: resultArray
+                });
+            });
+        });
+    });
 
-    router.route('/edit_task/:task_id')
+router.route('/edit_task/:task_id')
     .put(function (req, res, next) {
         var myquery = { task_id: req.params.task_id };
         var req_status = req.body.status;
-       
+
 
         mongo.connect(url, function (err, db) {
             db.collection('tasks').update(myquery, {
                 $set: {
-                    status: req_status,                    
+                    status: req_status,
                 }
             }, function (err, result) {
                 assert.equal(null, err);
