@@ -7,6 +7,7 @@ var mongo = require('mongodb').MongoClient;
 var autoIncrement = require("mongodb-autoincrement");
 var assert = require('assert');
 var port = process.env.PORT || 4005;
+var forEach = require('async-foreach').forEach;
 var router = express.Router();
 var url = 'mongodb://' + config.dbhost + ':27017/s_erp_data';
 
@@ -107,6 +108,169 @@ router.route('/no_of_messages/:sender_id')
             });
         });
     });
+
+// Teacher send message to parent
+
+router.route('/teacher_msg_all_parents/:section_id/:student_id/:parent_id')
+    .post(function (req, res, next) {
+        var status = 1;
+        var date = new Date();
+        var parent_id = req.params.parent_id;
+        var student_id = req.params.student_id;
+        var section_id = req.params.section_id;
+        var splited = section_id.split("-");
+        var school_id = splited[0] + '-' + splited[1];
+
+        var item = {
+            message_tacher_id: '',
+            student_id: student_id,
+            section_id: section_id,
+            school_id: school_id,
+            parent_id: parent_id,
+            teacher_id: req.body.teacher_id,
+            date: new Date(),
+            message: req.body.message
+        };
+
+        mongo.connect(url, function (err, db) {
+            autoIncrement.getNextSequence(db, 'teacher_messages', function (err, autoIndex) {
+                var collection = db.collection('teacher_messages');
+                collection.ensureIndex({
+                    "message_tacher_id": 1,
+                }, {
+                        unique: true
+                    }, function (err, result) {
+                        if (item.message == null || item.parent_id == null) {
+                            res.end('null');
+                        } else {
+                            collection.insertOne(item, function (err, result) {
+                                if (err) {
+                                    if (err.code == 11000) {
+                                        res.end('false');
+                                    }
+                                    res.end('false');
+                                }
+                                collection.update({
+                                    _id: item._id
+                                }, {
+                                        $set: {
+                                            message_tacher_id: 'Teacher-Msg-' + autoIndex
+                                        }
+
+                                    }, function (err, result) {
+                                        db.close();
+                                        res.end('true');
+                                    });
+                            });
+                        }
+                    });
+            });
+        });
+    })
+// Teacher send Message to parents
+router.route('/teacher_msg_all_parents/:section_id/:school_id')
+    .post(function (req, res, next) {
+
+        // var class_id = req.params.class_id;
+        var section_id = req.params.section_id;
+        var school_id = req.params.school_id;
+        var teacher_id = req.body.teacher_id;
+        var d = new Date();
+        var message = req.body.message;
+
+        if (section_id == null || school_id == null || !req.body.parents) {
+            res.end('null');
+        } else {
+            var count = 0;
+            if (req.body.parents.length > 0) {
+                forEach(req.body.parents, function (key, value) {
+
+                    var item = {
+                        message_tacher_id: '',
+                        section_id: section_id,
+                        school_id: school_id,
+                        teacher_id: teacher_id,
+                        date: new Date(),
+                        student_id: key.student_id,
+                        parent_id: key.parent_id,
+                        message: message
+                    };
+
+                    mongo.connect(url, function (err, db) {
+                        autoIncrement.getNextSequence(db, 'teacher_messages', function (err, autoIndex) {
+                            var collection = db.collection('teacher_messages');
+                            collection.ensureIndex({
+                                "message_tacher_id": 1,
+                            }, {
+                                    unique: true
+                                }, function (err, result) {
+                                    if (item.section_id == null || item.message == null || item.parent_id == null) {
+                                        res.end('null');
+                                    } else {
+                                        item.message_tacher_id = 'Teacher-Msg-' + autoIndex;
+                                        collection.insertOne(item, function (err, result) {
+                                            if (err) {
+                                                console.log(err);
+                                                if (err.code == 11000) {
+
+                                                    res.end('false');
+                                                }
+                                                res.end('false');
+                                            }
+                                            count++;
+                                            db.close();
+
+                                            if (count == req.body.parents.length) {
+                                                res.end('true');
+                                            }
+
+
+                                        });
+                                    }
+                                });
+
+                            //     }
+                            // });
+
+
+
+                        });
+                    });
+
+                });
+
+
+            } else {
+                res.end('false');
+            }
+
+
+        }
+
+
+    })
+
+
+router.route('/parent_get_messages/:parent_id')
+    .get(function (req, res, next) {
+        var resultArray = [];
+        var parent_id = req.params.parent_id;
+        mongo.connect(url, function (err, db) {
+            assert.equal(null, err);
+            var cursor = db.collection('teacher_messages').find({ parent_id: parent_id });
+            cursor.forEach(function (doc, err) {
+                assert.equal(null, err);
+                resultArray.push(doc);
+            }, function () {
+                db.close();
+                res.send({
+                    messages: resultArray
+                });
+            });
+        });
+    });
+
+
 
 
 module.exports = router;

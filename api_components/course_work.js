@@ -104,7 +104,7 @@ router.route('/course_works/:subject_id')
             }, function () {
                 db.close();
                 res.send({
-                    [subject_id]: resultArray
+                    chapters: resultArray
                 });
             });
         });
@@ -221,7 +221,7 @@ router.route('/no_of_classes_to_chapter/:subject_id')
             }, function () {
                 db.close();
                 res.send({
-                    [subject_id]: resultArray
+                    chapters: resultArray
                 });
             });
         });
@@ -314,7 +314,7 @@ router.route('/topics/:lession_id')
             }, function () {
                 db.close();
                 res.send({
-                    [lession_id]: resultArray
+                    chapters: resultArray
                 });
             });
         });

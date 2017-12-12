@@ -133,5 +133,50 @@ router.route('/edit_task/:task_id')
 
 
 
+router.route('/edit_task_management/:task_id')
+    .put(function (req, res, next) {
+        var myquery = { task_id: req.params.task_id };
+        var req_priority = req.body.priority;
+        var req_assigned_on = req.body.assigned_on;
+        var req_status = req.body.status;
+        var req_task = req.body.task;
+       
+
+        mongo.connect(url, function (err, db) {
+            db.collection('tasks').update(myquery, {
+                $set: {
+                    priority: req_priority,                    
+                    due_date: req_due_date,
+                    status: req_status,
+                    task: req_task,
+                }
+            }, function (err, result) {
+                assert.equal(null, err);
+                if (err) {
+                    res.send('false');
+                }
+                db.close();
+                res.send('true');
+            });
+        });
+    });
+
+
+router.route('/delete_task_management/:task_id')
+    .delete(function (req, res, next) {
+        var myquery = { task_id: req.params.task_id };
+
+        mongo.connect(url, function (err, db) {
+            db.collection('tasks').deleteOne(myquery, function (err, result) {
+                assert.equal(null, err);
+                if (err) {
+                    res.send('false');
+                }
+                db.close();
+                res.send('true');
+            });
+        });
+    });
+
 
 module.exports = router;

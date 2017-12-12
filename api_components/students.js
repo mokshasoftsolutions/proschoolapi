@@ -87,6 +87,7 @@ router.route('/students/:section_id')
             parent_account_details.parent_account_new = req.body.parent_account_new;
             parent_account_details.parent_id = req.body.parent_id;
             parent_account_details.school_id = school_id;
+            parent_account_details.section_id = section_id;
             // console.log(parent_account_details);
             // console.log(req.body.parent_account_create);
             // console.log(req.body.parent_account_new);
@@ -212,6 +213,7 @@ router.route('/students/:section_id')
                                         requestData.student_id = class_id + '-STD-' + autoIndex;
                                         requestData.parent_id = parent_account_details.parent_id;
                                         requestData.school_id = parent_account_details.school_id;
+                                        requestData.section_id = parent_account_details.section_id;
                                         // console.log(requestData);
                                         // console.log(parent_account_details.parent_account_new);
                                         if (parent_account_details.parent_account_new == true || parent_account_details.parent_account_new == 'true') {

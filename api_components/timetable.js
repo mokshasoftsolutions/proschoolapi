@@ -204,10 +204,10 @@ router.route('/class_timetables/:section_id')
         });
     });
 
-router.route('/classes_timetable_by_day/:select_day')
+router.route('/classes_timetable_by_day/:select_day/:class_id')
     .get(function (req, res, next) {
         var resultArray = [];
-
+        var class_id = req.params.class_id;
         var Day = ['sunday', 'monday', 'tuesday', 'wednesday', 'thrusday', 'friday', 'saturday'];
         var day = req.params.select_day;
         day = Day[day - 1];
@@ -219,7 +219,8 @@ router.route('/classes_timetable_by_day/:select_day')
             var cursor = db.collection('timetable').aggregate([
                 {
                     $match: {
-                        day: day
+                        day: day,
+                        class_id: class_id,
                     }
                 },
                 {
@@ -264,6 +265,15 @@ router.route('/classes_timetable_by_day/:select_day')
                         },
                         section_name: {
                             "$first": "$section_doc.name"
+                        },
+                        section_id:{
+                            "$first": "$section_doc.section_id"
+                        },
+                        section_id:{
+                            "$first": "$section_doc.section_id"
+                        },
+                        class_id:{
+                            "$first": "$class_doc.class_id"
                         },
                         day: {
                             "$first": "$day"

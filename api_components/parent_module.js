@@ -18,7 +18,8 @@ parentModule.prototype.addParent = function (request) {
     var parent_name = request.name;
     var school_id = request.school_id;
     var student_id = request.student_id;
-    var students = { student_id: student_id };
+    var section_id = request.section_id;
+    var students = { student_id: student_id,section_id:section_id };
     var item = {
         parent_id: 'getauto',
         parent_name: parent_name,

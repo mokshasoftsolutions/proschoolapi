@@ -25,16 +25,56 @@ router.route('/getparentlist/:schoolid')
         var parents = [];
         mongo.connect(url, function (err, db) {
             assert.equal(null, err);
-           // var cursor = db.collection('parents').find({ school_id: school_id, status: 1 });
+            // var cursor = db.collection('parents').find({ school_id: school_id, status: 1 });
             var cursor = db.collection('parents').aggregate([
                 {
-                    $match: {                        
-                        school_id: school_id                        
+                    $match: {
+                        school_id: school_id
                     }
                 },
                 {
                     $unwind: "$students"
-                },               
+                },
+                {
+                    $lookup: {
+                        from: "students",
+                        localField: "students.student_id",
+                        foreignField: "student_id",
+                        as: "student_doc"
+                    }
+                },
+            ]);
+
+            cursor.forEach(function (doc, err) {
+                assert.equal(null, err);
+                parents.push(doc);
+            }, function () {
+                db.close();
+                res.send({
+                    parents: parents
+                });
+            });
+        });
+    });
+
+//List parents
+router.route('/get_parents_by_section_id/:section_id')
+    .get(function (req, res, next) {
+        var section_id = req.params.section_id;
+        var parents = [];
+        mongo.connect(url, function (err, db) {
+            assert.equal(null, err);
+          //  var cursor = db.collection('parents').find({}, {students: { $elemMatch: { section_id: section_id } }})
+
+            var cursor = db.collection('parents').aggregate([
+                {
+                    $match: {
+                        students: { $elemMatch: { section_id: section_id } }
+                    }
+                },
+                {
+                    $unwind: "$students"
+                },
                 {
                     $lookup: {
                         from: "students",
