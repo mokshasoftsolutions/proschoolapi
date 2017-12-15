@@ -54,9 +54,9 @@ router.post('/', function (req, res, next) {
 
 
 // router.post('/devicecode', function (req, res, next) {
-    
+
 //         Task.postSingleDevice(req.body, function (err, count) {
-    
+
 //             //console.log(req.body);
 //             if (err) {
 //                 res.json(err);
@@ -66,7 +66,7 @@ router.post('/', function (req, res, next) {
 //             }
 //         });
 //     });
-    
+
 
 
 router.post('/:id', function (req, res, next) {

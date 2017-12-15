@@ -112,6 +112,7 @@ router.route('/students/:section_id')
                 admission_no: req.body.admission_no,
                 roll_no: req.body.roll_no,
                 academic_year: req.body.academic_year,
+                blood_group: req.body.blood_group,
                 bus_route_id: req.body.bus_route_id,
 
             };
@@ -134,6 +135,7 @@ router.route('/students/:section_id')
             var parent_father = {
                 parent_name: req.body.father_name,
                 parent_contact: req.body.father_contact,
+                parent_email: req.body.father_email,
                 parent_relation: 'father',
                 parent_address: req.body.cur_address + ' ' + req.body.perm_city + ' ' + req.body.perm_state + ' ' + req.body.perm_pincode,
                 occupation: req.body.father_occupation
@@ -141,6 +143,7 @@ router.route('/students/:section_id')
             var parent_mother = {
                 parent_name: req.body.mother_name,
                 parent_contact: req.body.mother_contact,
+                parent_email: req.body.mother_email,
                 parent_relation: 'mother',
                 parent_address: req.body.cur_address + ' ' + req.body.perm_city + ' ' + req.body.perm_state + ' ' + req.body.perm_pincode,
                 occupation: req.body.mother_occupation
@@ -148,6 +151,7 @@ router.route('/students/:section_id')
             var parent_gaurdian = {
                 parent_name: req.body.gaurdian_name,
                 parent_contact: req.body.gaurdian_contact,
+                parent_email: req.body.gaurdian_email,
                 parent_relation: req.body.gaurdian_relation,
                 parent_address: req.body.gaurdian_address,
                 occupation: req.body.gaurdian_occupation

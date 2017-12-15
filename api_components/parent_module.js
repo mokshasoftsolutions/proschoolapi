@@ -25,7 +25,7 @@ parentModule.prototype.addParent = function (request) {
         parent_name: parent_name,
         school_id: school_id,
         status: status,
-    }
+    } 
     mongo.connect(url, function (err, db) {
         autoIncrement.getNextSequence(db, 'parents', function (err, autoIndex) {
             var collection = db.collection('parents');

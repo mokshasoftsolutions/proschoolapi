@@ -145,6 +145,31 @@ router.route('/school_classes_edit/:class_id/:name/:value')
     });
 
 
+
+router.route('/edit_classes/:class_id')
+    .put(function (req, res, next) {
+
+        var myquery = { class_id: req.params.class_id };
+        var req_name = req.body.name;
+
+        mongo.connect(url, function (err, db) {
+            db.collection('school_classes').update(myquery, {
+                $set: {
+                    name: req_name,
+                }
+            }, function (err, result) {
+                assert.equal(null, err);
+                if (err) {
+                    res.send('false');
+                }
+                db.close();
+                res.send('true');
+            });
+        });
+    });
+
+
+
 router.route('/delete_classes/:class_id')
     .delete(function (req, res, next) {
         var myquery = { class_id: req.params.class_id };

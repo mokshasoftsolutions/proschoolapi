@@ -29,6 +29,7 @@ router.route('/task/:school_id')
             task_id: 'getauto',
             task: req.body.task,
             school_id: school_id,
+            department: req.body.department,
             priority: req.body.priority,
             posted_by: req.body.posted_by,
             assigned_on: date,
@@ -137,6 +138,7 @@ router.route('/edit_task_management/:task_id')
     .put(function (req, res, next) {
         var myquery = { task_id: req.params.task_id };
         var req_priority = req.body.priority;
+        var req_department = req.body.department;
         var req_assigned_on = req.body.assigned_on;
         var req_status = req.body.status;
         var req_task = req.body.task;
@@ -146,7 +148,8 @@ router.route('/edit_task_management/:task_id')
             db.collection('tasks').update(myquery, {
                 $set: {
                     priority: req_priority,                    
-                    due_date: req_due_date,
+                    assigned_on: req_assigned_on,
+                    department: req_department,
                     status: req_status,
                     task: req_task,
                 }

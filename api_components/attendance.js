@@ -670,7 +670,7 @@ module.exports = router;
 
 
 
-router.route('/sec_attendence_b/:select_date/:school_id')
+router.route('/all_classes_attendence_by_date/:select_date/:school_id')
     .get(function (req, res, next) {
         var resultArray = [];
         var school_id = req.params.school_id;

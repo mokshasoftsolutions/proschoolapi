@@ -24,16 +24,17 @@ router.route('/class_sections/:class_id')
     .post(function (req, res, next) {
         var status = 1;
         var class_id = req.params.class_id;
-        
+
         var splited = class_id.split("-");
         var school_id = splited[0] + '-' + splited[1];
-       
+
         school_classes = [];
         var item = {
             section_id: 'getauto',
             class_id: class_id,
             name: req.body.name,
-            school_id : school_id,
+            school_id: school_id,
+            teacher_name: req.body.teacher_name,
             status: status,
         };
         mongo.connect(url, function (err, db) {
@@ -77,6 +78,63 @@ router.route('/class_sections/:class_id')
         mongo.connect(url, function (err, db) {
             assert.equal(null, err);
             var cursor = db.collection('class_sections').find({ class_id });
+            cursor.forEach(function (doc, err) {
+                assert.equal(null, err);
+                resultArray.push(doc);
+            }, function () {
+                db.close();
+                res.send({
+                    class_sections: resultArray
+                });
+            });
+        });
+    });
+
+router.route('/get_sections_by_classid/:class_id')
+    .get(function (req, res, next) {
+        var class_id = req.params.class_id;
+        var resultArray = [];
+        mongo.connect(url, function (err, db) {
+            assert.equal(null, err);
+            var cursor = db.collection('class_sections').aggregate([
+                {
+                    $match: {
+                        class_id: class_id,
+                    }
+                },
+                {
+                    $lookup: {
+                        from: "school_classes",
+                        localField: "class_id",
+                        foreignField: "class_id",
+                        as: "class_doc"
+                    }
+                },
+                {
+                    $unwind: "$class_doc"
+                },
+                {
+                    $group: {
+                        _id: '$_id',
+                        class_name: {
+                            "$first": "$class_doc.name"
+                        },
+                        section_name: {
+                            "$first": "$name"
+                        },
+                        section_id: {
+                            "$first": "$section_id"
+                        },
+                        class_id: {
+                            "$first": "$class_id"
+                        },
+                        teacher_name: {
+                            "$first": "$teacher_name"
+                        }
+
+                    }
+                }
+            ])
             cursor.forEach(function (doc, err) {
                 assert.equal(null, err);
                 resultArray.push(doc);
@@ -148,6 +206,32 @@ router.route('/class_sections_edit/:section_id/:name/:value')
             });
         });
     });
+
+
+router.route('/edit_sections/:section_id')
+    .put(function (req, res, next) {
+
+        var myquery = { section_id: req.params.section_id };
+        var req_name = req.body.name;
+        var req_teacher_name = req.body.teacher_name;
+
+        mongo.connect(url, function (err, db) {
+            db.collection('class_sections').update(myquery, {
+                $set: {
+                    name: req_name,
+                    teacher_name: req_teacher_name,
+                }
+            }, function (err, result) {
+                assert.equal(null, err);
+                if (err) {
+                    res.send('false');
+                }
+                db.close();
+                res.send('true');
+            });
+        });
+    });
+
 
 
 router.route('/delete_sections/:section_id')
