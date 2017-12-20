@@ -29,7 +29,8 @@ router.route('/messages')
         var item = {
             message_id: 'getauto',
             message: req.body.message,
-            posted_by: req.body.posted_by,
+            subject: req.body.subject,
+            sent_by: req.body.sent_by,
             posted_on: date,
             status: status,
         }

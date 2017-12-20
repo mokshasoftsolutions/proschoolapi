@@ -300,6 +300,9 @@ router.route('/allClasses_Attendence_by_date/:select_date/:class_id/:school_id')
         endDate.setDate(endDate.getDate() + 1)
         mongo.connect(url, function (err, db) {
             assert.equal(null, err);
+            var sectionsArray = db.collection('class_sections').find({ class_id: class_id });
+            //console.log(sectionsArray);
+
             var data = db.collection('attendance').find({
                 date: { $gte: new Date(select_date.toISOString()), $lt: new Date(endDate.toISOString()) },
                 class_id: class_id,

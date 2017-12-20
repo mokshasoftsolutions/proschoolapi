@@ -83,6 +83,19 @@ router.route('/schools')
                 website: req.body.website,
                 academic_year: req.body.academic_year,
                 description: req.body.description,
+                founder: req.body.founder,
+                chairman: req.body.chairman,
+                vice_principal: req.body.vice_principal,
+                extra_curricular_activites: req.body.extra_curricular_activites,
+                coordinator: req.body.coordinator,
+                principal: req.body.principal,
+                alternate_phone: req.body.alternate_phone,
+                class_from: req.body.class_from,
+                timings: req.body.timings,
+                alternate_email: req.body.alternate_email,
+                medium: req.body.medium,
+                facilities_available: req.body.facilities_available,
+                afflication: req.body.afflication,
                 status: status,
             };
             var username = req.body.email;
@@ -199,6 +212,126 @@ router.route('/school/:school_id')
             });
         });
     });
+
+
+router.route('/edit_school_details/:school_id')
+    .put(function (req, res, next) {
+
+        var myquery = { school_id: req.params.school_id };
+        var req_name = req.body.name;
+        var req_medium = req.body.medium;
+        var req_academic_year = req.body.academic_year;
+        var req_extra_curricular_activites = req.body.extra_curricular_activites;
+        var req_facilities_available = req.body.facilities_available;
+        var req_timings = req.body.timings;
+        var req_afflication = req.body.afflication;
+        var req_class_from = req.body.class_from;
+        var req_website = req.body.website;
+        var req_email = req.body.email;
+        var req_phone = req.body.phone;
+        var req_alternate_phone = req.body.alternate_phone;
+        var req_address = req.body.address;
+        var req_founder = req.body.founder;
+        var req_chairman = req.body.chairman;
+        var req_principal = req.body.principal;
+        var req_vice_principal = req.body.vice_principal;
+        var req_coordinator = req.body.coordinator;
+
+        mongo.connect(url, function (err, db) {
+            db.collection('schools').update(myquery, {
+                $set: {
+                    name: req_name,
+                    medium: req_medium,
+                    academic_year: req_academic_year,
+                    timings: req_timings,
+                    extra_curricular_activites: req_extra_curricular_activites,
+                    facilities_available: req_facilities_available,
+                    afflication: req_afflication,
+                    class_from: req_class_from,
+                    founder: req_founder,
+                    chairman: req_chairman,
+                    principal: req_principal,
+                    vice_principal: req_vice_principal,
+                    coordinator: req_coordinator,
+                    website: req_website,
+                    email: req_email,
+                    phone: req_phone,
+                    alternate_phone: req_alternate_phone,
+                    address: req_address,
+                }
+            }, function (err, result) {
+                assert.equal(null, err);
+                if (err) {
+                    res.send('false');
+                }
+                db.close();
+                res.send('true');
+            });
+        });
+    });
+
+
+// router.route('/edit_school_management_details/:school_id')
+//     .put(function (req, res, next) {
+
+//         var myquery = { school_id: req.params.school_id };
+//         var req_founder = req.body.founder;
+//         var req_chairman = req.body.chairman;
+//         var req_principal = req.body.principal;
+//         var req_vice_principal = req.body.vice_principal;
+//         var req_coordinator = req.body.coordinator;
+
+//         mongo.connect(url, function (err, db) {
+//             db.collection('schools').update(myquery, {
+//                 $set: {
+//                     founder: req_founder,
+//                     chairman: req_chairman,
+//                     principal: req_principal,
+//                     vice_principal: req_vice_principal,
+//                     coordinator: req_coordinator,
+//                 }
+//             }, function (err, result) {
+//                 assert.equal(null, err);
+//                 if (err) {
+//                     res.send('false');
+//                 }
+//                 db.close();
+//                 res.send('true');
+//             });
+//         });
+//     });
+
+
+// router.route('/edit_school_contact_details/:school_id')
+//     .put(function (req, res, next) {
+
+//         var myquery = { school_id: req.params.school_id };
+//         var req_website = req.body.website;
+//         var req_email = req.body.email;
+//         var req_phone = req.body.phone;
+//         var req_alternate_phone = req.body.alternate_phone;
+//         var req_address = req.body.address;
+
+//         mongo.connect(url, function (err, db) {
+//             db.collection('schools').update(myquery, {
+//                 $set: {
+//                     website: req_website,
+//                     email: req_email,
+//                     phone: req_phone,
+//                     alternate_phone: req_alternate_phone,
+//                     address: req_address,
+//                 }
+//             }, function (err, result) {
+//                 assert.equal(null, err);
+//                 if (err) {
+//                     res.send('false');
+//                 }
+//                 db.close();
+//                 res.send('true');
+//             });
+//         });
+//     });
+
 
 
 module.exports = router;

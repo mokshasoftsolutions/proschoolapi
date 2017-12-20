@@ -81,6 +81,16 @@ router.route('/employee/:school_id')
                 phone: req.body.phone,
                 email: req.body.email,
                 joined_on: req.body.joined_on,
+                basic_pay: req.body.basic_pay,
+                blood_group: req.body.blood_group,
+                spoken_languages: req.body.spoken_languages,
+                salary_band: req.body.salary_band,
+                martial_status: req.body.martial_status,
+                mobile: req.body.mobile,
+                perm_city: req.body.perm_city,
+                country: req.body.country,
+                state: req.body.state,
+                postal_code: req.body.postal_code,
                 status: status,
             };
             var current_address = {
@@ -157,9 +167,10 @@ router.route('/employee/:school_id')
     })
     .get(function (req, res, next) {
         var resultArray = [];
+        var school_id = req.params.school_id;
         mongo.connect(url, function (err, db) {
             assert.equal(null, err);
-            var cursor = db.collection('employee').find();
+            var cursor = db.collection('employee').find({ school_id: school_id });
             cursor.forEach(function (doc, err) {
                 assert.equal(null, err);
                 resultArray.push(doc);
@@ -196,6 +207,23 @@ router.route('/employees_by_category/:job_category')
         mongo.connect(url, function (err, db) {
             assert.equal(null, err);
             var cursor = db.collection('employee').find({ job_category: job_category });
+            cursor.forEach(function (doc, err) {
+                resultArray.push(doc);
+            }, function () {
+                db.close();
+                res.send({ employees: resultArray });
+            });
+        });
+    });
+
+router.route('/employees_by_school_id_category/:job_category/:school_id')
+    .get(function (req, res, next) {
+        var job_category = req.params.job_category;
+        var school_id = req.params.school_id;
+        var resultArray = [];
+        mongo.connect(url, function (err, db) {
+            assert.equal(null, err);
+            var cursor = db.collection('employee').find({ job_category: job_category, school_id: school_id });
             cursor.forEach(function (doc, err) {
                 resultArray.push(doc);
             }, function () {
@@ -375,13 +403,23 @@ router.route('/bulk_upload_employees/:school_id')
                                 dob: key.dob,
                                 gender: key.gender,
                                 qualification: key.qualification,
-                                job_category: key.jobcategory,
+                                job_category: key.job_category,
                                 experience: key.experience,
                                 phone: key.phone,
                                 email: key.email,
                                 profile_image: key.profileimage,
                                 website: key.website,
                                 joined_on: key.joinedon,
+                                basic_pay: key.basic_pay,
+                                blood_group: key.blood_group,
+                                spoken_languages: key.spoken_languages,
+                                salary_band: key.salary_band,
+                                martial_status: key.martial_status,
+                                mobile: key.mobile,
+                                perm_city: key.perm_city,
+                                country: key.country,
+                                state: key.state,
+                                postal_code: key.postal_code,
                                 status: status,
                             };
                             var current_address = {
@@ -440,6 +478,16 @@ router.route('/bulk_upload_employees/:school_id')
                                                                         permanent_address
                                                                     }
                                                                 });
+                                                            if (item.job_category == "teaching") {
+                                                                var requestData = {}
+                                                                requestData.name = item.first_name + " " + item.last_name;
+                                                                requestData.employee_id = 'SCH-EMP-' + autoIndex;
+                                                                requestData.joined_on = item.joined_on;
+                                                                requestData.school_id = school_id;
+
+                                                                teacherModule.addTeacher(requestData);
+
+                                                            }
                                                             count++;
                                                             db.close();
 

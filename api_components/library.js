@@ -31,6 +31,7 @@ router.route('/book/:school_id')
             book_title: req.body.book_title,
             author_name: req.body.author_name,
             book_price: req.body.book_price,
+            isbn: req.body.isbn,
             qty: req.body.qty,
             rack_number: req.body.rack_number,
             inward_date: req.body.inward_date,
