@@ -76,9 +76,10 @@ router.route('/book/:school_id')
     })
     .get(function (req, res, next) {
         var resultArray = [];
+        var school_id = req.params.school_id;
         mongo.connect(url, function (err, db) {
             assert.equal(null, err);
-            var cursor = db.collection('books').find();
+            var cursor = db.collection('books').find({ school_id });           
             cursor.forEach(function (doc, err) {
                 assert.equal(null, err);
                 resultArray.push(doc);
@@ -90,6 +91,7 @@ router.route('/book/:school_id')
             });
         });
     });
+
 
 // Modified
 // Get Book Details By BookId

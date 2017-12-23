@@ -21,10 +21,11 @@ router.use(function (req, res, next) {
 
 // Add Timetable
 
-router.route('/messages')
+router.route('/messages/:school_id')
     .post(function (req, res, next) {
         var status = 1;
         var date = new Date();
+        var school_id = req.params.school_id;
         var receivers = [];
         var item = {
             message_id: 'getauto',
@@ -32,6 +33,7 @@ router.route('/messages')
             subject: req.body.subject,
             sent_by: req.body.sent_by,
             posted_on: date,
+            school_id:school_id,
             status: status,
         }
         receivers = req.body.receivers;
@@ -224,31 +226,16 @@ router.route('/teacher_msg_all_parents/:section_id/:school_id')
                                             if (count == req.body.parents.length) {
                                                 res.end('true');
                                             }
-
-
                                         });
                                     }
-                                });
-
-                            //     }
-                            // });
-
-
-
+                                });                          
                         });
                     });
-
                 });
-
-
             } else {
                 res.end('false');
             }
-
-
         }
-
-
     })
 
 

@@ -84,11 +84,8 @@ router.route('/class_timetable/:section_id/:subject_id')
 router.route('/class_timetable/:subject_id')
     .get(function (req, res, next) {
         var resultArray = [];
-
         //var section_id = req.params.section_id;
         var subject_id = req.params.subject_id;
-
-
 
         mongo.connect(url, function (err, db) {
             assert.equal(null, err);
@@ -144,11 +141,8 @@ router.route('/class_timetable/:subject_id')
 router.route('/class_timetables/:section_id')
     .get(function (req, res, next) {
         var resultArray = [];
-
         //var section_id = req.params.section_id;
         var section_id = req.params.section_id;
-
-
 
         mongo.connect(url, function (err, db) {
             assert.equal(null, err);
@@ -173,8 +167,6 @@ router.route('/class_timetables/:section_id')
                         ]
                     }
                 },
-
-
                 {
                     "$project": {
                         "_id": "$_id",
@@ -213,9 +205,7 @@ router.route('/classes_timetable_by_day/:select_day/:class_id')
         day = Day[day - 1];
 
         mongo.connect(url, function (err, db) {
-            assert.equal(null, err);
-            // var cursor = db.collection('timetable').find({date:select_date});
-            // var cursor = db.collection('timetable').find({day:day});
+            assert.equal(null, err);          
             var cursor = db.collection('timetable').aggregate([
                 {
                     $match: {
@@ -256,7 +246,6 @@ router.route('/classes_timetable_by_day/:select_day/:class_id')
                 {
                     $unwind: "$subject_doc"
                 },
-
                 {
                     $group: {
                         _id: '$_id',
@@ -283,28 +272,7 @@ router.route('/classes_timetable_by_day/:select_day/:class_id')
                         },
                         start_time: {
                             "$first": "$start_time"
-                        }
-                        // paper_name: {
-                        //     "$first": "$exampaper_doc.exam_paper_title"
-                        // },
-                        // exam_sch_id: {
-                        //     "$first": "$exam_sch_id"
-                        // },
-                        // examschedule_name: {
-                        //     "$first": "$schedule_doc.exam_title"
-                        // },
-                        // marks: {
-                        //     "$first": "$marks"
-                        // },
-                        // percentage: {
-                        //     "$first": "$percentage"
-                        // },
-                        // max_marks: {
-                        //     "$first": "$exampaper_doc.max_marks"
-                        // },
-                        // conduct: {
-                        //     "$first": "$conduct"
-                        // }
+                        }                       
                     }
                 },
             ])
@@ -334,8 +302,7 @@ router.route('/class_timetable_by_day/:select_day/:section_id')
 
         mongo.connect(url, function (err, db) {
             assert.equal(null, err);
-            // var cursor = db.collection('timetable').find({date:select_date});
-            // var cursor = db.collection('timetable').find({day:day});
+           
             var cursor = db.collection('timetable').aggregate([
                 {
                     $match: {
@@ -393,28 +360,7 @@ router.route('/class_timetable_by_day/:select_day/:section_id')
                         },
                         start_time: {
                             "$first": "$start_time"
-                        }
-                        // paper_name: {
-                        //     "$first": "$exampaper_doc.exam_paper_title"
-                        // },
-                        // exam_sch_id: {
-                        //     "$first": "$exam_sch_id"
-                        // },
-                        // examschedule_name: {
-                        //     "$first": "$schedule_doc.exam_title"
-                        // },
-                        // marks: {
-                        //     "$first": "$marks"
-                        // },
-                        // percentage: {
-                        //     "$first": "$percentage"
-                        // },
-                        // max_marks: {
-                        //     "$first": "$exampaper_doc.max_marks"
-                        // },
-                        // conduct: {
-                        //     "$first": "$conduct"
-                        // }
+                        }                      
                     }
                 },
             ])

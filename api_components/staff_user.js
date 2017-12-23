@@ -12,7 +12,7 @@ var router = express.Router();
 var url = 'mongodb://' + config.dbhost + ':27017/s_erp_data';
 
 var cookieParser = require('cookie-parser');
-router.use(function(req, res, next) {
+router.use(function (req, res, next) {
     // do logging
     res.header("Access-Control-Allow-Origin", "*");
     res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
@@ -22,7 +22,7 @@ router.use(function(req, res, next) {
 // Add Employee
 
 router.route('/staff_user/:employee_id')
-    .post(function(req, res, next) {
+    .post(function (req, res, next) {
         var status = 1;
         var employee_id = req.params.employee_id;
         var sec_pass = bcrypt.hashSync(req.body.password);
@@ -36,50 +36,50 @@ router.route('/staff_user/:employee_id')
             sms_alerts_number: req.body.sms_alerts_number,
             status: status,
         };
-        mongo.connect(url, function(err, db) {
-            autoIncrement.getNextSequence(db, 'staff_users', function(err, autoIndex) {
+        mongo.connect(url, function (err, db) {
+            autoIncrement.getNextSequence(db, 'staff_users', function (err, autoIndex) {
                 var collection = db.collection('staff_users');
                 collection.ensureIndex({
                     "staff_user_id": 1,
                 }, {
-                    unique: true
-                }, function(err, result) {
-                    if (item.username == null || item.password == null || item.employee_id == null) {
-                        res.end('null');
-                    } else {
-                        collection.insertOne(item, function(err, result) {
-                            if (err) {
-                                if (err.code == 11000) {
+                        unique: true
+                    }, function (err, result) {
+                        if (item.username == null || item.password == null || item.employee_id == null) {
+                            res.end('null');
+                        } else {
+                            collection.insertOne(item, function (err, result) {
+                                if (err) {
+                                    if (err.code == 11000) {
+                                        res.end('false');
+                                    }
                                     res.end('false');
                                 }
-                                res.end('false');
-                            }
-                            collection.update({
-                                _id: item._id
-                            }, {
-                                $set: {
-                                    staff_user_id: employee_id+'-STUSR-'+autoIndex
-                                }
-                            }, function(err, result) {
-                                db.close();
-                                res.end('true');
+                                collection.update({
+                                    _id: item._id
+                                }, {
+                                        $set: {
+                                            staff_user_id: employee_id + '-STUSR-' + autoIndex
+                                        }
+                                    }, function (err, result) {
+                                        db.close();
+                                        res.end('true');
+                                    });
                             });
-                        });
-                    }
-                });
+                        }
+                    });
             });
         });
 
     })
-    .get(function(req, res, next) {
+    .get(function (req, res, next) {
         var resultArray = [];
-        mongo.connect(url, function(err, db) {
+        mongo.connect(url, function (err, db) {
             assert.equal(null, err);
-            var cursor = db.collection('staff_users').find({},{'password':0});
-            cursor.forEach(function(doc, err) {
+            var cursor = db.collection('staff_users').find({}, { 'password': 0 });
+            cursor.forEach(function (doc, err) {
                 assert.equal(null, err);
                 resultArray.push(doc);
-            }, function() {
+            }, function () {
                 db.close();
 
                 res.send({

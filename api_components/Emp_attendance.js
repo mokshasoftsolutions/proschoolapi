@@ -310,10 +310,15 @@ router.route('/employee_Attendance_by_category/:category/:select_date/:school_id
         endDate.setDate(endDate.getDate() + 1)
         mongo.connect(url, function (err, db) {
             assert.equal(null, err);
+            // var data = db.collection('employee_attendance').find({
+            //     date: { $gte: new Date(select_date.toISOString()), $lt: new Date(endDate.toISOString()) },
+            //     category: category,
+            //     school_id: school_id
+            // })
             var data = db.collection('employee_attendance').find({
                 date: { $gte: new Date(select_date.toISOString()), $lt: new Date(endDate.toISOString()) },
-                category: category,
-                school_id: school_id
+                school_id: school_id,
+                category: category
             })
             dataCount = data.count(function (e, triggerCount) {
                 if (triggerCount > 0) {

@@ -29,12 +29,16 @@ router.route('/assignment/:section_id/:lession_id')
         var status = 1;
         var section_id = req.params.section_id;
         var lession_id = req.params.lession_id;
+        var splited = section_id.split("-");
+        var school_id = splited[0] + '-' + splited[1];
+
         // var chapter_name = req.params.chapter_name;
         books = [];
         var item = {
             assignment_id: 'getauto',
             section_id: section_id,
             lession_id: lession_id,
+            school_id: school_id,
             assignment_title: req.body.assignment_title,
             subject_name: req.body.subject_name,
             due_date: req.body.due_date,
@@ -77,9 +81,9 @@ router.route('/assignment/:section_id/:lession_id')
         });
     })
 
-
     .get(function (req, res, next) {
         var resultArray = [];
+
         var lession_id = req.params.lession_id;
         mongo.connect(url, function (err, db) {
             assert.equal(null, err);
@@ -87,7 +91,7 @@ router.route('/assignment/:section_id/:lession_id')
             var cursor = db.collection('assignments').aggregate([
                 {
                     $match: {
-                        'lession_id': lession_id
+                        'lession_id': lession_id,
                     }
                 },
                 {
@@ -120,6 +124,8 @@ router.route('/assignment_marksbulk_eval/:section_id/:subject_id/:lession_id/:as
         var subject_id = req.params.subject_id;
         var section_id = req.params.section_id;
         var lession_id = req.params.lession_id;
+        var splited = section_id.split("-");
+        var school_id = splited[0] + '-' + splited[1];
         var assignment_id = req.params.assignment_id;
 
         if (subject_id == null || section_id == null || !req.body.studentAssignmentMarks) {
@@ -129,13 +135,13 @@ router.route('/assignment_marksbulk_eval/:section_id/:subject_id/:lession_id/:as
             if (req.body.studentAssignmentMarks.length > 0) {
                 forEach(req.body.studentAssignmentMarks, function (key, value) {
 
-
                     var item = {
                         assignment_result_id: '',
                         student_id: key.student_id,
                         subject_id: subject_id,
                         section_id: section_id,
                         lession_id: lession_id,
+                        school_id: school_id,
                         assignment_id: assignment_id,
                         marks: key.marks
                     };
@@ -175,31 +181,18 @@ router.route('/assignment_marksbulk_eval/:section_id/:subject_id/:lession_id/:as
                                                     if (count == req.body.studentAssignmentMarks.length) {
                                                         res.end('true');
                                                     }
-
-
                                                 });
                                             }
                                         });
-
                                 }
                             });
-
-
-
                         });
                     });
-
                 });
-
-
             } else {
                 res.end('false');
             }
-
-
         }
-
-
     })
     .get(function (req, res, next) {
         var resultArray = [];
@@ -216,7 +209,7 @@ router.route('/assignment_marksbulk_eval/:section_id/:subject_id/:lession_id/:as
                         subject_id: subject_id,
                         section_id: section_id,
                         lession_id: lession_id,
-                        assignment_id: assignment_id
+                        assignment_id: assignment_id,
                     }
                 },
                 {
@@ -465,6 +458,8 @@ router.route('/bulk_upload_assignments/:section_id/:lession_id')
     .post(function (req, res, next) {
         var section_id = req.params.section_id;
         var lession_id = req.params.lession_id;
+        var splited = section_id.split("-");
+        var school_id = splited[0] + '-' + splited[1];
         var status = 1;
         var exceltojson;
         upload(req, res, function (err) {
@@ -507,6 +502,7 @@ router.route('/bulk_upload_assignments/:section_id/:lession_id')
                                 assignment_id: 'getauto',
                                 section_id: section_id,
                                 lession_id: lession_id,
+                                school_id: school_id,
                                 chapter_name: key.chaptername,
                                 assignment_title: key.assignmenttitle,
                                 subject_name: key.subjectname,
@@ -622,7 +618,7 @@ router.route('/edit_assignments_marks/:assignment_result_id')
         mongo.connect(url, function (err, db) {
             db.collection('assignment_marks').update(myquery, {
                 $set: {
-                    marks: req_marks                  
+                    marks: req_marks
                 }
             }, function (err, result) {
                 assert.equal(null, err);

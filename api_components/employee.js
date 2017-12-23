@@ -70,6 +70,7 @@ router.route('/employee/:school_id')
             var item = {
                 employee_id: 'getauto',
                 school_id: school_id,
+                employeeId: req.body.employeeId,
                 first_name: req.body.first_name,
                 last_name: req.body.last_name,
                 surname: req.body.surname,
@@ -397,6 +398,7 @@ router.route('/bulk_upload_employees/:school_id')
                             var item = {
                                 employee_id: 'getauto',
                                 school_id: school_id,
+                                employeeId: key.employeeId,
                                 first_name: key.firstname,
                                 last_name: key.lastname,
                                 surname: key.surname,

@@ -150,40 +150,16 @@ router.route('/fee_master/:school_id')
         mongo.connect(url, function (err, db) {
             assert.equal(null, err);
             // var cursor = db.collection('fee_types').find({school_id});
-            var cursor = db.collection('fee_types').aggregate([{
-                "$lookup": {
-                    "from": "feetypes",
-                    "localField": "fee_type",
-                    "foreignField": "fee_type",
-                    "as": "fee_doc"
+            var cursor = db.collection('fee_types').aggregate([
+                {
+                    "$lookup": {
+                        "from": "feetypes",
+                        "localField": "fee_type",
+                        "foreignField": "fee_type",
+                        "as": "fee_doc"
+                    }
                 }
-            },
-                // {
-                //     "$unwind": "$fee_doc"
-                // }
-                // {
-                //     "$redact": {
-                //         "$cond": [{
-                //                 "$eq": ["$employee_id", "$employee_doc.employee_id"]
-                //             },
-                //             "$$KEEP",
-                //             "$$PRUNE"
-                //         ]
-                //     }
-                // },
-                // {
-                //     "$project": {
-                //         "_id": "$_id",
-                //         "teacher_id": "$teacher_id",
-                //         "employee": "$employee_doc"  ,
-                //         "school_id": "$school_id",
-                //         "employee_id": "$employee_id",
-                //         "added_on": "$added_on",
 
-                //         "subjects": "$subjects"
-
-                //     }
-                // }
             ]);
             cursor.forEach(function (doc, err) {
                 assert.equal(null, err);

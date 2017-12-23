@@ -56,15 +56,7 @@ router.route('/students/:section_id')
         var section_id = req.params.section_id;
         var splited = section_id.split("-");
         var school_id = splited[0] + '-' + splited[1];
-        var class_id = splited[0] + '-' + splited[1] + '-' + splited[2] + '-' + splited[3];
-        // var parent_account_details = {};
-        // parent_account_details.parent_account_create = req.body.parent_account_create;
-        // parent_account_details.parent_account_new = req.body.parent_account_new;
-        // parent_account_details.parent_id = req.body.parent_id;
-        // parent_account_details.school_id = req.body.school_id;
-        //   console.log(parent_account_details);
-        //   console.log(req.body.parent_account_create);
-        //   console.log(req.body.parent_account_new);
+        var class_id = splited[0] + '-' + splited[1] + '-' + splited[2] + '-' + splited[3];        
 
         uploadImage(req, res, function (err) {
             if (err) {
