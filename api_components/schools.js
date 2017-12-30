@@ -236,6 +236,7 @@ router.route('/edit_school_details/:school_id')
         var req_principal = req.body.principal;
         var req_vice_principal = req.body.vice_principal;
         var req_coordinator = req.body.coordinator;
+        var req_est_on = req.body.est_on;
 
         mongo.connect(url, function (err, db) {
             db.collection('schools').update(myquery, {
@@ -256,6 +257,7 @@ router.route('/edit_school_details/:school_id')
                     website: req_website,
                     email: req_email,
                     phone: req_phone,
+                    est_on: req_est_on,
                     alternate_phone: req_alternate_phone,
                     address: req_address,
                 }
@@ -270,6 +272,48 @@ router.route('/edit_school_details/:school_id')
         });
     });
 
+
+
+router.route('/schools_photo_edit/:school_id')
+    .post(function (req, res, next) {
+        var status = 1;
+        var school_id = req.params.school_id;
+        var myquery = { school_id: req.params.school_id };
+        uploadImage(req, res, function (err) {
+            if (err) {
+                res.json({ error_code: 1, err_desc: err });
+                return;
+            }
+            /** Multer gives us file info in req.file object */
+            if (!req.file) {
+                res.json({ error_code: 1, err_desc: "No file passed" });
+                return;
+            }
+            // var SchoolImage = {
+            filename = req.file.filename;
+            originalname = req.file.originalname;
+            imagePath = req.file.path;
+            mimetype = req.file.mimetype;
+            // }
+         //   var filename = req.file.filename;
+         //   console.log(filename);
+
+            mongo.connect(url, function (err, db) {
+                db.collection('schools').update(myquery, {
+                    $set:
+                        ({ SchoolImage: [{ filename: filename, originalname: originalname, imagePath: imagePath, mimetype: mimetype }] })
+                    // SchoolImage: SchoolImage
+                }, function (err, result) {
+                    if (err) {
+                        res.send('false');
+                    }
+                    db.close();
+                    res.send('true');
+                });
+            });
+        })
+    });
+// db.getCollection('schools').update({"school_id":"SCH-9274"},{$set: ({SchoolImage: [ { filename: "HEMABABU.jpg"}]})});
 
 // router.route('/edit_school_management_details/:school_id')
 //     .put(function (req, res, next) {

@@ -13,6 +13,7 @@ var students = require("./api_components/students.js");
 var subjects = require("./api_components/subject.js");
 var course_works = require("./api_components/course_work.js");
 var attendance = require("./api_components/attendance.js");
+var attendanceDate = require("./api_components/AttendanceByDate_classes.js");
 var Emp_attendance = require("./api_components/Emp_attendance.js");
 var Employee_attendance_chart = require("./api_components/Employee_attendance_chart.js");
 var employee = require("./api_components/employee.js");
@@ -141,6 +142,7 @@ app.use('/api', students);
 app.use('/api', subjects);
 app.use('/api', course_works);
 app.use('/api', attendance);
+app.use('/api',attendanceDate)
 app.use('/api', Emp_attendance);
 app.use('/api', Employee_attendance_chart);
 app.use('/api', employee);

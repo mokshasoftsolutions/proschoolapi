@@ -13,6 +13,7 @@ var xlsxtojson = require("xlsx-to-json-lc");
 var port = process.env.PORT || 4005;
 var router = express.Router();
 var url = 'mongodb://' + config.dbhost + ':27017/s_erp_data';
+var loginUrl = 'mongodb://' + config.dbhost + ':27017/auth';
 
 var cookieParser = require('cookie-parser');
 router.use(function (req, res, next) {
@@ -409,7 +410,6 @@ router.route('/bulk_upload_employees/:school_id')
                                 experience: key.experience,
                                 phone: key.phone,
                                 email: key.email,
-                                profile_image: key.profileimage,
                                 website: key.website,
                                 joined_on: key.joinedon,
                                 basic_pay: key.basic_pay,
@@ -565,14 +565,52 @@ router.route('/edit_employee/:employee_id')
         });
     });
 
-
-
-router.route('/delete_employee/:employee_id')
-    .delete(function (req, res, next) {
+router.route('/edit_employee_details/:employee_id')
+    .put(function (req, res, next) {
         var myquery = { employee_id: req.params.employee_id };
+        var req_first_name = req.body.first_name;
+        var req_last_name = req.body.last_name;
+        var req_dob = req.body.dob;
+        var req_gender = req.body.gender;
+        var req_qualification = req.body.qualification;
+        var req_job_category = req.body.job_category;
+        var req_experience = req.body.experience;
+        var req_phone = req.body.phone;
+        var req_email = req.body.email;
+        var req_website = req.body.website;
+        var req_joined_on = req.body.joined_on;
+        var salary_band = req.body.salary_band;
+        var basic_pay = req.body.basic_pay;
+        var mobile = req.body.mobile;
+        var blood_group = req.body.blood_group;
+        var spoken_languages = req.body.spoken_languages;
+        var country = req.body.country;
+        var perm_city = req.body.perm_city;
+        var postal_code = req.body.postal_code;
 
         mongo.connect(url, function (err, db) {
-            db.collection('employee').deleteOne(myquery, function (err, result) {
+            db.collection('employee').update(myquery, {
+                $set: {
+                    first_name: req_first_name,
+                    last_name: req_last_name,
+                    dob: req_dob,
+                    gender: req_gender,
+                    qualification: req_qualification,
+                    job_category: req_job_category,
+                    experience: req_experience,
+                    phone: req_phone,
+                    email: req_email,                    
+                    website: req_website,
+                    joined_on: req_joined_on,
+                    salary_band: salary_band,
+                    basic_pay: basic_pay,
+                    mobile: mobile,
+                    blood_group: blood_group,
+                    spoken_languages: spoken_languages,
+                    country: country,
+                    postal_code: postal_code
+                }
+            }, function (err, result) {
                 assert.equal(null, err);
                 if (err) {
                     res.send('false');
@@ -581,6 +619,96 @@ router.route('/delete_employee/:employee_id')
                 res.send('true');
             });
         });
+    });
+
+
+
+router.route('/delete_employee/:employee_id')
+    .delete(function (req, res, next) {
+        var myquery = { employee_id: req.params.employee_id };
+        var employee_id = req.params.employee_id;
+        var resultArray = [];
+
+        mongo.connect(url, function (err, db) {
+            db.collection('employee').deleteOne(myquery, function (err, result) {
+                assert.equal(null, err);
+                if (err) {
+                    res.send(' employee false');
+                }
+                else {
+                    mongo.connect(url, function (err, db) {
+                        var cursor = db.collection('teachers').find({ employee_id: employee_id });
+                        cursor.forEach(function (doc, err) {
+                            assert.equal(null, err);
+                            resultArray.push(doc);
+                        }, function () {
+                            uniqueId = resultArray[0].teacher_id;
+                            db.collection('teachers').deleteOne(myquery, function (err, result) {
+                                if (err) {
+                                    res.send('teacher false');
+                                }
+                                else {
+                                    mongo.connect(loginUrl, function (err, db) {
+                                        db.collection('users').deleteOne({ uniqueId: uniqueId }, function (err, result) {
+                                            assert.equal(null, err);
+                                            if (err) {
+                                                res.send('user false');
+                                            }
+                                        });
+                                    });
+                                }
+
+                            });
+
+                        });
+                    });
+                }
+                db.close();
+                res.send('true');
+            });
+
+        });
+    });
+
+
+router.route('/employee_photo_edit/:employee_id')
+    .post(function (req, res, next) {
+        var status = 1;
+
+        var myquery = { employee_id: req.params.employee_id };
+        uploadImage(req, res, function (err) {
+            if (err) {
+                res.json({ error_code: 1, err_desc: err });
+                return;
+            }
+            /** Multer gives us file info in req.file object */
+            if (!req.file) {
+                res.json({ error_code: 1, err_desc: "No file passed" });
+                return;
+            }
+            // var SchoolImage = {
+            filename = req.file.filename;
+            originalname = req.file.originalname;
+            imagePath = req.file.path;
+            mimetype = req.file.mimetype;
+            // }
+            //   var filename = req.file.filename;
+            //   console.log(filename);
+
+            mongo.connect(url, function (err, db) {
+                db.collection('employee').update(myquery, {
+                    $set:
+                        ({ employeeImage: [{ filename: filename, originalname: originalname, imagePath: imagePath, mimetype: mimetype }] })
+                    // SchoolImage: SchoolImage
+                }, function (err, result) {
+                    if (err) {
+                        res.send('false');
+                    }
+                    db.close();
+                    res.send('true');
+                });
+            });
+        })
     });
 
 

@@ -64,7 +64,7 @@ router.route('/get_parents_by_section_id/:section_id')
         var parents = [];
         mongo.connect(url, function (err, db) {
             assert.equal(null, err);
-          //  var cursor = db.collection('parents').find({}, {students: { $elemMatch: { section_id: section_id } }})
+            //  var cursor = db.collection('parents').find({}, {students: { $elemMatch: { section_id: section_id } }})
 
             var cursor = db.collection('parents').aggregate([
                 {
@@ -201,6 +201,66 @@ router.route('/removeStudentFromParent/:parentId/:studentId')
                     }
                 });
 
+        });
+    });
+
+//get Students by parent id
+router.route('/all_classes/:select_date/:school_id')
+    .get(function (req, res, next) {
+        var schoolId = req.params.school_id;
+        var select_date = new Date(req.params.select_date);       
+        var endDate = new Date(select_date);
+        endDate.setDate(endDate.getDate() + 1)
+         var parents = [];
+        mongo.connect(url, function (err, db) {
+            assert.equal(null, err);
+            //  var cursor = db.collection('parents').find({ parent_id: parent_id, status: 1 });
+            var cursor = db.collection('school_classes').aggregate([
+                {
+                    $match: {
+                        school_id: schoolId                        
+                    }
+                },
+                {
+                    $lookup: {
+                        from: 'class_sections',
+                        localField: 'class_id',
+                        foreignField: 'class_id',
+                        as: 'x1'
+                    }
+                },
+                {
+                    '$unwind': '$x1'
+                },                
+                {
+                    $lookup: {
+                        from: 'attendance',
+                        localField: 'x1.section_id',
+                        foreignField: 'section_id',
+                        'as': 'x2'
+                    }
+                },
+                {
+                    '$unwind': '$x2'
+                },
+                {
+                    $match: {
+                        'x2.date': {
+                            $gte: new Date(select_date.toISOString()),
+                            $lt: new Date(endDate.toISOString())
+                        },                     
+                    }
+                },
+            ]);
+            cursor.forEach(function (doc, err) {
+                assert.equal(null, err);
+                parents.push(doc);
+            }, function () {
+                db.close();
+                res.send({
+                    parents: parents
+                });
+            });
         });
     });
 
