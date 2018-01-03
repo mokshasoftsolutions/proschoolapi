@@ -237,12 +237,20 @@ router.route('/edit_sections/:section_id')
 router.route('/delete_sections/:section_id')
     .delete(function (req, res, next) {
         var myquery = { section_id: req.params.section_id };
-
         mongo.connect(url, function (err, db) {
             db.collection('class_sections').deleteOne(myquery, function (err, result) {
                 assert.equal(null, err);
                 if (err) {
                     res.send('false');
+                } else {
+                    mongo.connect(url, function (err, db) {
+                        db.collection('students').deleteOne(myquery, function (err, result) {
+                            assert.equal(null, err);
+                            if (err) {
+                                res.send('students false');
+                            }
+                        });
+                    });
                 }
                 db.close();
                 res.send('true');

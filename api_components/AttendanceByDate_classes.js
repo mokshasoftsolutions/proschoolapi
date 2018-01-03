@@ -115,6 +115,9 @@ router.route('/sec_attendence_b/:select_date/:class_id')
                         status: {
                             "$first": "$status"
                         },
+                        // class_name:{
+                        //     "$first":"$name"
+                        // }
 
                     }
                 }
@@ -318,25 +321,27 @@ router.route('/all_cses_att_date_testing/:select_date/:school_id')
                                 if (classDataLength == count) {
                                     next(null, classResult);
                                 }
-                                console.log(sectionAttendence);
+                                // console.log(sectionAttendence);
                                 attendenceClass.push(className);
                                 attendenceClass.push(sectionAttendence);
-                                // console.log(attendenceClass);
-                                // classAttendence.push(attendenceClass);
+                             //   console.log(attendenceClass[1]);
+                                 classAttendence.push(attendenceClass);
                                 //console.log(classAttendence);
-
+                               
                             }, function () {
                                 // Attendence.push(classAttendence);
-                                //  console.log(classAttendence);
+                                //  console.log("hemababu");
                                 //db.close();
                                 // res.send({
-                                //     Attendence: Attendence
+                                //     Attendence: "hema"
                                 // });
                             });
                         }
                     }
                 ],
                 function (err, result1) {
+                    console.log("testing");
+                    //console.log(classAttendence+"hemababu");
                     db.close();
                     //    console.log(result1);
                     if (err) {
@@ -347,12 +352,12 @@ router.route('/all_cses_att_date_testing/:select_date/:school_id')
                     } else {
 
                         res.send({
-                            students: result1
+                            students: classAttendence
                         });
 
                     }
                 }
-            );
+             );
 
 
         });

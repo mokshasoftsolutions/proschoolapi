@@ -81,6 +81,7 @@ router.route('/students/:section_id')
             parent_account_details.parent_id = req.body.parent_id;
             parent_account_details.school_id = school_id;
             parent_account_details.section_id = section_id;
+            parent_account_details.class_id = class_id;
             // console.log(parent_account_details);
             // console.log(req.body.parent_account_create);
             // console.log(req.body.parent_account_new);
@@ -211,6 +212,7 @@ router.route('/students/:section_id')
                                         requestData.parent_id = parent_account_details.parent_id;
                                         requestData.school_id = parent_account_details.school_id;
                                         requestData.section_id = parent_account_details.section_id;
+                                        requestData.class_id = parent_account_details.class_id;
                                         // console.log(requestData);
                                         // console.log(parent_account_details.parent_account_new);
                                         if (parent_account_details.parent_account_new == true || parent_account_details.parent_account_new == 'true') {
@@ -567,10 +569,13 @@ router.route('/bulk_upload_students/:section_id')
                     if (test.length > 0) {
                         test.forEach(function (key, value) {
                             var parent_account_details = {};
-                            parent_account_details.parent_account_create = key.parent_account_create;
-                            parent_account_details.parent_account_new = key.parent_account_new;
-                            parent_account_details.parent_id = key.parent_id;
+                            parent_account_details.parent_account_create = key.parentaccountcreate;
+                            parent_account_details.parent_account_new = key.parentaccountnew;
+                            parent_account_details.parent_id = key.parentid;
                             parent_account_details.school_id = school_id;
+                            parent_account_details.class_id = class_id;
+                            parent_account_details.section_id = section_id;
+                            // console.log(parent_account_details);
 
                             var item = {
                                 student_id: 'getauto',
@@ -684,15 +689,17 @@ router.route('/bulk_upload_students/:section_id')
                                                         requestData.student_id = class_id + '-STD-' + autoIndex;
                                                         requestData.parent_id = parent_account_details.parent_id;
                                                         requestData.school_id = parent_account_details.school_id;
-                                                        // console.log(requestData);
-                                                        // console.log(parent_account_details.parent_account_new);
+                                                        requestData.class_id = parent_account_details.class_id;
+                                                        requestData.section_id = parent_account_details.section_id;
+                                                        //  console.log(requestData);
+                                                        //  console.log(parent_account_details.parent_account_new);
                                                         if (parent_account_details.parent_account_new == true || parent_account_details.parent_account_new == 'true' || parent_account_details.parent_account_new == 'TRUE') {
-                                                            // console.log("newaccount")
+                                                            console.log("newaccount")
                                                             parentModule.addParent(requestData);
 
                                                         }
                                                         if (parent_account_details.parent_account_new == false || parent_account_details.parent_account_new == 'false' || parent_account_details.parent_account_new == 'FALSE') {
-                                                            // console.log("existing")
+                                                            console.log("existing")
                                                             parentModule.addStudentToParent(requestData);
                                                         }
 
@@ -933,7 +940,6 @@ router.route('/delete_student/:student_id')
                                     $match:
                                         {
                                             "students": { $elemMatch: { "student_id": student_id } }
-
                                         }
                                 },
                                 {
@@ -961,45 +967,42 @@ router.route('/delete_student/:student_id')
                             assert.equal(null, err);
                             resultArray.push(doc);
                         }, function () {
-                            //console.log(resultArray);
-                            length = resultArray[0].students[0].length;
-                            parentId = resultArray[0].parent_id;
-                            // console.log(parentId);
-                            if (length > 1) {
+                            length = resultArray.length;
+                            if (length != 0) {
 
-                                mongo.connect(url, function (err, db) {
-                                    db.collection('parents').update({ "students": { $elemMatch: { "student_id": student_id } } },
-                                        { $pull: { "students": { "student_id": student_id } } })
-
-                                    assert.equal(null, err);
-                                    if (err) {
-                                        res.send('false');
-                                    }
-
-                                });
+                                //console.log(resultArray);
+                                length = resultArray[0].students[0].length;
+                                parentId = resultArray[0].parent_id;
+                                // console.log(parentId);
+                                if (length > 1) {
+                                    mongo.connect(url, function (err, db) {
+                                        db.collection('parents').update({ "students": { $elemMatch: { "student_id": student_id } } },
+                                            { $pull: { "students": { "student_id": student_id } } })
+                                        assert.equal(null, err);
+                                        if (err) {
+                                            res.send('false');
+                                        }
+                                    });
+                                }
+                                else if (length == 1) {
+                                    mongo.connect(url, function (err, db) {
+                                        db.collection('parents').deleteOne({ "students": { $elemMatch: { "student_id": student_id } } })
+                                        assert.equal(null, err);
+                                        if (err) {
+                                            res.send('false');
+                                        }
+                                        else {
+                                            mongo.connect(loginUrl, function (err, db) {
+                                                db.collection('users').deleteOne({ uniqueId: parentId })
+                                                assert.equal(null, err);
+                                                if (err) {
+                                                    res.send('false');
+                                                }
+                                            });
+                                        }
+                                    });
+                                }
                             }
-                            else if (length == 1) {
-                                mongo.connect(url, function (err, db) {
-                                    db.collection('parents').deleteOne({ "students": { $elemMatch: { "student_id": student_id } } })
-                                    assert.equal(null, err);
-                                    if (err) {
-                                        res.send('false');
-                                    }
-                                    else {
-                                        mongo.connect(loginUrl, function (err, db) {
-                                            db.collection('users').deleteOne({ uniqueId: parentId })
-                                            assert.equal(null, err);
-                                            if (err) {
-                                                res.send('false');
-                                            }
-
-                                        });
-                                    }
-
-                                });
-
-                            }
-
                             db.close();
                             res.send('true');
                         });

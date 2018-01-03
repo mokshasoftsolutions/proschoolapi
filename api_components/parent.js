@@ -208,17 +208,17 @@ router.route('/removeStudentFromParent/:parentId/:studentId')
 router.route('/all_classes/:select_date/:school_id')
     .get(function (req, res, next) {
         var schoolId = req.params.school_id;
-        var select_date = new Date(req.params.select_date);       
+        var select_date = new Date(req.params.select_date);
         var endDate = new Date(select_date);
         endDate.setDate(endDate.getDate() + 1)
-         var parents = [];
+        var parents = [];
         mongo.connect(url, function (err, db) {
             assert.equal(null, err);
             //  var cursor = db.collection('parents').find({ parent_id: parent_id, status: 1 });
             var cursor = db.collection('school_classes').aggregate([
                 {
                     $match: {
-                        school_id: schoolId                        
+                        school_id: schoolId
                     }
                 },
                 {
@@ -231,7 +231,7 @@ router.route('/all_classes/:select_date/:school_id')
                 },
                 {
                     '$unwind': '$x1'
-                },                
+                },
                 {
                     $lookup: {
                         from: 'attendance',
@@ -248,9 +248,25 @@ router.route('/all_classes/:select_date/:school_id')
                         'x2.date': {
                             $gte: new Date(select_date.toISOString()),
                             $lt: new Date(endDate.toISOString())
-                        },                     
+                        },
                     }
                 },
+                // {
+                //     "$project": {
+                //         "_id": "$_id",
+                //         "class_name": "$name",
+                //         "section_name": "$x1.name",
+                //         "status": "$x2.status",
+                        // "marks": "$marks",
+                        // "comment": "$comment",
+                        // "date": "$date",
+                        // "status": "$status",
+                        // "student_name": "$student_doc.first_name",
+                        // "roll_no": "$student_doc.roll_no",
+                        // "max_marks": "$exams_doc.max_marks",
+
+                //     }
+                // }
             ]);
             cursor.forEach(function (doc, err) {
                 assert.equal(null, err);
