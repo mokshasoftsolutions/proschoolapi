@@ -178,8 +178,6 @@ router.route('/class_timetables/:section_id')
                         "room_no": "$room_no",
                         "subject_id": "$subject_id",
                         "name": "$subject_doc.name",
-
-
                     }
                 }
             ])

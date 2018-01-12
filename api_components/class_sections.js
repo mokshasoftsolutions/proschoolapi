@@ -131,7 +131,59 @@ router.route('/get_sections_by_classid/:class_id')
                         teacher_name: {
                             "$first": "$teacher_name"
                         }
+                    }
+                }
+            ])
+            cursor.forEach(function (doc, err) {
+                assert.equal(null, err);
+                resultArray.push(doc);
+            }, function () {
+                db.close();
+                res.send({
+                    class_sections: resultArray
+                });
+            });
+        });
+    });
 
+router.route('/get_sections_by_schoolId/:school_id')
+    .get(function (req, res, next) {
+        var school_id = req.params.school_id;
+        var resultArray = [];
+        mongo.connect(url, function (err, db) {
+            assert.equal(null, err);
+            var cursor = db.collection('class_sections').aggregate([
+                {
+                    $match: {
+                        school_id: school_id,
+                    }
+                },
+                {
+                    $lookup: {
+                        from: "school_classes",
+                        localField: "class_id",
+                        foreignField: "class_id",
+                        as: "class_doc"
+                    }
+                },
+                {
+                    $unwind: "$class_doc"
+                },
+                {
+                    $group: {
+                        _id: '$_id',
+                        class_name: {
+                            "$first": "$class_doc.name"
+                        },
+                        section_name: {
+                            "$first": "$name"
+                        },
+                        section_id: {
+                            "$first": "$section_id"
+                        },
+                        class_id: {
+                            "$first": "$class_id"
+                        }
                     }
                 }
             ])

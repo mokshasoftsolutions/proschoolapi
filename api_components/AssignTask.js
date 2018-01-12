@@ -33,6 +33,7 @@ router.route('/task/:school_id')
             priority: req.body.priority,
             assigned_to: req.body.assigned_to,
             posted_by: req.body.posted_by,
+            employee_id: req.body.employee_id,
             assigned_on: date,
             status: "pending",
         }
@@ -95,7 +96,36 @@ router.route('/tasks_manager/:school_id')
         var school_id = req.params.school_id;
         mongo.connect(url, function (err, db) {
             assert.equal(null, err);
-            var cursor = db.collection('tasks').find({ school_id: school_id });
+            //var cursor = db.collection('tasks').find({ school_id: school_id });
+            var cursor = db.collection('tasks').aggregate([
+                {
+                    $match: {
+                        school_id: school_id
+                    }
+                },
+                {
+                    $lookup: {
+                        from: "employee",
+                        localField: "employee_id",
+                        foreignField: "employee_id",
+                        as: "employee_doc"
+                    }
+                },
+                {
+                    "$project": {
+                        "_id": "$_id",
+                        "task_id": "$task_id",
+                        "task": "$task",
+                        "employee_id": "$employee_doc.employee_id",
+                        "school_id": "$school_id",
+                        "department": "$department",
+                        "priority": "$priority",
+                        "assigned_to": "$assigned_to",
+                        "status": "$status",
+                        "assigned_on":"$assigned_on"
+                    }
+                }
+            ]);
             cursor.forEach(function (doc, err) {
                 assert.equal(null, err);
                 resultArray.push(doc);

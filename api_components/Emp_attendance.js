@@ -363,6 +363,7 @@ router.route('/employee_Attendance_by_category/:category/:select_date/:school_id
                 assert.equal(null, err);
                 resultArray.push(doc);
             }, function () {
+
                 db.close();
                 res.send({
                     employeeAttendence: resultArray,

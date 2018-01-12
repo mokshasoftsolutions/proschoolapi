@@ -533,6 +533,7 @@ router.route('/bulk_upload_students/:section_id')
         var class_id = splited[0] + '-' + splited[1] + '-' + splited[2] + '-' + splited[3];
         var status = 1;
         var exceltojson;
+        var parents_account = [];
         upload(req, res, function (err) {
             if (err) {
                 res.json({ error_code: 1, err_desc: err });
@@ -636,6 +637,13 @@ router.route('/bulk_upload_students/:section_id')
                                 parent_address: key.gaurdianaddress,
                                 occupation: key.gaurdianoccupation
                             };
+                            var studentImage = {
+                                filename: "student.jpg",
+                                originalname: "student",
+                                imagePath: "uploads",
+                                mimetype: "jpg/image",
+
+                            };
 
                             mongo.connect(url, function (err, db) {
                                 autoIncrement.getNextSequence(db, 'students', function (err, autoIndex) {
@@ -665,6 +673,7 @@ router.route('/bulk_upload_students/:section_id')
                                                             $push: {
                                                                 current_address,
                                                                 permanent_address,
+                                                                studentImage,
                                                                 parents: parent_father
                                                             }
                                                         });
@@ -692,23 +701,23 @@ router.route('/bulk_upload_students/:section_id')
                                                         requestData.class_id = parent_account_details.class_id;
                                                         requestData.section_id = parent_account_details.section_id;
                                                         //  console.log(requestData);
+                                                        //  parents_account.push(requestData);
                                                         //  console.log(parent_account_details.parent_account_new);
                                                         if (parent_account_details.parent_account_new == true || parent_account_details.parent_account_new == 'true' || parent_account_details.parent_account_new == 'TRUE') {
-                                                            console.log("newaccount")
+                                                          //  console.log("newaccount")
                                                             parentModule.addParent(requestData);
 
                                                         }
                                                         if (parent_account_details.parent_account_new == false || parent_account_details.parent_account_new == 'false' || parent_account_details.parent_account_new == 'FALSE') {
-                                                            console.log("existing")
+                                                          //  console.log("existing")
                                                             parentModule.addStudentToParent(requestData);
                                                         }
-
                                                     }
-
                                                     count++;
                                                     db.close();
 
                                                     if (count == test.length) {
+                                                        //  console.log(parents_account);
                                                         res.end('true');
                                                     }
 
