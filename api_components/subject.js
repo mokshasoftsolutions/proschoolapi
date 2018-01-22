@@ -207,11 +207,7 @@ router.route('/bulk_upload_subjects/:section_id')
                         return res.json({ error_code: 1, err_desc: err, data: null });
                     }
                     res.json({ data: result });
-<<<<<<< HEAD
                     //  console.log(result[0]);
-=======
-                  //  console.log(result[0]);
->>>>>>> 48fd8959419cea987082acf5c57162fa76faaeca
                     var test = result;
                     var count = 0;
 

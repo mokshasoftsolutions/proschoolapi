@@ -705,7 +705,6 @@ router.route('/bulk_upload_students/:section_id')
                                                         requestData.class_id = parent_account_details.class_id;
                                                         requestData.section_id = parent_account_details.section_id;
                                                         //  console.log(requestData);
-<<<<<<< HEAD
                                                           parents_account.push(requestData);
                                                         //  console.log(parent_account_details.parent_account_new);
                                                         // if (parent_account_details.parent_account_new == true || parent_account_details.parent_account_new == 'true' || parent_account_details.parent_account_new == 'TRUE') {
@@ -717,29 +716,13 @@ router.route('/bulk_upload_students/:section_id')
                                                         //     //  console.log("existing")
                                                         //     parentModule.addStudentToParent(requestData);
                                                         // }
-=======
-                                                        //  parents_account.push(requestData);
-                                                        //  console.log(parent_account_details.parent_account_new);
-                                                        if (parent_account_details.parent_account_new == true || parent_account_details.parent_account_new == 'true' || parent_account_details.parent_account_new == 'TRUE') {
-                                                          //  console.log("newaccount")
-                                                            parentModule.addParent(requestData);
-
-                                                        }
-                                                        if (parent_account_details.parent_account_new == false || parent_account_details.parent_account_new == 'false' || parent_account_details.parent_account_new == 'FALSE') {
-                                                          //  console.log("existing")
-                                                            parentModule.addStudentToParent(requestData);
-                                                        }
->>>>>>> 48fd8959419cea987082acf5c57162fa76faaeca
                                                     }
                                                     count++;
                                                     db.close();
 
                                                     if (count == test.length) {
                                                         //  console.log(parents_account);
-<<<<<<< HEAD
                                                           parentModule.parent(parents_account);
-=======
->>>>>>> 48fd8959419cea987082acf5c57162fa76faaeca
                                                         res.end('true');
                                                     }
 
@@ -956,7 +939,6 @@ router.route('/delete_student/:student_id')
                     res.send('false');
                 }
                 else {
-<<<<<<< HEAD
                     mongo.connect(url, function (err, db) {
                         db.collection('attendance').deleteMany(myquery, function (err, result) {
                             assert.equal(null, err);
@@ -1040,82 +1022,6 @@ router.route('/delete_student/:student_id')
                                     });
                                 });
                             }
-=======
-
-                    mongo.connect(url, function (err, db) {
-                        assert.equal(null, err);
-                        var cursor = db.collection('parents').aggregate(
-                            [
-                                {
-                                    $match:
-                                        {
-                                            "students": { $elemMatch: { "student_id": student_id } }
-                                        }
-                                },
-                                {
-                                    "$project":
-                                        {
-                                            "parent_id": "$parent_id",
-                                            "parent_name": "$parent_name",
-                                            "students":
-                                                {
-                                                    "$map":
-                                                        {
-                                                            "input": "$students",
-                                                            "as": "students",
-                                                            "in":
-                                                                {
-                                                                    "length": { "$size": "$students" }
-                                                                }
-                                                        }
-                                                }
-                                        }
-                                }
-                            ]
-                        );
-                        cursor.forEach(function (doc, err) {
-                            assert.equal(null, err);
-                            resultArray.push(doc);
-                        }, function () {
-                            length = resultArray.length;
-                            if (length != 0) {
-
-                                //console.log(resultArray);
-                                length = resultArray[0].students[0].length;
-                                parentId = resultArray[0].parent_id;
-                                // console.log(parentId);
-                                if (length > 1) {
-                                    mongo.connect(url, function (err, db) {
-                                        db.collection('parents').update({ "students": { $elemMatch: { "student_id": student_id } } },
-                                            { $pull: { "students": { "student_id": student_id } } })
-                                        assert.equal(null, err);
-                                        if (err) {
-                                            res.send('false');
-                                        }
-                                    });
-                                }
-                                else if (length == 1) {
-                                    mongo.connect(url, function (err, db) {
-                                        db.collection('parents').deleteOne({ "students": { $elemMatch: { "student_id": student_id } } })
-                                        assert.equal(null, err);
-                                        if (err) {
-                                            res.send('false');
-                                        }
-                                        else {
-                                            mongo.connect(loginUrl, function (err, db) {
-                                                db.collection('users').deleteOne({ uniqueId: parentId })
-                                                assert.equal(null, err);
-                                                if (err) {
-                                                    res.send('false');
-                                                }
-                                            });
-                                        }
-                                    });
-                                }
-                            }
-                            db.close();
-                            res.send('true');
->>>>>>> 48fd8959419cea987082acf5c57162fa76faaeca
                         });
                     });
                 }

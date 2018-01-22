@@ -47,10 +47,7 @@ router.route('/all_cses_att_date_testing/:select_date/:school_id')
 
             async.waterfall(
                 [
-<<<<<<< HEAD
                     
-=======
->>>>>>> 48fd8959419cea987082acf5c57162fa76faaeca
                     function getSchoolClassed(next) {
                         //   console.log("getSchoolClassed");
                         db.collection('school_classes').find({
@@ -83,16 +80,9 @@ router.route('/all_cses_att_date_testing/:select_date/:school_id')
                                     }
                                     classData.sections = results
 
-<<<<<<< HEAD
                                    
                                     if (classResultLength == count) {
                                        
-=======
-                                    //  console.log(classResultLength+'=='+count);
-
-                                    if (classResultLength == count) {
-                                        //   console.log(JSON.stringify(classResult));
->>>>>>> 48fd8959419cea987082acf5c57162fa76faaeca
                                         next(null, classResult);
                                         // next(null, classData);
                                     }

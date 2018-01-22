@@ -376,11 +376,7 @@ router.route('/attendancechartbymonth/:select_month/:student_id')
         });
     });
 
-<<<<<<< HEAD
 router.route('/sec_attendence/:select_date/:class_id')
-=======
-    router.route('/sec_attendence/:select_date/:class_id')
->>>>>>> 48fd8959419cea987082acf5c57162fa76faaeca
     .get(function (req, res, next) {
         var class_id = req.params.class_id;
         var splited = class_id.split("-");
@@ -391,13 +387,8 @@ router.route('/sec_attendence/:select_date/:class_id')
         var endDate = new Date(select_date);
         var count, dataCount;
         var classArray = [];
-<<<<<<< HEAD
         var resultarray = attendenceSection = [];
         var attendenceClass = sectionArray = [];
-=======
-        var resultarray = [];
-        var attendenceClass = [];
->>>>>>> 48fd8959419cea987082acf5c57162fa76faaeca
         var className;
         endDate.setDate(endDate.getDate() + 1)
         mongo.connect(url, function (err, db) {
@@ -415,7 +406,6 @@ router.route('/sec_attendence/:select_date/:class_id')
                 }
             });
 
-<<<<<<< HEAD
             // sections.forEach(function (sec, err) {
             //     console.log("sections" + sec.section_id);
             //     if (sec.class_id == class_id) {
@@ -447,39 +437,6 @@ router.route('/sec_attendence/:select_date/:class_id')
             //         sectionArray.push(attendenceSection);
             //     }
             // })
-=======
-            sections.forEach(function (sec, err) {
-                console.log("sections" + sec.section_id);
-                if (sec.class_id == class_id) {
-                    console.log("classSection");
-                    present = absent = onLeave = 0;
-                    data.forEach(function (doc, err) {
-                        console.log("data");
-                        if (sec.section_id == doc.section_id) {
-                            if (doc.status == "Present") {
-                                present += 1;
-                                console.log("babu" + present);
-                            }
-                            else if (doc.status == "Absent") {
-                                absent += 1;
-                                console.log("babu1" + absent);
-                            }
-                            else if (doc.status == "On Leave") {
-                                onLeave += 1;
-                                console.log("babu2" + onLeave);
-                            }
-                        }
-                    });
-                    sectionName = sec.name;
-                    attendenceSection.push(sectionName);
-                    attendenceSection.push(present);
-                    attendenceSection.push(absent);
-                    attendenceSection.push(onLeave);
-
-                    sectionArray.push(attendenceSection);
-                }
-            })
->>>>>>> 48fd8959419cea987082acf5c57162fa76faaeca
 
             var cursor = db.collection('attendance').aggregate([
                 {
@@ -524,13 +481,8 @@ router.route('/sec_attendence/:select_date/:class_id')
                 db.close();
                 res.send({
                     sectionAttendence: resultArray,
-<<<<<<< HEAD
                     // count: count,
                     // sections: sectionArray
-=======
-                    count: count,
-                    sections: sectionArray
->>>>>>> 48fd8959419cea987082acf5c57162fa76faaeca
                 });
             });
 
