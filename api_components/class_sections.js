@@ -77,7 +77,7 @@ router.route('/class_sections/:class_id')
         var resultArray = [];
         mongo.connect(url, function (err, db) {
             assert.equal(null, err);
-            var cursor = db.collection('class_sections').find({ class_id });
+            var cursor = db.collection('class_sections').find({ class_id: class_id });
             cursor.forEach(function (doc, err) {
                 assert.equal(null, err);
                 resultArray.push(doc);
@@ -131,7 +131,59 @@ router.route('/get_sections_by_classid/:class_id')
                         teacher_name: {
                             "$first": "$teacher_name"
                         }
+                    }
+                }
+            ])
+            cursor.forEach(function (doc, err) {
+                assert.equal(null, err);
+                resultArray.push(doc);
+            }, function () {
+                db.close();
+                res.send({
+                    class_sections: resultArray
+                });
+            });
+        });
+    });
 
+router.route('/get_sections_by_schoolId/:school_id')
+    .get(function (req, res, next) {
+        var school_id = req.params.school_id;
+        var resultArray = [];
+        mongo.connect(url, function (err, db) {
+            assert.equal(null, err);
+            var cursor = db.collection('class_sections').aggregate([
+                {
+                    $match: {
+                        school_id: school_id,
+                    }
+                },
+                {
+                    $lookup: {
+                        from: "school_classes",
+                        localField: "class_id",
+                        foreignField: "class_id",
+                        as: "class_doc"
+                    }
+                },
+                {
+                    $unwind: "$class_doc"
+                },
+                {
+                    $group: {
+                        _id: '$_id',
+                        class_name: {
+                            "$first": "$class_doc.name"
+                        },
+                        section_name: {
+                            "$first": "$name"
+                        },
+                        section_id: {
+                            "$first": "$section_id"
+                        },
+                        class_id: {
+                            "$first": "$class_id"
+                        }
                     }
                 }
             ])
@@ -237,12 +289,20 @@ router.route('/edit_sections/:section_id')
 router.route('/delete_sections/:section_id')
     .delete(function (req, res, next) {
         var myquery = { section_id: req.params.section_id };
-
         mongo.connect(url, function (err, db) {
             db.collection('class_sections').deleteOne(myquery, function (err, result) {
                 assert.equal(null, err);
                 if (err) {
                     res.send('false');
+                } else {
+                    mongo.connect(url, function (err, db) {
+                        db.collection('students').deleteOne(myquery, function (err, result) {
+                            assert.equal(null, err);
+                            if (err) {
+                                res.send('students false');
+                            }
+                        });
+                    });
                 }
                 db.close();
                 res.send('true');

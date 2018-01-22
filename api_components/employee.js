@@ -1,3 +1,4 @@
+
 // flow
 var express = require("express");
 var config = require("../config.json");
@@ -12,7 +13,10 @@ var xlstojson = require("xls-to-json-lc");
 var xlsxtojson = require("xlsx-to-json-lc");
 var port = process.env.PORT || 4005;
 var router = express.Router();
+var fs = require('fs');
+var unzip = require('unzip');
 var url = 'mongodb://' + config.dbhost + ':27017/s_erp_data';
+var loginUrl = 'mongodb://' + config.dbhost + ':27017/auth';
 
 var cookieParser = require('cookie-parser');
 router.use(function (req, res, next) {
@@ -70,6 +74,7 @@ router.route('/employee/:school_id')
             var item = {
                 employee_id: 'getauto',
                 school_id: school_id,
+                employeeId: req.body.employeeId,
                 first_name: req.body.first_name,
                 last_name: req.body.last_name,
                 surname: req.body.surname,
@@ -81,6 +86,16 @@ router.route('/employee/:school_id')
                 phone: req.body.phone,
                 email: req.body.email,
                 joined_on: req.body.joined_on,
+                basic_pay: req.body.basic_pay,
+                blood_group: req.body.blood_group,
+                spoken_languages: req.body.spoken_languages,
+                salary_band: req.body.salary_band,
+                martial_status: req.body.martial_status,
+                mobile: req.body.mobile,
+                perm_city: req.body.perm_city,
+                country: req.body.country,
+                state: req.body.state,
+                postal_code: req.body.postal_code,
                 status: status,
             };
             var current_address = {
@@ -157,9 +172,10 @@ router.route('/employee/:school_id')
     })
     .get(function (req, res, next) {
         var resultArray = [];
+        var school_id = req.params.school_id;
         mongo.connect(url, function (err, db) {
             assert.equal(null, err);
-            var cursor = db.collection('employee').find();
+            var cursor = db.collection('employee').find({ school_id: school_id });
             cursor.forEach(function (doc, err) {
                 assert.equal(null, err);
                 resultArray.push(doc);
@@ -189,13 +205,39 @@ router.route('/search_employee/:job_category/:gender')
         });
     });
 
-router.route('/employees_by_category/:job_category')
+router.route('/employees_by_category/:job_category/:school_id')
     .get(function (req, res, next) {
         var job_category = req.params.job_category;
+        var school_id = req.params.school_id;
+        var resultArray = [];
+        var cursor;
+      //  console.log(job_category);
+        mongo.connect(url, function (err, db) {
+            assert.equal(null, err);
+            //var cursor = db.collection('employee').find({ job_category: job_category, school_id: school_id });
+            if (job_category == "all") {            
+                 cursor = db.collection('employee').find({ school_id: school_id });
+            }
+            else {             
+                 cursor = db.collection('employee').find({ job_category: job_category, school_id: school_id });
+            }
+            cursor.forEach(function (doc, err) {
+                resultArray.push(doc);
+            }, function () {
+                db.close();
+                res.send({ employees: resultArray });
+            });
+        });
+    });
+
+router.route('/employees_by_school_id_category/:job_category/:school_id')
+    .get(function (req, res, next) {
+        var job_category = req.params.job_category;
+        var school_id = req.params.school_id;
         var resultArray = [];
         mongo.connect(url, function (err, db) {
             assert.equal(null, err);
-            var cursor = db.collection('employee').find({ job_category: job_category });
+            var cursor = db.collection('employee').find({ job_category: job_category, school_id: school_id });
             cursor.forEach(function (doc, err) {
                 resultArray.push(doc);
             }, function () {
@@ -329,6 +371,7 @@ router.route('/bulk_upload_employees/:school_id')
         var school_id = req.params.school_id;
         var status = 1;
         var exceltojson;
+        var teachers_account = [];
         upload(req, res, function (err) {
             if (err) {
                 res.json({ error_code: 1, err_desc: err });
@@ -347,7 +390,7 @@ router.route('/bulk_upload_employees/:school_id')
             } else {
                 exceltojson = xlstojson;
             }
-            console.log(req.file.path);
+            // console.log(req.file.path);
             try {
                 exceltojson({
                     input: req.file.path,
@@ -358,17 +401,17 @@ router.route('/bulk_upload_employees/:school_id')
                         return res.json({ error_code: 1, err_desc: err, data: null });
                     }
                     res.json({ data: result });
-                    console.log(result[0]);
+                    //  console.log(result[0]);
                     var test = result;
-                    var count = 0;
+                    var count1 = 0;
 
                     if (test.length > 0) {
                         test.forEach(function (key, value) {
 
-
                             var item = {
                                 employee_id: 'getauto',
                                 school_id: school_id,
+                                employeeId: key.employeeId,
                                 first_name: key.firstname,
                                 last_name: key.lastname,
                                 surname: key.surname,
@@ -379,9 +422,18 @@ router.route('/bulk_upload_employees/:school_id')
                                 experience: key.experience,
                                 phone: key.phone,
                                 email: key.email,
-                                profile_image: key.profileimage,
                                 website: key.website,
                                 joined_on: key.joinedon,
+                                basic_pay: key.basicpay,
+                                blood_group: key.bloodgroup,
+                                spoken_languages: key.spokenlanguages,
+                                salary_band: key.salaryband,
+                                martial_status: key.martialstatus,
+                                mobile: key.mobile,
+                                perm_city: key.permcity,
+                                country: key.country,
+                                state: key.state,
+                                postal_code: key.postalcode,
                                 status: status,
                             };
                             var current_address = {
@@ -399,6 +451,13 @@ router.route('/bulk_upload_employees/:school_id')
                                 perm_pincode: key.permpincode,
                                 perm_long: key.permlong,
                                 perm_lat: key.permlat
+                            };
+                            var employeeImage = {
+                                filename: "student.jpg",
+                                originalname: "student",
+                                imagePath: "uploads",
+                                mimetype: "jpg/image",
+
                             };
 
                             mongo.connect(url, function (err, db) {
@@ -437,17 +496,30 @@ router.route('/bulk_upload_employees/:school_id')
                                                             }, {
                                                                     $push: {
                                                                         current_address,
-                                                                        permanent_address
+                                                                        permanent_address,
+                                                                        employeeImage
                                                                     }
                                                                 });
-                                                            count++;
+                                                            // console.log(item.job_category);
+                                                            if (item.job_category == "teaching") {
+                                                                // console.log("hema");
+                                                                var requestData = {}
+                                                                requestData.name = item.first_name + " " + item.last_name;
+                                                                requestData.employee_id = 'SCH-EMP-' + autoIndex;
+                                                                requestData.joined_on = item.joined_on;
+                                                                requestData.school_id = school_id;
+                                                                teachers_account.push(requestData);
+                                                                // teacherModule.addTeacher(requestData);
+
+                                                            }
+                                                            count1++;
                                                             db.close();
 
-                                                            if (count == test.length) {
+                                                            if (count1 == test.length) {
+                                                                // console.log(teachers_account);
+                                                                teacherModule.teacher(teachers_account);
                                                                 res.end('true');
                                                             }
-
-
                                                         });
                                                     }
                                                 });
@@ -515,14 +587,66 @@ router.route('/edit_employee/:employee_id')
         });
     });
 
-
-
-router.route('/delete_employee/:employee_id')
-    .delete(function (req, res, next) {
+router.route('/edit_employee_details/:employee_id')
+    .put(function (req, res, next) {
         var myquery = { employee_id: req.params.employee_id };
+        var req_first_name = req.body.first_name;
+        var req_last_name = req.body.last_name;
+        var req_dob = req.body.dob;
+        var req_gender = req.body.gender;
+        var req_qualification = req.body.qualification;
+        var req_job_category = req.body.job_category;
+        var req_experience = req.body.experience;
+        var req_phone = req.body.phone;
+        var req_email = req.body.email;
+        var req_website = req.body.website;
+        var req_joined_on = req.body.joined_on;
+        var salary_band = req.body.salary_band;
+        var basic_pay = req.body.basic_pay;
+        var mobile = req.body.mobile;
+        var blood_group = req.body.blood_group;
+        var spoken_languages = req.body.spoken_languages;
+        var country = req.body.country;
+        var state = req.body.state;
+        var alternate_email = req.body.alternate_email;
+        var perm_city = req.body.perm_city;
+        var postal_code = req.body.postal_code;
+        var perm_address = req.body.perm_address;
+        var cur_address = req.body.cur_address;
+        var martial_status = req.body.martial_status
 
         mongo.connect(url, function (err, db) {
-            db.collection('employee').deleteOne(myquery, function (err, result) {
+            db.collection('employee').update(myquery, {
+
+                $set: {
+                    first_name: req_first_name,
+                    last_name: req_last_name,
+                    dob: req_dob,
+                    gender: req_gender,
+                    qualification: req_qualification,
+                    job_category: req_job_category,
+                    experience: req_experience,
+                    phone: req_phone,
+                    email: req_email,
+                    website: req_website,
+                    joined_on: req_joined_on,
+                    salary_band: salary_band,
+                    alternate_email: alternate_email,
+                    state: state,
+                    basic_pay: basic_pay,
+                    //  cur_address: cur_address,
+                    // perm_address: perm_address,
+                    mobile: mobile,
+                    blood_group: blood_group,
+                    spoken_languages: spoken_languages,
+                    country: country,
+                    postal_code: postal_code,
+                    //   perm_city: perm_city,
+                    martial_status: martial_status,
+                    permanent_address: [{ perm_city: perm_city, perm_address: perm_address }],
+                    current_address: [{ cur_address: cur_address }]
+                }
+            }, function (err, result) {
                 assert.equal(null, err);
                 if (err) {
                     res.send('false');
@@ -533,5 +657,193 @@ router.route('/delete_employee/:employee_id')
         });
     });
 
+// else {
+//     mongo.connect(url, function (err, db) {
+//         var cursor = db.collection('teachers').find({ employee_id: employee_id });
+//         cursor.forEach(function (doc, err) {
+//             assert.equal(null, err);
+//             resultArray.push(doc);
+//         }, function () {
+//             uniqueId = resultArray[0].teacher_id;
+//             db.collection('teachers').deleteOne(myquery, function (err, result) {
+//                 if (err) {
+//                     res.send('teacher false');
+//                 }
+//                 else {
+//                     mongo.connect(loginUrl, function (err, db) {
+//                         db.collection('users').deleteOne({ uniqueId: uniqueId }, function (err, result) {
+//                             assert.equal(null, err);
+//                             if (err) {
+//                                 res.send('user false');
+//                             }
+//                         });
+//                     });
+//                 }
+
+//             });
+
+//         });
+//     });
+// }
+
+router.route('/delete_employee/:employee_id')
+    .delete(function (req, res, next) {
+        var myquery = { employee_id: req.params.employee_id };
+        var employee_id = req.params.employee_id;
+        var resultArray = [];
+
+        mongo.connect(url, function (err, db) {
+            db.collection('employee').deleteOne(myquery, function (err, result) {
+                assert.equal(null, err);
+                if (err) {
+                    res.send(' employee false');
+                }
+                else {
+                    mongo.connect(url, function (err, db) {
+                        var cursor = db.collection('teachers').find({ employee_id: employee_id });
+                        cursor.forEach(function (doc, err) {
+                            assert.equal(null, err);
+                            resultArray.push(doc);
+                        }, function () {
+                            //  console.log(resultArray);
+                            length = resultArray.length;
+                            //   console.log(length);
+                            if (length != 0) {
+                                uniqueId = resultArray[0].teacher_id;
+                                db.collection('teachers').deleteOne(myquery, function (err, result) {
+                                    if (err) {
+                                        res.send('teacher false');
+                                    }
+                                    else {
+                                        mongo.connect(loginUrl, function (err, db) {
+                                            db.collection('users').deleteOne({ uniqueId: uniqueId }, function (err, result) {
+                                                assert.equal(null, err);
+                                                if (err) {
+                                                    res.send('user false');
+                                                }
+                                            });
+                                        });
+                                    }
+
+                                });
+                            }
+
+                        });
+                    });
+                }
+                db.close();
+                res.send('true');
+            });
+
+        });
+    });
+
+// router.route('/delete_employee/:employee_id')
+// .delete(function (req, res, next) {
+//     var myquery = { employee_id: req.params.employee_id };
+
+//     mongo.connect(url, function (err, db) {
+//         db.collection('employee').deleteOne(myquery, function (err, result) {
+//             assert.equal(null, err);
+//             if (err) {
+//                 res.send('false');
+//             }
+//             db.close();
+//             res.send('true');
+//         });
+//     });
+// });
+
+router.route('/employee_photo_edit/:employee_id')
+    .post(function (req, res, next) {
+        var status = 1;
+
+        var myquery = { employee_id: req.params.employee_id };
+        uploadImage(req, res, function (err) {
+            if (err) {
+                res.json({ error_code: 1, err_desc: err });
+                return;
+            }
+            /** Multer gives us file info in req.file object */
+            if (!req.file) {
+                res.json({ error_code: 1, err_desc: "No file passed" });
+                return;
+            }
+            // var SchoolImage = {
+            filename = req.file.filename;
+            originalname = req.file.originalname;
+            imagePath = req.file.path;
+            mimetype = req.file.mimetype;
+            // }
+            //   var filename = req.file.filename;
+            //   console.log(filename);
+
+            mongo.connect(url, function (err, db) {
+                db.collection('employee').update(myquery, {
+                    $set:
+                        ({ employeeImage: [{ filename: filename, originalname: originalname, imagePath: imagePath, mimetype: mimetype }] })
+                    // SchoolImage: SchoolImage
+                }, function (err, result) {
+                    if (err) {
+                        res.send('false');
+                    }
+                    db.close();
+                    res.send('true');
+                });
+            });
+        })
+    });
+
 
 module.exports = router;
+
+
+var storageImage = multer.diskStorage({ //multers disk storage settings
+    destination: function (req, file, cb) {
+        cb(null, './uploads/')
+    },
+    filename: function (req, file, cb) {
+        var datetimestamp = Date.now();
+        cb(null, file.fieldname + '-' + datetimestamp + '.' + file.originalname.split('.')[file.originalname.split('.').length - 1])
+        // cb(null, file.originalname);
+    }
+});
+
+
+var uploadZip = multer({ //multer settings
+    storage: storageImage,
+    fileFilter: function (req, file, callback) { //file filter
+        if (['.zip'].indexOf(file.originalname.split('.')[file.originalname.split('.').length - 1]) === -1) {
+            return callback(new Error('Wrong extension type'));
+        }
+        callback(null, true);
+    }
+}).single('file');
+
+// Add Employee
+router.route('/multiple_images/:school_id')
+    .post(function (req, res, next) {
+        var status = 1;
+        var school_id = req.params.school_id;
+
+        uploadZip(req, res, function (err) {
+            if (err) {
+                res.json({ error_code: 1, err_desc: err });
+                return;
+            }
+            /** Multer gives us file info in req.file object */
+            if (!req.file) {
+                res.json({ error_code: 1, err_desc: "No file passed" });
+                return;
+            }
+            var dirPath = __dirname + "./uploads/" + req.file.filename;
+
+            var destPath = __dirname + "/uploads/unzip";
+
+            fs.createReadStream(dirPath).pipe(unzip.Extract({ path: destPath }));
+
+            res.redirect('/');
+
+
+        });
+    });

@@ -10,6 +10,7 @@ var forEach = require('async-foreach').forEach;
 var port = process.env.PORT || 4005;
 var router = express.Router();
 var async = require('async');
+var waterfall = require('async-waterfall');
 var url = 'mongodb://' + config.dbhost + ':27017/s_erp_data';
 
 var cookieParser = require('cookie-parser');
@@ -25,6 +26,8 @@ router.use(function (req, res, next) {
 router.route('/attendance/:student_id')
     .post(function (req, res, next) {
         var student_id = req.params.student_id;
+        var splited = student_id.split("-");
+        var school_id = splited[0] + '-' + splited[1];
         var d = new Date();
         var month = d.getMonth() + 1;
         var day = d.getDate()
@@ -47,6 +50,7 @@ router.route('/attendance/:student_id')
             student_id: student_id,
             class_id: req.body.class_id,
             section_id: req.body.section_id,
+            school_id: school_id,
             date: new Date(),
             session: session,
             status: req.body.status
@@ -300,6 +304,9 @@ router.route('/allClasses_Attendence_by_date/:select_date/:class_id/:school_id')
         endDate.setDate(endDate.getDate() + 1)
         mongo.connect(url, function (err, db) {
             assert.equal(null, err);
+            var sectionsArray = db.collection('class_sections').find({ class_id: class_id });
+            //console.log(sectionsArray);
+
             var data = db.collection('attendance').find({
                 date: { $gte: new Date(select_date.toISOString()), $lt: new Date(endDate.toISOString()) },
                 class_id: class_id,
@@ -669,8 +676,7 @@ router.route('/get_attendance_id_by_date_session/:student_id/:date/:session')
 module.exports = router;
 
 
-
-router.route('/all_classes_attendence_by_date/:select_date/:school_id')
+router.route('/all_classes_attendence_by_date_testing/:select_date/:school_id')
     .get(function (req, res, next) {
         var resultArray = [];
         var school_id = req.params.school_id;
@@ -680,12 +686,160 @@ router.route('/all_classes_attendence_by_date/:select_date/:school_id')
         var count, dataCount;
         var sectionArray = [];
         var classArray = [];
+        var classes = [];
         var resultarray = [];
         var attendenceSection = [];
         var attendenceClass = [];
         var sectionName, className;
         endDate.setDate(endDate.getDate() + 1)
+
+
         mongo.connect(url, function (err, db) {
+
+            async.waterfall(
+                [
+                    function getSchoolClassed(next) {
+                        console.log("In First Step is classes");
+                        db.collection('school_classes').find({
+                            school_id
+                        }).toArray(function (err, result) {
+                            if (err) {
+                                next(err, null);
+                            }
+                            next(null, result);
+                        });
+                    },
+                    function getSectionsData(result, next) {
+
+                        // classes.push(result);
+                        // console.log(result +" I'm the god");
+                        var count = 0;
+                        var classResult = result;
+                        var classResultLength = result.length;
+                        if (classResultLength == 0) {
+                            next(null, []);
+                        } else {
+                            console.log("In Second step sections")
+                            classResult.forEach(function (classData) {
+                                var class_id = classData.class_id;
+                                // console.log(class_id);
+                                db.collection('class_sections').find({
+                                    class_id
+                                }).toArray(function (err, results) {
+                                    count++;
+                                    if (err) {
+                                        next(err, null);
+                                    }
+                                    classData.sections = results
+                                    // console.log(classData.sections);
+
+                                    if (classResultLength == count) {
+                                        next(null, classResult);
+                                        // next(null, classData);
+                                    }
+
+                                })
+                            })
+                        }
+                    },
+                    function getTotalSchoolAttendance(result, next) {
+                        console.log(result);
+                        console.log("In third Step is attendence");
+                        var data = db.collection('attendance').find({
+                            date: { $gte: new Date(select_date.toISOString()), $lt: new Date(endDate.toISOString()) },
+                            school_id: school_id
+                        }).toArray(function (err, attResult) {
+                            if (err) {
+                                next(err, null);
+                            }
+
+                            next(null, result, attResult);
+
+
+                        });
+                    }, function getAttendanceData(result, attResult, next) {
+                        //  console.log(attResult);
+                        //  console.log(result);
+                        var count = 0;
+
+                        var classResult = result;
+                        var classDataLength = result.length;
+                        if (classDataLength == 0) {
+                            next(null, []);
+                        } else {
+                            console.log("In fourth step sections attendance")
+                            classResult.forEach(function (classData) {
+
+                                var sectionCount = 0;
+                                // var classData=classData.sections;
+                                //   console.log(classData.sections);
+                                var sectionDataLength = classData.sections.length;
+                                var class_id = classData.class_id;
+                                if (sectionDataLength == 0) {
+                                    count++;
+                                    console.log("count 0")
+                                } else {
+                                    // classData.sections.forEach(function(sectionData) {
+                                    forEach(classData.sections, function (sectionData, index, arrData) {
+                                        console.log("section Data")
+
+                                        var section_id = sectionData.section_id;
+                                        var data = db.collection('attendance').find({
+                                            date: { $gte: new Date(select_date.toISOString()), $lt: new Date(endDate.toISOString()) },
+                                            school_id: school_id, class_id: class_id, section_id: section_id
+                                        }).toArray(function (err, results) {
+
+                                            sectionCount++;
+                                            if (err) {
+                                                next(err, null);
+                                            }
+                                            console.log("attendance");
+                                            sectionData.attendance = results
+                                            console.log(sectionDataLength + " == " + sectionCount)
+                                            if (sectionDataLength == sectionCount) {
+                                                count++;
+                                            }
+
+                                        })
+                                        // sectionCount++;
+                                        // sectionData.attendance = attResult;
+                                        // console.log(sectionDataLength+" == "+sectionCount)
+                                        //     if(sectionDataLength == sectionCount){
+                                        //     count ++;
+                                        //     }
+
+                                    })
+                                }
+                                if (classDataLength == count) {
+                                    next(null, classResult);
+                                }
+
+                            })
+
+
+                        }
+
+
+
+                    }
+                ],
+                function (err, result1) {
+                    db.close();
+                    //    console.log(result1);
+                    if (err) {
+                        res.send({
+                            error: err
+                        });
+
+                    } else {
+
+                        res.send({
+                            students: result1
+                        });
+
+                    }
+                }
+            );
             assert.equal(null, err);
             var classes = db.collection('school_classes').find({ school_id });
             var sections = db.collection('class_sections').find({ school_id });
@@ -741,6 +895,159 @@ router.route('/all_classes_attendence_by_date/:select_date/:school_id')
             })
             classArray.push(attendenceClass);
 
+            // var cursor = db.collection('attendance').aggregate([
+            //     {
+            //         $match: {
+            //             date: {
+            //                 $gte: new Date(select_date.toISOString()),
+            //                 $lt: new Date(endDate.toISOString())
+            //             },
+            //             school_id: school_id
+
+            //         },
+            //     },
+            //     {
+            //         $lookup: {
+            //             from: "class_sections",
+            //             localField: "section_id",
+            //             foreignField: "section_id",
+            //             as: "section_doc"
+            //         }
+            //     },
+            //     {
+            //         $unwind: "$section_doc"
+            //     },
+            //     {
+            //         $lookup: {
+            //             from: "school_classes",
+            //             localField: "class_id",
+            //             foreignField: "class_id",
+            //             as: "class_doc"
+            //         }
+            //     },
+            //     {
+            //         $unwind: "$class_doc"
+            //     },
+            //     {
+            //         $lookup: {
+            //             from: "students",
+            //             localField: "student_id",
+            //             foreignField: "student_id",
+            //             as: "student_doc"
+            //         }
+            //     },
+            //     {
+            //         $unwind: "$student_doc"
+            //     },
+            //     {
+            //         $group: {
+            //             _id: '$_id',
+            //             class_name: {
+            //                 "$first": "$class_doc.name"
+            //             },
+            //             section_name: {
+            //                 "$first": "$section_doc.name"
+            //             },
+            //             status: {
+            //                 "$first": "$status"
+            //             },
+            //             student_name: {
+            //                 "$first": "$student_doc.first_name"
+            //             }
+
+            //         }
+            //     }
+            // ])
+
+            // cursor.forEach(function (doc, err) {
+            //     assert.equal(null, err);
+            //     resultArray.push(doc);
+            // }, function () {
+            //     db.close();
+            //     res.send({
+            //         sectionAttendence: resultArray,
+            //         count: count,
+            //         classes: classArray
+            //     });
+            // });
+
+        });
+    });
+
+
+
+
+
+router.route('/all_classes_attendence_by_date/:select_date/:school_id')
+    .get(function (req, res, next) {
+        var resultArray = [];
+        var school_id = req.params.school_id;
+        var select_date = new Date(req.params.select_date);
+        var present = 0, absent = 0, onLeave = 0;
+        var endDate = new Date(select_date);
+        var schoolClasses = classSections = [];
+        var className, sectionName;
+
+        endDate.setDate(endDate.getDate() + 1)
+        mongo.connect(url, function (err, db) {
+            assert.equal(null, err);
+
+            var classesObject = db.collection('school_classes').find({ school_id });
+            classesObject.forEach(function (doc, err) {
+                assert.equal(null, err);
+                schoolClasses.push(doc);
+            }, function () {
+                //console.log(schoolClasses);
+                var classesLength = schoolClasses.length;
+                //console.log(classesLength);
+                for (var i = 0; i < classesLength; i++) {
+                    className = schoolClasses[i].name;
+                     console.log(className);
+                    classId = schoolClasses[i].class_id;
+                    console.log(classId);
+                    var sectionsObject = db.collection('class_sections').find({ class_id: classId });
+                    sectionsObject.forEach(function (doc, err) {
+                        assert.equal(null, err);
+                        classSections.push(doc);
+                    }, function () {
+                        var sectionsLength = classSections.length;
+                        console.log(sectionsLength);
+                        // for (var j = 0; j < 1; j++) {
+                        //     sectionName = classSections[j].name;
+                        //     sectionId = classSections[j].section_id;
+                        //   //  console.log(sectionId);
+                        //    // console.log(sectionName);
+
+                        // }
+
+                    });
+
+
+
+                }
+
+                db.close();
+                res.send({ schoolAttendence: schoolClasses });
+
+            });
+
+        });
+    });
+
+
+
+router.route('/presentDay_Attendence_by_school/:select_date/:school_id')
+    .get(function (req, res, next) {
+        // var class_id = req.params.class_id;
+        var school_id = req.params.school_id;
+        var select_date = new Date(req.params.select_date);
+        var endDate = new Date(select_date);
+        endDate.setDate(endDate.getDate() + 1)
+        var resultArray = [];
+        var classAttendence = [];
+        mongo.connect(url, function (err, db) {
+            assert.equal(null, err);
+
             var cursor = db.collection('attendance').aggregate([
                 {
                     $match: {
@@ -774,17 +1081,17 @@ router.route('/all_classes_attendence_by_date/:select_date/:school_id')
                 {
                     $unwind: "$class_doc"
                 },
-                {
-                    $lookup: {
-                        from: "students",
-                        localField: "student_id",
-                        foreignField: "student_id",
-                        as: "student_doc"
-                    }
-                },
-                {
-                    $unwind: "$student_doc"
-                },
+                // {
+                //     $lookup: {
+                //         from: "students",
+                //         localField: "student_id",
+                //         foreignField: "student_id",
+                //         as: "student_doc"
+                //     }
+                // },
+                // {
+                //     $unwind: "$student_doc"
+                // },
                 {
                     $group: {
                         _id: '$_id',
@@ -797,9 +1104,15 @@ router.route('/all_classes_attendence_by_date/:select_date/:school_id')
                         status: {
                             "$first": "$status"
                         },
-                        student_name: {
-                            "$first": "$student_doc.first_name"
-                        }
+                        class_id: {
+                            "$first": "$class_doc.class_id"
+                        },
+                        section_id: {
+                            "$first": "$section_doc.section_id"
+                        },
+                        // student_name: {
+                        //     "$first": "$student_doc.first_name"
+                        // }
 
                     }
                 }
@@ -810,14 +1123,11 @@ router.route('/all_classes_attendence_by_date/:select_date/:school_id')
                 resultArray.push(doc);
             }, function () {
                 db.close();
+                console.log(resultArray[0]);
                 res.send({
                     sectionAttendence: resultArray,
-                    count: count,
-                    classes: classArray
+
                 });
             });
-
         });
     });
-
-

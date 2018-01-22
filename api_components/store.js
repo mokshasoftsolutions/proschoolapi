@@ -28,7 +28,7 @@ router.route('/vendor/:school_id')
             vendor_id: 'getauto',
             school_id: school_id,
             vendor_name: req.body.vendor_name,
-            material:req.body.material,
+            material: req.body.material,
             contact_no: req.body.contact_no,
             email: req.body.email,
             address: req.body.address,
@@ -273,7 +273,7 @@ router.route('/delete_vendor_events/:vendor_id')
                 if (err) {
                     res.send('false');
                 }
-                    res.send('true');
+                res.send('true');
             });
         });
     });
@@ -285,7 +285,7 @@ router.route('/edit_material_in/:material_in_id')
         var myquery = { material_in_id: req.params.material_in_id };
         var req_material = req.body.material;
         var req_vendor_name = req.body.vendor_name;
-        var req_no_of_units = req.body.no_of_units;        
+        var req_no_of_units = req.body.no_of_units;
         var req_purchased_date = req.body.purchased_date;
         var req_price = req.body.price;
 

@@ -119,7 +119,7 @@ router.route('/attendancechartbydate/:select_date/:class_id/:section_id')
                         "roll_no": "$student_doc.roll_no",
                         "class_name": "$class_doc.name",
                         "section_name": "$section_doc.name",
-                        "date":"$date",
+                        "date": "$date",
                         //  "date": { $and: [{ $gte: ["$date", new Date(select_date.toISOString())] }, { $lt: ["$date", new Date(endDate.toISOString())] }] }
                         //  "date": { $cond: { if : { $and: [{ $gte: ["$date", new Date(select_date.toISOString())] }, { $lt: ["$date", new Date(endDate.toISOString())] }] } },then: "$date"}
 
@@ -231,7 +231,7 @@ router.route('/attendancechartbyStudentAndDate/:select_date/:student_id')
                         "roll_no": "$student_doc.roll_no",
                         "class_name": "$class_doc.name",
                         "section_name": "$section_doc.name",
-                        "date":"$date",
+                        "date": "$date",
 
                     }
                 }
@@ -264,7 +264,7 @@ router.route('/attendancechartbymonth/:select_month/:student_id')
         var firstDay = new Date(date.getFullYear(), select_month - 1, 1);
         var lastDay = new Date(date.getFullYear(), select_month, 1);
         //  console.log(firstDay);
-         // console.log(lastDay);
+        // console.log(lastDay);
         var resultArray = [];
         mongo.connect(url, function (err, db) {
             assert.equal(null, err);
@@ -373,6 +373,119 @@ router.route('/attendancechartbymonth/:select_month/:student_id')
                     absent: absent
                 });
             });
+        });
+    });
+
+router.route('/sec_attendence/:select_date/:class_id')
+    .get(function (req, res, next) {
+        var class_id = req.params.class_id;
+        var splited = class_id.split("-");
+        var school_id = splited[0] + '-' + splited[1];
+        var resultArray = [];
+        var select_date = new Date(req.params.select_date);
+        var present = 0, absent = 0, onLeave = 0;
+        var endDate = new Date(select_date);
+        var count, dataCount;
+        var classArray = [];
+        var resultarray = attendenceSection = [];
+        var attendenceClass = sectionArray = [];
+        var className;
+        endDate.setDate(endDate.getDate() + 1)
+        mongo.connect(url, function (err, db) {
+            assert.equal(null, err);
+            var sections = db.collection('class_sections').find({ class_id });
+            var data = db.collection('attendance').find({
+                date: { $gte: new Date(select_date.toISOString()), $lt: new Date(endDate.toISOString()) },
+                class_id: class_id
+            });
+
+            dataCount = data.count(function (e, triggerCount) {
+                if (triggerCount > 0) {
+                    count = triggerCount;
+                    //  console.log(count);
+                }
+            });
+
+            // sections.forEach(function (sec, err) {
+            //     console.log("sections" + sec.section_id);
+            //     if (sec.class_id == class_id) {
+            //         console.log("classSection");
+            //         present = absent = onLeave = 0;
+            //         data.forEach(function (doc, err) {
+            //             console.log("data");
+            //             if (sec.section_id == doc.section_id) {
+            //                 if (doc.status == "Present") {
+            //                     present += 1;
+            //                     console.log("babu" + present);
+            //                 }
+            //                 else if (doc.status == "Absent") {
+            //                     absent += 1;
+            //                     console.log("babu1" + absent);
+            //                 }
+            //                 else if (doc.status == "On Leave") {
+            //                     onLeave += 1;
+            //                     console.log("babu2" + onLeave);
+            //                 }
+            //             }
+            //         });
+            //         sectionName = sec.name;
+            //         attendenceSection.push(sectionName);
+            //         attendenceSection.push(present);
+            //         attendenceSection.push(absent);
+            //         attendenceSection.push(onLeave);
+
+            //         sectionArray.push(attendenceSection);
+            //     }
+            // })
+
+            var cursor = db.collection('attendance').aggregate([
+                {
+                    $match: {
+                        date: {
+                            $gte: new Date(select_date.toISOString()),
+                            $lt: new Date(endDate.toISOString())
+                        },
+                        class_id: class_id
+
+                    },
+                },
+                {
+                    $lookup: {
+                        from: "class_sections",
+                        localField: "section_id",
+                        foreignField: "section_id",
+                        as: "section_doc"
+                    }
+                },
+                {
+                    $unwind: "$section_doc"
+                },
+                {
+                    $group: {
+                        _id: '$_id',
+                        section_name: {
+                            "$first": "$section_doc.name"
+                        },
+                        status: {
+                            "$first": "$status"
+                        },
+
+                    }
+                }
+            ])
+
+            cursor.forEach(function (doc, err) {
+                assert.equal(null, err);
+                resultArray.push(doc);
+            }, function () {
+                db.close();
+                res.send({
+                    sectionAttendence: resultArray,
+                    // count: count,
+                    // sections: sectionArray
+                });
+            });
+
         });
     });
 

@@ -71,7 +71,7 @@ router.post('/', function (req, res, next) {
 
 router.post('/:id', function (req, res, next) {
 
-    Task.deleteAll(req.body, function (err, count) {
+    Task.deleteAll(req.body.id, function (err, count) {
         if (err) {
             res.json(err);
         }

@@ -127,7 +127,7 @@ router.route('/employee_attendancebulk/:school_id')
     .post(function (req, res, next) {
 
         var school_id = req.params.school_id;
-       // console.log(school_id);
+        // console.log(school_id);
         var d = new Date();
         var month = d.getMonth() + 1;
         var day = d.getDate()
@@ -298,19 +298,26 @@ router.route('/get_employee_attendance_by_date/:employee_id/:date')
     });
 
 
-router.route('/employee_Attendance_by_category/:category/:select_date')
+router.route('/employee_Attendance_by_category/:category/:select_date/:school_id')
     .get(function (req, res, next) {
         var resultArray = [];
         var category = req.params.category;
+        var school_id = req.params.school_id;
         var select_date = new Date(req.params.select_date);
         var endDate = new Date(select_date);
         var present = 0, absent = 0, onLeave = 0;
-        var count=0,dataCount;
+        var count = 0, dataCount;
         endDate.setDate(endDate.getDate() + 1)
         mongo.connect(url, function (err, db) {
             assert.equal(null, err);
+            // var data = db.collection('employee_attendance').find({
+            //     date: { $gte: new Date(select_date.toISOString()), $lt: new Date(endDate.toISOString()) },
+            //     category: category,
+            //     school_id: school_id
+            // })
             var data = db.collection('employee_attendance').find({
                 date: { $gte: new Date(select_date.toISOString()), $lt: new Date(endDate.toISOString()) },
+                school_id: school_id,
                 category: category
             })
             dataCount = data.count(function (e, triggerCount) {
@@ -338,7 +345,16 @@ router.route('/employee_Attendance_by_category/:category/:select_date')
                             $gte: new Date(select_date.toISOString()),
                             $lt: new Date(endDate.toISOString())
                         },
-                        'category': category
+                        'category': category,
+                        school_id: school_id
+                    }
+                },
+                {
+                    "$lookup": {
+                        "from": "employee",
+                        "localField": "employee_id",
+                        "foreignField": "employee_id",
+                        "as": "employee_doc"
                     }
                 }
             ])
@@ -347,6 +363,7 @@ router.route('/employee_Attendance_by_category/:category/:select_date')
                 assert.equal(null, err);
                 resultArray.push(doc);
             }, function () {
+
                 db.close();
                 res.send({
                     employeeAttendence: resultArray,

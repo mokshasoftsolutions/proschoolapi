@@ -28,6 +28,7 @@ router.route('/teachers/:school_id')
         var status = 1;
         var school_id = req.params.school_id;
         subjects = [];
+
         var item = {
             teacher_id: 'getauto',
             school_id: school_id,
@@ -135,13 +136,10 @@ router.route('/addorupdatesubjectstoteacher/:school_id/:section_id')
         var item = {
             teacher_subject_id: 'getauto',
             school_id: school_id,
-            teacher_id: req.body.teacher_id,
-            // added_on: req.body.added_on,
-            // section_id : req.body.section_id,
+            teacher_id: req.body.teacher_id,            
             status: status,
         };
-        var subjects = {
-            // subject_id: req.body.subject_id,
+        var subjects = {          
             section_id: section_id,
             subject_id: req.body.subject_id,
             teacher_id: teacher_id,
@@ -304,28 +302,7 @@ router.route('/listsubjectstoteacher/:school_id')
                 },
                 {
                     "$unwind": "$subjects_doc"
-                },
-                // {
-                //     "$lookup": {
-                //         "from": "class_sections",
-                //         "localField": "subjects.section_id",
-                //         "foreignField": "section_id",
-                //         "as": "section_doc"
-                //     }
-                // },
-                // {
-                //     "$unwind": "$section_doc"
-                // },
-                // {
-                //     "$redact": {
-                //         "$cond": [{
-                //             "$eq": ["$employee_id", "$employee_doc.employee_id"]
-                //         },
-                //             "$$KEEP",
-                //             "$$PRUNE"
-                //         ]
-                //     }
-                // },
+                },               
                 {
                     "$project": {
                         "_id": "$_id",
@@ -357,6 +334,7 @@ router.route('/listsubjectstoteacher/:school_id')
             });
         });
     });
+
 // Add Subjects to Teachers For a Section 
 
 router.route('/addsubjectstoteacher/:section_id')
@@ -365,9 +343,7 @@ router.route('/addsubjectstoteacher/:section_id')
         var section_id = req.params.section_id;
         var item = {
             teacher_id: 'getauto',
-            subject_name: req.body.subject_name,
-            // subject_id: req.body.subject_id,
-            // employee_id: req.body.employee_id,
+            subject_name: req.body.subject_name,           
             teacher_name: req.body.teacher_name,
             section_id: section_id,
             status: status

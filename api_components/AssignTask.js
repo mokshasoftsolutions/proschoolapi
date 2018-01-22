@@ -31,11 +31,13 @@ router.route('/task/:school_id')
             school_id: school_id,
             department: req.body.department,
             priority: req.body.priority,
+            assigned_to: req.body.assigned_to,
             posted_by: req.body.posted_by,
+            employee_id: req.body.employee_id,
             assigned_on: date,
             status: "pending",
         }
-        assigned_to = req.body.assigned_to;
+
         mongo.connect(url, function (err, db) {
             autoIncrement.getNextSequence(db, 'tasks', function (err, autoIndex) {
                 var collection = db.collection('tasks');
@@ -59,9 +61,6 @@ router.route('/task/:school_id')
                                 }, {
                                         $set: {
                                             task_id: 'TASK-' + autoIndex
-                                        },
-                                        $push: {
-                                            assigned_to
                                         }
                                     }, function (err, result) {
                                         db.close();
@@ -97,7 +96,36 @@ router.route('/tasks_manager/:school_id')
         var school_id = req.params.school_id;
         mongo.connect(url, function (err, db) {
             assert.equal(null, err);
-            var cursor = db.collection('tasks').find({ school_id: school_id });
+            //var cursor = db.collection('tasks').find({ school_id: school_id });
+            var cursor = db.collection('tasks').aggregate([
+                {
+                    $match: {
+                        school_id: school_id
+                    }
+                },
+                {
+                    $lookup: {
+                        from: "employee",
+                        localField: "employee_id",
+                        foreignField: "employee_id",
+                        as: "employee_doc"
+                    }
+                },
+                {
+                    "$project": {
+                        "_id": "$_id",
+                        "task_id": "$task_id",
+                        "task": "$task",
+                        "employee_id": "$employee_doc.employee_id",
+                        "school_id": "$school_id",
+                        "department": "$department",
+                        "priority": "$priority",
+                        "assigned_to": "$assigned_to",
+                        "status": "$status",
+                        "assigned_on":"$assigned_on"
+                    }
+                }
+            ]);
             cursor.forEach(function (doc, err) {
                 assert.equal(null, err);
                 resultArray.push(doc);
@@ -140,16 +168,18 @@ router.route('/edit_task_management/:task_id')
         var req_priority = req.body.priority;
         var req_department = req.body.department;
         var req_assigned_on = req.body.assigned_on;
+        var assigned_to = req.body.assigned_to;
         var req_status = req.body.status;
         var req_task = req.body.task;
-       
+
 
         mongo.connect(url, function (err, db) {
             db.collection('tasks').update(myquery, {
                 $set: {
-                    priority: req_priority,                    
+                    priority: req_priority,
                     assigned_on: req_assigned_on,
                     department: req_department,
+                    assigned_to: assigned_to,
                     status: req_status,
                     task: req_task,
                 }

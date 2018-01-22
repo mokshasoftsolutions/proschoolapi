@@ -598,6 +598,26 @@ router.route('/delete_course_work/:lession_id')
                 if (err) {
                     res.send('false');
                 }
+                else {
+                    mongo.connect(url, function (err, db) {
+                        db.collection('assignments').deleteOne(myquery, function (err, result) {
+                            assert.equal(null, err);
+                            if (err) {
+                                res.send('false');
+                            }
+                            else {
+                                mongo.connect(url, function (err, db) {
+                                    db.collection('assignment_marks').deleteOne(myquery, function (err, result) {
+                                        assert.equal(null, err);
+                                        if (err) {
+                                            res.send('false');
+                                        }                                        
+                                    });
+                                });
+                            }                            
+                        });
+                    });
+                }
                 db.close();
                 res.send('true');
             });

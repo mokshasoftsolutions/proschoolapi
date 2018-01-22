@@ -180,11 +180,34 @@ router.route('/delete_classes/:class_id')
                 if (err) {
                     res.send('false');
                 }
-                db.close();
-                res.send('true');
+                else {
+                    mongo.connect(url, function (err, db) {
+                        db.collection('class_sections').deleteOne(myquery, function (err, result) {
+                            assert.equal(null, err);
+                            if (err) {
+                                res.send('sections false');
+                            }
+                            else {
+                                mongo.connect(url, function (err, db) {
+                                    db.collection('students').deleteOne(myquery, function (err, result) {
+                                        assert.equal(null, err);
+                                        if (err) {
+                                            res.send('students false');
+                                        }                                    
+
+                                    });
+                                });
+                            }
+
+                        });
+                    });
+                    db.close();
+                    res.send('true');
+                }
             });
         });
     });
 
 
 module.exports = router;
+ 

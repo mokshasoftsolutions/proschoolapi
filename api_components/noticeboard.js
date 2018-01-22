@@ -74,7 +74,7 @@ router.route('/noticeboard/:school_id')
          school_id= req.params.school_id,
       mongo.connect(url, function(err, db) {
             assert.equal(null, err);
-            var cursor = db.collection('noticeboard').find({school_id});
+            var cursor = db.collection('noticeboard').find({school_id:school_id});
             cursor.forEach(function(doc, err) {
                 assert.equal(null, err);
                 resultArray.push(doc);
