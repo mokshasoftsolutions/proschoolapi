@@ -134,11 +134,7 @@ parentModule.prototype.parent = function (parents_account,res,next) {
 
 }
 parentModule.prototype.addParent = function (request) {
-<<<<<<< HEAD
     //   console.log("hemu");
-=======
- //   console.log("hemu");
->>>>>>> 48fd8959419cea987082acf5c57162fa76faaeca
     var status = 1;
     var parent_name = request.name;
     var school_id = request.school_id;
@@ -164,19 +160,11 @@ parentModule.prototype.addParent = function (request) {
                     collection.insertOne(item, function (err, result) {
                         if (err) {
                             if (err.code == 11000) {
-<<<<<<< HEAD
                                 //  res.end('code false');  
                                 // console.log(err);                                                                                                  
                             }
                             // res.end('false');
                             //  console.log(err);
-=======
-                               //  res.end('code false');  
-                              // console.log(err);                                                                                                  
-                            }
-                            // res.end('false');
-                          //  console.log(err);
->>>>>>> 48fd8959419cea987082acf5c57162fa76faaeca
                         }
                         collection.update({
                             _id: item._id
@@ -196,11 +184,7 @@ parentModule.prototype.addParent = function (request) {
                                 userData.uniqueId = school_id + '-PARENT-' + autoIndex;
                                 userData.role = "parent";
                                 userData.school_id = school_id;
-<<<<<<< HEAD
                                 // console.log(userData);
-=======
-                               // console.log(userData);
->>>>>>> 48fd8959419cea987082acf5c57162fa76faaeca
                                 parentUserModule.parentUserModuleSave(userData);
                             });
                     });
