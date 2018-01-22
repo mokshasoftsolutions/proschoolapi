@@ -86,19 +86,33 @@ router.route('/session_timings/:school_id')
         });
     });
 
+<<<<<<< HEAD
 router.route('/edit_session/:session_id')
     .put(function (req, res, next) {
+=======
+    router.route('/session_edit/:session_id')
+    .post(function (req, res, next) {
+>>>>>>> 48fd8959419cea987082acf5c57162fa76faaeca
         var myquery = { session_id: req.params.session_id };
         var session = req.body.session;
         var start_time = req.body.start_time;
         var end_time = req.body.end_time;
         mongo.connect(url, function (err, db) {
+<<<<<<< HEAD
             db.collection('session_timings').update(myquery, {
                 $set: {
                     session: session,
                     start_time: start_time,
                     end_time: end_time,
                 }
+=======
+            db.collection('session_timings').update(myquery, { 
+                $set: { 
+                    session: session,
+                    start_time: start_time,
+                    end_time: end_time, 
+                } 
+>>>>>>> 48fd8959419cea987082acf5c57162fa76faaeca
             }, function (err, result) {
                 assert.equal(null, err);
                 if (err) {
@@ -112,7 +126,11 @@ router.route('/edit_session/:session_id')
 
 
 
+<<<<<<< HEAD
 router.route('/delete_session/:session_id')
+=======
+router.route('/session_delete/:session_id')
+>>>>>>> 48fd8959419cea987082acf5c57162fa76faaeca
     .delete(function (req, res, next) {
         var myquery = { session_id: req.params.session_id };
 
