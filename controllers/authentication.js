@@ -92,6 +92,7 @@ exports.signin = function (req, res, next) {
 			role: req.user.role,
 			uniqueId: req.user.uniqueId,
 			school_id: req.user.school_id,
+			employee_id:req.user.employee_id,
 			_id : req.user._id
 		});
 	}

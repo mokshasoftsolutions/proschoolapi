@@ -73,13 +73,12 @@ router.route('/all_cses_att_date_testing/:select_date/:school_id')
                                 // console.log(class_id);
                                 db.collection('class_sections').find({
                                     class_id
-                                }).sort ({ name : 1 } ).toArray(function (err, results) {
+                                }).sort({ name: 1 }).toArray(function (err, results) {
                                     count++;
                                     if (err) {
                                         next(err, null);
                                     }
                                     classData.sections = results
-
 
                                     if (classResultLength == count) {
 
@@ -205,9 +204,7 @@ router.route('/all_cses_att_date_testing/:select_date/:school_id')
                                 if (classDataLength == count) {
                                     next(null, classAttendence);
                                 }
-
                             });
-
                         }
                     }
                 ],
@@ -268,7 +265,7 @@ router.route('/student_tillDate_attendence/:student_id')
                 },
                 {
                     $unwind: "$section_doc"
-                },               
+                },
                 {
                     $lookup: {
                         from: "students",
@@ -349,84 +346,143 @@ router.route('/student_tillDate_attendence/:student_id')
 
 router.route('/presentDay_student_attendence/:select_date/:student_id')
     .get(function (req, res, next) {
-        var student_id = req.params.student_id;        
+        var student_id = req.params.student_id;
         var resultArray = [];
-        var select_date = new Date(req.params.select_date);       
-        var endDate = new Date(select_date);      
+        var select_date = new Date(req.params.select_date);
+        var endDate = new Date(select_date);
+        var cursor;
         endDate.setDate(endDate.getDate() + 1)
         mongo.connect(url, function (err, db) {
-            assert.equal(null, err);           
-
-            var cursor = db.collection('attendance').aggregate([
-                {
-                    $match: {
-                        date: {
-                            $gte: new Date(select_date.toISOString()),
-                            $lt: new Date(endDate.toISOString())
-                        },
-                        student_id: student_id
-                    },
-                },
-                {
-                    $lookup: {
-                        from: "class_sections",
-                        localField: "section_id",
-                        foreignField: "section_id",
-                        as: "section_doc"
-                    }
-                },
-                {
-                    $unwind: "$section_doc"
-                },
-                {
-                    $lookup: {
-                        from: "students",
-                        localField: "student_id",
-                        foreignField: "student_id",
-                        as: "student_doc"
-                    }
-                },
-                {
-                    $unwind: "$student_doc"
-                },
-                {
-                    $group: {
-                        _id: '$_id',
-                        section_name: {
-                            "$first": "$section_doc.name"
-                        },
-                        status: {
-                            "$first": "$status"
-                        },
-                        student_name: {
-                            "$first": "$student_doc.first_name"
-                        },
-                        Admission_no: {
-                            "$first": "$student_doc.admission_no"
-                        },
-                        roll_no: {
-                            "$first": "$student_doc.roll_no"
-                        },
-                        studentImage: {
-                            "$first": "$student_doc.studentImage"
-                        },
-                       
-
-                    }
-                }
-            ])
-
-            cursor.forEach(function (doc, err) {
+            assert.equal(null, err);
+            var data = db.collection('attendance').find({
+                date: { $gte: new Date(select_date.toISOString()), $lt: new Date(endDate.toISOString()) },
+                student_id: student_id
+            });
+            data.forEach(function (doc, err) {
                 assert.equal(null, err);
                 resultArray.push(doc);
             }, function () {
-                db.close();
-                res.send({
-                    studentAttendence: resultArray,
-                   
-                });
-            });
+               // console.log(resultArray);
 
+                if (resultArray == "") {
+                  //  console.log("rfgweqrg");
+                    cursor = db.collection('students').aggregate([
+                        {
+                            $match: {
+                                student_id: student_id
+                            }
+                        },
+                        {
+                            $lookup: {
+                                from: "class_sections",
+                                localField: "section_id",
+                                foreignField: "section_id",
+                                as: "section_doc"
+                            }
+                        },
+                        {
+                            $unwind: "$section_doc"
+                        },
+                        {
+                            $group: {
+                                _id: '$_id',
+                                section_name: {
+                                    "$first": "$section_doc.name"
+                                },
+                                status: {
+                                    "$first": "Attendence not taken Yet"
+                                },
+                                student_name: {
+                                    "$first": "$first_name"
+                                },
+                                Admission_no: {
+                                    "$first": "$admission_no"
+                                },
+                                roll_no: {
+                                    "$first": "$roll_no"
+                                },
+                                studentImage: {
+                                    "$first": "$studentImage"
+                                },
+
+                            }
+                        }
+                    ])
+
+
+                }
+                else {
+                  //  console.log("");
+                    cursor = db.collection('attendance').aggregate([
+                        {
+                            $match: {
+                                date: {
+                                    $gte: new Date(select_date.toISOString()),
+                                    $lt: new Date(endDate.toISOString())
+                                },
+                                student_id: student_id
+                            },
+                        },
+                        {
+                            $lookup: {
+                                from: "class_sections",
+                                localField: "section_id",
+                                foreignField: "section_id",
+                                as: "section_doc"
+                            }
+                        },
+                        {
+                            $unwind: "$section_doc"
+                        },
+                        {
+                            $lookup: {
+                                from: "students",
+                                localField: "student_id",
+                                foreignField: "student_id",
+                                as: "student_doc"
+                            }
+                        },
+                        {
+                            $unwind: "$student_doc"
+                        },
+                        {
+                            $group: {
+                                _id: '$_id',
+                                section_name: {
+                                    "$first": "$section_doc.name"
+                                },
+                                status: {
+                                    "$first": "$status"
+                                },
+                                student_name: {
+                                    "$first": "$student_doc.first_name"
+                                },
+                                Admission_no: {
+                                    "$first": "$student_doc.admission_no"
+                                },
+                                roll_no: {
+                                    "$first": "$student_doc.roll_no"
+                                },
+                                studentImage: {
+                                    "$first": "$student_doc.studentImage"
+                                },
+
+
+                            }
+                        }
+                    ])
+                }
+                cursor.forEach(function (doc, err) {
+                    assert.equal(null, err);
+                    resultArray.push(doc);
+                }, function () {
+                    db.close();
+                    res.send({
+                        studentAttendence: resultArray,
+
+                    });
+                });
+            })
         });
     });
 

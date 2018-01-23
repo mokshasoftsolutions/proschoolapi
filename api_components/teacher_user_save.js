@@ -10,7 +10,7 @@ var mongo = require('mongodb').MongoClient;
 var url = 'mongodb://' + config1.dbhost + ':27017/s_erp_data';
 var forEach = require('async-foreach').forEach;
 var ObjectID = require('mongodb').ObjectID;
-var teacherUserModule = function() {};
+var teacherUserModule = function () { };
 function tokenForUser(user) {
 	// console.log(user)
 	const timestamp = new Date().getTime();
@@ -19,16 +19,18 @@ function tokenForUser(user) {
 		unid: user.uniqueId,
 		role: user.role,
 		school_id: user.school_id,
+		employee_id:employee_id,
 		iat: timestamp
 	}, "ex23hf9284y9er2ehfbdbvcv83yehrdf8273");
 }
- 
+
 teacherUserModule.prototype.teacherUserModuleSave = function (req) {
 	const email = req.email;
 	const password = req.password.toLowerCase();
 	const uniqueId = req.uniqueId;
 	const role = req.role;
 	const school_id = req.school_id;
+	const employee_id = req.employeeId;
 
 	if (!email || !password) {
 		// return res.status(422).send({
@@ -63,7 +65,8 @@ teacherUserModule.prototype.teacherUserModuleSave = function (req) {
 			password: password,
 			uniqueId: uniqueId,
 			role: role,
-			school_id: school_id
+			school_id: school_id,
+			employee_id: employee_id
 		});
 
 		user.save(function (err) {

@@ -136,10 +136,10 @@ router.route('/addorupdatesubjectstoteacher/:school_id/:section_id')
         var item = {
             teacher_subject_id: 'getauto',
             school_id: school_id,
-            teacher_id: req.body.teacher_id,            
+            teacher_id: req.body.teacher_id,
             status: status,
         };
-        var subjects = {          
+        var subjects = {
             section_id: section_id,
             subject_id: req.body.subject_id,
             teacher_id: teacher_id,
@@ -302,7 +302,7 @@ router.route('/listsubjectstoteacher/:school_id')
                 },
                 {
                     "$unwind": "$subjects_doc"
-                },               
+                },
                 {
                     "$project": {
                         "_id": "$_id",
@@ -343,7 +343,7 @@ router.route('/addsubjectstoteacher/:section_id')
         var section_id = req.params.section_id;
         var item = {
             teacher_id: 'getauto',
-            subject_name: req.body.subject_name,           
+            subject_name: req.body.subject_name,
             teacher_name: req.body.teacher_name,
             section_id: section_id,
             status: status
@@ -444,4 +444,25 @@ router.route('/delete_subject_teacher/:teacher_id/:subject_id')
         });
     });
 
+router.route('/employeeId_by_teacherId/:teacher_id')
+    .get(function (req, res, next) {
+        var teacher_id = req.params.teacher_id;
+        var status = 1;
+        var resultArray = [];
+        teacher_id = teacher_id.toUpperCase();
+        console.log(teacher_id);
+        mongo.connect(url, function (err, db) {
+            assert.equal(null, err);
+            var cursor = db.collection('teachers').find({ teacher_id });
+            cursor.forEach(function (doc, err) {
+                assert.equal(null, err);
+                resultArray.push(doc);
+            }, function () {
+                db.close();
+                res.send({
+                    teachers: resultArray
+                });
+            });
+        });
+    });
 module.exports = router;

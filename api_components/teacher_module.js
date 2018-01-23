@@ -173,6 +173,7 @@ teacherModule.prototype.addTeacher = function (request) {
                                 userData.email = school_id + '-TCH-' + autoIndex;
                                 userData.password = school_id + '-TCH-' + autoIndex;
                                 userData.uniqueId = school_id + '-TCH-' + autoIndex;
+                                userData.employeeId = employee_id;
                                 // userData.email = parentId+autoIndex;
                                 // userData.password = parentId+autoIndex;
                                 // userData.uniqueId = parentId+autoIndex;
@@ -197,7 +198,7 @@ teacherModule.prototype.addTeacher = function (request) {
 //                         }, {
 //                             "$addToSet": {
 //                                 "students": {
-//                                      student_id: student_id 
+//                                      student_id: student_id
 //                                 }
 //                             }
 //                         },

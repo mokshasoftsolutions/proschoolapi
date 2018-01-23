@@ -7,6 +7,9 @@ var mongo = require('mongodb').MongoClient;
 var autoIncrement = require("mongodb-autoincrement");
 var assert = require('assert');
 var multer = require('multer');
+var forEach = require('async-foreach').forEach;
+var async = require('async');
+var waterfall = require('async-waterfall');
 var xlstojson = require("xls-to-json-lc");
 var xlsxtojson = require("xlsx-to-json-lc");
 var port = process.env.PORT || 4005;
@@ -337,6 +340,121 @@ router.route('/delete_subjects/:subject_id')
         });
     });
 
+
+router.route('/all_subjects_of_chapters_completed_topics/:section_id')
+    .get(function (req, res, next) {
+        var resultArray = [];
+        var section_id = req.params.section_id;
+        var chaptersObject = [];
+        var subjectsObject = [];
+
+        mongo.connect(url, function (err, db) {
+
+            async.waterfall(
+                [
+                    function getSubjects(next) {
+                        //   console.log("getSubjects");
+                        db.collection('subjects').find({
+                            section_id
+                        }).toArray(function (err, result) {
+                            if (err) {
+                                next(err, null);
+                            }
+                            next(null, result);
+                        });
+                    },
+                    function getChaptersData(result, next) {
+                        //   console.log("getChaptersData");                      
+                        var count = 0;
+                        var subjectResult = result;
+                        var subjectResultLength = result.length;
+                        if (subjectResultLength == 0) {
+                            next(null, []);
+                        } else {
+                            //  console.log("In Second step sections")
+                            subjectResult.forEach(function (subjectData) {
+                                var subject_id = subjectData.subject_id;
+                                // console.log(subject_id);
+                                db.collection('coursework').find({
+                                    subject_id
+                                }).sort({ name: 1 }).toArray(function (err, results) {
+                                    count++;
+                                    if (err) {
+                                        next(err, null);
+                                    }
+                                    subjectData.chapters = results
+                                    // console.log(subjectData.chapters);
+
+                                    if (subjectResultLength == count) {
+
+                                        next(null, subjectResult);
+                                        // next(null, classData);
+                                    }
+
+                                })
+                            })
+                        }
+                    }, function getchaptersTopicsData(result, next) {
+                        //  console.log(result);
+                        var count = 0;
+                        var subjectResult = result;
+                        var subjectDataLength = result.length;
+                        //  console.log(classData.sections);
+                        if (subjectDataLength == 0) {
+                            next(null, []);
+                        } else {
+                           // console.log("In fourth step sections attendance")
+                            subjectResult.forEach(function (subjectData) {
+                                subjectChapters = [];
+                                // attendenceClass = [];
+
+                                var chaptersCount = 0;
+                                var subjectName = subjectData.name;
+                                var subjectsData = subjectData;
+                                var subject_id = subjectData.subject_id;
+                                subjectChapters = subjectData.chapters;
+                                //  console.log(subject_id);
+                                //  console.log(subjectData.chapters +"hema"+ chaptersCount);
+                                chaptersObject = [];
+                                for (i = 0; i < subjectChapters.length; i++) {
+                                    var chapterName = subjectChapters[i].title;
+                                    // console.log(subjectChapters[i]);
+                                    var completed_topics = subjectChapters[i].completed_topics;
+                                    chaptersObject.push({ "chapterName": chapterName, "completed_topics": completed_topics });
+
+                                }
+                                subjectsObject.push({ "subjectName": subjectName, "chapters": chaptersObject })
+
+                                count++;
+
+                                if (subjectDataLength == count) {
+                                    next(null, subjectsObject);
+                                }
+
+                            });
+
+                        }
+                    }
+                ],
+                function (err, result1) {
+
+                    db.close();
+                    if (err) {
+                        res.send({
+                            error: err
+                        });
+
+                    } else {
+
+                        res.send({
+                            subjects: result1
+                        });
+
+                    }
+                }
+            );
+        });
+    });
 
 
 module.exports = router;

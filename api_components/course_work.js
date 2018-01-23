@@ -29,11 +29,15 @@ router.route('/course_works/:subject_id')
         var status = 1;
         var subject_id = req.params.subject_id;
         // var subject_name = req.params.subject_name;
+        var completed_topics = 0;
 
         var item = {
             lession_id: 'getauto',
             subject_id: subject_id,
             title: req.body.title,
+            start_date: req.body.start_date,
+            completion_date: req.body.completion_date,
+            completed_topics: completed_topics,
             chapter_code: req.body.chapter_code,
             no_of_topics: req.body.no_of_topics,
             description: req.body.description,
@@ -588,6 +592,34 @@ router.route('/edit_course_work/:lession_id')
     });
 
 
+router.route('/edit_completed_topics/:lession_id')
+    .put(function (req, res, next) {
+        var myquery = { lession_id: req.params.lession_id };
+        var req_completed_topics = req.body.completed_topics;
+        // var req_chapter_code = req.body.chapter_code;
+        // var req_no_of_topics = req.body.no_of_topics;
+        // var req_description = req.body.description;
+
+        mongo.connect(url, function (err, db) {
+            db.collection('coursework').update(myquery, {
+                $set: {
+                    completed_topics: req_completed_topics,
+                    // chapter_code: req_chapter_code,
+                    // no_of_topics: req_no_of_topics,
+                    // description: req_description
+                }
+            }, function (err, result) {
+                assert.equal(null, err);
+                if (err) {
+                    res.send('false');
+                }
+                db.close();
+                res.send('true');
+            });
+        });
+    });
+
+
 router.route('/delete_course_work/:lession_id')
     .delete(function (req, res, next) {
         var myquery = { lession_id: req.params.lession_id };
@@ -611,10 +643,10 @@ router.route('/delete_course_work/:lession_id')
                                         assert.equal(null, err);
                                         if (err) {
                                             res.send('false');
-                                        }                                        
+                                        }
                                     });
                                 });
-                            }                            
+                            }
                         });
                     });
                 }
