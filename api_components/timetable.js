@@ -376,4 +376,6 @@ router.route('/class_timetable_by_day/:select_day/:section_id')
         });
     });
 
+    
+
 module.exports = router;

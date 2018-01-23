@@ -98,6 +98,11 @@ router.route('/get_sections_by_classid/:class_id')
             assert.equal(null, err);
             var cursor = db.collection('class_sections').aggregate([
                 {
+                    $sort: {
+                        name: -1
+                    }
+                },
+                {
                     $match: {
                         class_id: class_id,
                     }

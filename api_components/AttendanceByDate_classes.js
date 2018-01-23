@@ -47,7 +47,7 @@ router.route('/all_cses_att_date_testing/:select_date/:school_id')
 
             async.waterfall(
                 [
-                    
+
                     function getSchoolClassed(next) {
                         //   console.log("getSchoolClassed");
                         db.collection('school_classes').find({
@@ -73,16 +73,16 @@ router.route('/all_cses_att_date_testing/:select_date/:school_id')
                                 // console.log(class_id);
                                 db.collection('class_sections').find({
                                     class_id
-                                }).toArray(function (err, results) {
+                                }).sort ({ name : 1 } ).toArray(function (err, results) {
                                     count++;
                                     if (err) {
                                         next(err, null);
                                     }
                                     classData.sections = results
 
-                                   
+
                                     if (classResultLength == count) {
-                                       
+
                                         next(null, classResult);
                                         // next(null, classData);
                                     }
@@ -178,13 +178,13 @@ router.route('/all_cses_att_date_testing/:select_date/:school_id')
                                                 abPercent = Math.round(abPercent);
                                                 onPercent = (100 * onLeave) / percent;
                                                 onPercent = Math.round(onPercent);
-                                              //  console.log(prePercent);
+                                                //  console.log(prePercent);
                                                 preAtt.present = present;
                                                 preAtt.absent = absent;
                                                 preAtt.onLeave = onLeave;
-                                                preAtt.presentPercent = prePercent+"%";
-                                                preAtt.absentPercent = abPercent+"%";
-                                                preAtt.onLeavePercent = onPercent+"%";
+                                                preAtt.presentPercent = prePercent + "%";
+                                                preAtt.absentPercent = abPercent + "%";
+                                                preAtt.onLeavePercent = onPercent + "%";
                                             }
 
                                             attendenceSection.push({ "sectionName": sectionName, "sectionId": sectionId, "attendance": preAtt });
@@ -228,7 +228,204 @@ router.route('/all_cses_att_date_testing/:select_date/:school_id')
                     }
                 }
             );
+        });
+    });
 
+router.route('/student_tillDate_attendence/:student_id')
+    .get(function (req, res, next) {
+        var student_id = req.params.student_id;
+        var resultArray = [];
+        var present = 0, absent = 0, onLeave = 0;
+        var resultMonth, AttendenceMonth;
+        var studentAttendence = [];
+
+        mongo.connect(url, function (err, db) {
+            assert.equal(null, err);
+            var cursor = db.collection('attendance').aggregate([
+                {
+                    $match: {
+                        student_id: student_id
+                    },
+                },
+                {
+                    $lookup: {
+                        from: "school_classes",
+                        localField: "class_id",
+                        foreignField: "class_id",
+                        as: "class_doc"
+                    }
+                },
+                {
+                    $unwind: "$class_doc"
+                },
+                {
+                    $lookup: {
+                        from: "class_sections",
+                        localField: "section_id",
+                        foreignField: "section_id",
+                        as: "section_doc"
+                    }
+                },
+                {
+                    $unwind: "$section_doc"
+                },               
+                {
+                    $lookup: {
+                        from: "students",
+                        localField: "student_id",
+                        foreignField: "student_id",
+                        as: "student_doc"
+                    }
+                },
+                {
+                    $unwind: "$student_doc"
+                },
+                {
+                    $project:
+                        {
+                            Name: "$student_doc.first_name",
+                            className: "$class_doc.name",
+                            sectionName: "$section_doc.name",
+                            status: "$status",
+                            month: { $month: "$date" },
+                            date: "$date"
+                        }
+                }
+            ])
+
+            cursor.forEach(function (doc, err) {
+                assert.equal(null, err);
+                resultArray.push(doc);
+            }, function () {
+                monthArray = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12];
+                monthString = ["january", "february", "march", "april", "may", "june", "july", "august", "september", "october", "november", "december"]
+                // console.log(attendanceArray[0]);
+                for (i = 0; i < monthArray.length; i++) {
+                    monthValue = monthArray[i];
+                    monthName = monthString[i];
+                    // console.log(resultMonth);
+                    present = absent = onLeave = 0;
+                    monthAttendence = {};
+                    for (j = 0; j < resultArray.length; j++) {
+
+                        if (monthValue == resultArray[j].month) {
+                            // console.log("hema");
+                            if (resultArray[j].status == "Present") {
+                                present += 1;
+                            }
+                            else if (resultArray[j].status == "Absent") {
+                                absent += 1;
+                            }
+                            else if (resultArray[j].status == "On Leave") {
+                                onLeave += 1;
+                            }
+                        }
+
+                    }
+                    percent = present + absent + onLeave;
+                    prePercent = (100 * present) / percent;
+                    prePercent = Math.round(prePercent);
+                    abPercent = (100 * absent) / percent;
+                    abPercent = Math.round(abPercent);
+                    onPercent = (100 * onLeave) / percent;
+                    onPercent = Math.round(onPercent);
+                    monthAttendence.present = present;
+                    monthAttendence.absent = absent;
+                    monthAttendence.onLeave = onLeave;
+                    // console.log(monthAttendence);
+                    monthAttendence.presentPercent = prePercent + "%";
+                    monthAttendence.absentPercent = abPercent + "%";
+                    monthAttendence.onLeavePercent = onPercent + "%";
+                    studentAttendence.push({ "monthName": monthName, "month": monthValue, "count": percent, "attendance": monthAttendence })
+                }
+                db.close();
+                res.send({
+                    studentAttendence: studentAttendence
+                });
+            });
+        });
+    });
+
+
+router.route('/presentDay_student_attendence/:select_date/:student_id')
+    .get(function (req, res, next) {
+        var student_id = req.params.student_id;        
+        var resultArray = [];
+        var select_date = new Date(req.params.select_date);       
+        var endDate = new Date(select_date);      
+        endDate.setDate(endDate.getDate() + 1)
+        mongo.connect(url, function (err, db) {
+            assert.equal(null, err);           
+
+            var cursor = db.collection('attendance').aggregate([
+                {
+                    $match: {
+                        date: {
+                            $gte: new Date(select_date.toISOString()),
+                            $lt: new Date(endDate.toISOString())
+                        },
+                        student_id: student_id
+                    },
+                },
+                {
+                    $lookup: {
+                        from: "class_sections",
+                        localField: "section_id",
+                        foreignField: "section_id",
+                        as: "section_doc"
+                    }
+                },
+                {
+                    $unwind: "$section_doc"
+                },
+                {
+                    $lookup: {
+                        from: "students",
+                        localField: "student_id",
+                        foreignField: "student_id",
+                        as: "student_doc"
+                    }
+                },
+                {
+                    $unwind: "$student_doc"
+                },
+                {
+                    $group: {
+                        _id: '$_id',
+                        section_name: {
+                            "$first": "$section_doc.name"
+                        },
+                        status: {
+                            "$first": "$status"
+                        },
+                        student_name: {
+                            "$first": "$student_doc.first_name"
+                        },
+                        Admission_no: {
+                            "$first": "$student_doc.admission_no"
+                        },
+                        roll_no: {
+                            "$first": "$student_doc.roll_no"
+                        },
+                        studentImage: {
+                            "$first": "$student_doc.studentImage"
+                        },
+                       
+
+                    }
+                }
+            ])
+
+            cursor.forEach(function (doc, err) {
+                assert.equal(null, err);
+                resultArray.push(doc);
+            }, function () {
+                db.close();
+                res.send({
+                    studentAttendence: resultArray,
+                   
+                });
+            });
 
         });
     });

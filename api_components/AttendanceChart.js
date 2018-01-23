@@ -406,38 +406,6 @@ router.route('/sec_attendence/:select_date/:class_id')
                 }
             });
 
-            // sections.forEach(function (sec, err) {
-            //     console.log("sections" + sec.section_id);
-            //     if (sec.class_id == class_id) {
-            //         console.log("classSection");
-            //         present = absent = onLeave = 0;
-            //         data.forEach(function (doc, err) {
-            //             console.log("data");
-            //             if (sec.section_id == doc.section_id) {
-            //                 if (doc.status == "Present") {
-            //                     present += 1;
-            //                     console.log("babu" + present);
-            //                 }
-            //                 else if (doc.status == "Absent") {
-            //                     absent += 1;
-            //                     console.log("babu1" + absent);
-            //                 }
-            //                 else if (doc.status == "On Leave") {
-            //                     onLeave += 1;
-            //                     console.log("babu2" + onLeave);
-            //                 }
-            //             }
-            //         });
-            //         sectionName = sec.name;
-            //         attendenceSection.push(sectionName);
-            //         attendenceSection.push(present);
-            //         attendenceSection.push(absent);
-            //         attendenceSection.push(onLeave);
-
-            //         sectionArray.push(attendenceSection);
-            //     }
-            // })
-
             var cursor = db.collection('attendance').aggregate([
                 {
                     $match: {
