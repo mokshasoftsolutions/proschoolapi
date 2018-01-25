@@ -418,9 +418,11 @@ router.route('/all_subjects_of_chapters_completed_topics/:section_id')
                                 chaptersObject = [];
                                 for (i = 0; i < subjectChapters.length; i++) {
                                     var chapterName = subjectChapters[i].title;
+                                    var no_of_topics = subjectChapters[i].no_of_topics;
                                     // console.log(subjectChapters[i]);
                                     var completed_topics = subjectChapters[i].completed_topics;
-                                    chaptersObject.push({ "chapterName": chapterName, "completed_topics": completed_topics });
+                                    var percent = completed_topics*100/no_of_topics;
+                                    chaptersObject.push({ "chapterName": chapterName, "no_of_topics":no_of_topics,"percent":percent+"%","completed_topics": completed_topics });
 
                                 }
                                 subjectsObject.push({ "subjectName": subjectName, "chapters": chaptersObject })

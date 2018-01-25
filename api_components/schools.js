@@ -10,7 +10,7 @@ var port = process.env.PORT || 4005;
 var router = express.Router();
 var multer = require('multer');
 var url = 'mongodb://' + config.dbhost + ':27017/s_erp_data';
-var mailer = require('nodemailer');
+// var mailer = require('nodemailer');
 var schoolUserModule = require('../api_components/school_registration_user');
 var cookieParser = require('cookie-parser');
 router.use(function (req, res, next) {
@@ -23,13 +23,13 @@ router.use(function (req, res, next) {
 // Add Schools
 
 // Use Smtp Protocol to send Email
-var smtpTransport = mailer.createTransport({
-    service: "gmail",
-    auth: {
-        user: "basinahemababu91@gmail.com",
-        pass: "Jaasmith@"
-    }
-});
+// var smtpTransport = mailer.createTransport({
+//     service: "gmail",
+//     auth: {
+//         user: "basinahemababu91@gmail.com",
+//         pass: "Jaasmith@"
+//     }
+// });
 
 var storageImage = multer.diskStorage({ //multers disk storage settings
     destination: function (req, file, cb) {
@@ -99,23 +99,23 @@ router.route('/schools')
                 status: status,
             };
             var username = req.body.email;
-            var mail = {
-                from: "basinahemababu91@gmail.com",
-                to: username,
-                subject: "Authentication fields for PROSchool ",
-                text: "email: " + username + "password : " + username,
-                html: "<b> Username :</b>" + username + "<br>" + "<b> Password : </b>" + username
-            }
+            // var mail = {
+            //     from: "basinahemababu91@gmail.com",
+            //     to: username,
+            //     subject: "Authentication fields for PROSchool ",
+            //     text: "email: " + username + "password : " + username,
+            //     html: "<b> Username :</b>" + username + "<br>" + "<b> Password : </b>" + username
+            // }
 
-            smtpTransport.sendMail(mail, function (error, response) {
-                if (error) {
-                    console.log(error);
-                } else {
-                    console.log("Message sent: ");
-                }
+            // smtpTransport.sendMail(mail, function (error, response) {
+            //     if (error) {
+            //         console.log(error);
+            //     } else {
+            //         console.log("Message sent: ");
+            //     }
 
-                smtpTransport.close();
-            });
+            //     smtpTransport.close();
+            // });
             mongo.connect(url, function (err, db) {
                 autoIncrement.getNextSequence(db, 'schools', function (err, autoIndex) {
                     var collection = db.collection('schools');

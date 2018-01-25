@@ -7,6 +7,7 @@ var mongo = require('mongodb').MongoClient;
 var autoIncrement = require("mongodb-autoincrement");
 var assert = require('assert');
 var multer = require('multer');
+var forEach = require('async-foreach').forEach;
 var xlstojson = require("xls-to-json-lc");
 var xlsxtojson = require("xlsx-to-json-lc");
 var port = process.env.PORT || 4005;
@@ -112,6 +113,47 @@ router.route('/course_works/:subject_id')
                 });
             });
         });
+    });
+
+
+router.route('/chaptersbulk_completed_topics/:subject_id')
+    .post(function (req, res, next) {
+
+        var subject_id = req.params.subject_id;
+
+        if (subject_id == null || !req.body.chapters_completed) {
+            res.end('null');
+        } else {
+            var count = 0;
+            if (req.body.chapters_completed.length > 0) {
+                forEach(req.body.chapters_completed, function (key, value) {
+
+                    var completed_topics = key.completed_topics;
+                    var chapter_id = key.chapter_id;
+                    mongo.connect(url, function (err, db) {
+                        db.collection('coursework').update({ lession_id: chapter_id }, {
+                            $set: {
+                                completed_topics: completed_topics,                                
+                            }
+                        }, function (err, result) {
+                            assert.equal(null, err);
+                            if (err) {
+                                res.send('false');
+                            }
+                            count++;
+
+                            db.close();
+                            if (count == req.body.chapters_completed.length) {
+                                res.end('true');
+                            }
+                        });
+                    });
+                });
+
+            } else {
+                res.end('false');
+            }
+        }
     });
 
 // MOdified
