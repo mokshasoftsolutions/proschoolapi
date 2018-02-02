@@ -412,6 +412,7 @@ router.route('/all_subjects_of_chapters_completed_topics/:section_id')
                                 var subjectName = subjectData.name;
                                 var subjectsData = subjectData;
                                 var subject_id = subjectData.subject_id;
+                               
                                 subjectChapters = subjectData.chapters;
                                 //  console.log(subject_id);
                                 //  console.log(subjectData.chapters +"hema"+ chaptersCount);
@@ -422,7 +423,8 @@ router.route('/all_subjects_of_chapters_completed_topics/:section_id')
                                     // console.log(subjectChapters[i]);
                                     var completed_topics = subjectChapters[i].completed_topics;
                                     var percent = completed_topics*100/no_of_topics;
-                                    chaptersObject.push({ "chapterName": chapterName, "no_of_topics":no_of_topics,"percent":percent+"%","completed_topics": completed_topics });
+                                    var chapter_code=subjectChapters[i] .chapter_code;
+                                    chaptersObject.push({ "chapterName": chapterName, "no_of_topics":no_of_topics,"percent":percent+"%","completed_topics": completed_topics,"chapter_code":chapter_code });
 
                                 }
                                 subjectsObject.push({ "subjectName": subjectName, "chapters": chaptersObject })

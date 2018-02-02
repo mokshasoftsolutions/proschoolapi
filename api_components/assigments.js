@@ -150,11 +150,14 @@ router.route('/assignment_marksbulk_eval/:section_id/:subject_id/:lession_id/:as
                         autoIncrement.getNextSequence(db, 'assignment_marks', function (err, autoIndex) {
                             var data = db.collection('assignment_marks').find({
                                 section_id: section_id,
-                                assignment_id: assignment_id
+                                assignment_id: assignment_id,
+                                student_id: item.student_id
                             }).count(function (e, triggerCount) {
                                 if (triggerCount > 0) {
-                                    db.close();
-                                    res.end('false');
+                                    count++;
+                                    if (count == req.body.studentAssignmentMarks.length) {
+                                        res.send('false');
+                                    }
                                 } else {
                                     var collection = db.collection('assignment_marks');
                                     collection.ensureIndex({

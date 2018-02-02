@@ -28,7 +28,7 @@ router.route('/questions/:class_id')
         var splited = class_id.split("-");
         var school_id = splited[0] + '-' + splited[1];
 
-        var options = [ req.body.option1, req.body.option2, req.body.option3, req.body.option4];
+        var options = [req.body.option1, req.body.option2, req.body.option3, req.body.option4];
         var item = {
             question_id: 'getauto',
             class_id: class_id,
@@ -89,7 +89,50 @@ router.route('/questions/:subject_id/:class_id')
         var resultArray = [];
         mongo.connect(url, function (err, db) {
             assert.equal(null, err);
-            var cursor = db.collection('questions').find({ "subject_id":subject_id,"class_id":class_id });
+            //  var cursor = db.collection('questions').find({ "subject_id":subject_id,"class_id":class_id });
+            var cursor = db.collection('questions').aggregate([
+                {
+                    $match: {
+                        subject_id: subject_id,
+                        class_id: class_id
+                    },
+                },
+                {
+                    $lookup: {
+                        from: "school_classes",
+                        localField: "class_id",
+                        foreignField: "class_id",
+                        as: "class_doc"
+                    }
+                },
+                {
+                    $unwind: "$class_doc"
+                },
+                {
+                    $lookup: {
+                        from: "subjects",
+                        localField: "subject_id",
+                        foreignField: "subject_id",
+                        as: "subject_doc"
+                    }
+                },
+                {
+                    $unwind: "$subject_doc"
+                },
+                {
+                    "$project": {
+                        "_id": "$_id",
+                        "class_Name": "$class_doc.name",
+                        "subject_name": "$subject_doc.name",
+                        "question": "$question",
+                        "answer": "$answer",
+                        "options": "$options",
+                        "question_id": "$question_id",
+                        "class_id": "$class_id",
+                        "subject_id": "$subject_id"
+                    }
+                }
+            ])
             cursor.forEach(function (doc, err) {
                 assert.equal(null, err);
                 resultArray.push(doc);

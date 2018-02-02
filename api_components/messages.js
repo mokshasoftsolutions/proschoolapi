@@ -26,17 +26,17 @@ router.route('/messages/:school_id')
         var status = 1;
         var date = new Date();
         var school_id = req.params.school_id;
-        var receivers = [];
+
         var item = {
             message_id: 'getauto',
             message: req.body.message,
             subject: req.body.subject,
-            sent_by: req.body.sent_by,
+            sent_to: req.body.sent_to,
             posted_on: date,
-            school_id:school_id,
+            school_id: school_id,
             status: status,
         }
-        receivers = req.body.receivers;
+
         mongo.connect(url, function (err, db) {
             autoIncrement.getNextSequence(db, 'messages', function (err, autoIndex) {
                 var collection = db.collection('messages');
@@ -59,10 +59,7 @@ router.route('/messages/:school_id')
                                     _id: item._id
                                 }, {
                                         $set: {
-                                            message_id: '-MSG-' + autoIndex
-                                        },
-                                        $push: {
-                                            receivers
+                                            message_id: 'MSG-' + autoIndex
                                         }
                                     }, function (err, result) {
                                         db.close();
@@ -74,13 +71,27 @@ router.route('/messages/:school_id')
             });
         });
     })
-router.route('/messages/:receivers')
+router.route('/messages/:receivers/:school_id')
     .get(function (req, res, next) {
         var resultArray = [];
         var receivers = req.params.receivers;
+        var school_id = req.params.school_id;
+        var cursor;
+        if (receivers == "teachers") {
+            receivers = "parents";
+        }
+        else if (receivers == "parents") {
+            receivers = "teachers";
+        }
         mongo.connect(url, function (err, db) {
             assert.equal(null, err);
-            var cursor = db.collection('messages').find({ receivers });
+
+            if (receivers != "all") {
+                cursor = db.collection('messages').find({ 'sent_to': { $ne: receivers }, school_id: school_id }).sort({ posted_on: -1 });
+            }
+            else if (receivers == "all") {
+                cursor = db.collection('messages').find({ 'sent_to': receivers, school_id: school_id }).sort({ posted_on: -1 });
+            }
             cursor.forEach(function (doc, err) {
                 assert.equal(null, err);
                 resultArray.push(doc);
@@ -93,13 +104,13 @@ router.route('/messages/:receivers')
         });
     });
 
-router.route('/no_of_messages/:sender_id')
+router.route('/total_messages/:school_id')
     .get(function (req, res, next) {
         var resultArray = [];
-        var sender_id = req.params.sender_id;
+        var school_id = req.params.school_id;
         mongo.connect(url, function (err, db) {
             assert.equal(null, err);
-            var cursor = db.collection('messages').find({ sender_id });
+            var cursor = db.collection('messages').find({ school_id: school_id });
             cursor.forEach(function (doc, err) {
                 assert.equal(null, err);
                 resultArray.push(doc);
@@ -228,7 +239,7 @@ router.route('/teacher_msg_all_parents/:section_id/:school_id')
                                             }
                                         });
                                     }
-                                });                          
+                                });
                         });
                     });
                 });

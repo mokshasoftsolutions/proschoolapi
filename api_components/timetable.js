@@ -43,6 +43,7 @@ router.route('/class_timetable/:section_id/:subject_id')
             class_id: class_id,
             school_id: school_id,
             room_no: req.body.room_no,
+            teacher_id: req.body.teacher_id,
             subject_id: subject_id,
             date: date,
             status: status,
@@ -157,6 +158,15 @@ router.route('/class_timetables/:section_id')
                     }
                 },
                 { "$unwind": "$subject_doc" },
+                {
+                    "$lookup": {
+                        "from": "teachers",
+                        "localField": "teacher_id",
+                        "foreignField": "teacher_id",
+                        "as": "teacher_doc"
+                    }
+                },
+                { "$unwind": "$teacher_doc" },
 
                 {
                     "$redact": {
@@ -171,6 +181,7 @@ router.route('/class_timetables/:section_id')
                     "$project": {
                         "_id": "$_id",
                         "timetable_id": "$timetable_id",
+                        "teacher_name":"$teacher_doc.teacher_name",
                         "section_id": "$section_id",
                         "day": "$day",
                         "start_time": "$start_time",
@@ -346,6 +357,107 @@ router.route('/class_timetable_by_day/:select_day/:section_id')
                         _id: '$_id',
                         class_name: {
                             "$first": "$class_doc.name"
+                        },
+                        section_name: {
+                            "$first": "$section_doc.name"
+                        },
+                        day: {
+                            "$first": "$day"
+                        },
+                        subject_name: {
+                            "$first": "$subject_doc.name"
+                        },
+                        start_time: {
+                            "$first": "$start_time"
+                        }                      
+                    }
+                },
+            ])
+
+
+            cursor.forEach(function (doc, err) {
+                assert.equal(null, err);
+                resultArray.push(doc);
+            }, function () {
+                db.close();
+                res.send({
+                    timetable: resultArray
+                });
+            });
+        });
+    });
+
+
+    router.route('/teacher_timetable_by_day/:select_day/:teacher_id')
+    .get(function (req, res, next) {
+        var resultArray = [];
+        var teacher_id = req.params.teacher_id;
+        var Day = ['sunday', 'monday', 'tuesday', 'wednesday', 'thrusday', 'friday', 'saturday'];
+        var day = req.params.select_day;
+        day = Day[day - 1];
+
+        mongo.connect(url, function (err, db) {
+            assert.equal(null, err);
+           
+            var cursor = db.collection('timetable').aggregate([
+                {
+                    $match: {
+                        day: day,
+                        teacher_id: teacher_id
+                    }
+                },
+                {
+                    $lookup: {
+                        from: "class_sections",
+                        localField: "section_id",
+                        foreignField: "section_id",
+                        as: "section_doc"
+                    }
+                },
+                {
+                    $unwind: "$section_doc"
+                },
+                {
+                    $lookup: {
+                        from: "school_classes",
+                        localField: "class_id",
+                        foreignField: "class_id",
+                        as: "class_doc"
+                    }
+                },
+                {
+                    $unwind: "$class_doc"
+                },
+                {
+                    $lookup: {
+                        from: "subjects",
+                        localField: "subject_id",
+                        foreignField: "subject_id",
+                        as: "subject_doc"
+                    }
+                },
+                {
+                    $unwind: "$subject_doc"
+                },
+                {
+                    $lookup: {
+                        from: "teachers",
+                        localField: "teacher_id",
+                        foreignField: "teacher_id",
+                        as: "teacher_doc"
+                    }
+                },
+                {
+                    $unwind: "$teacher_doc"
+                },
+                {
+                    $group: {
+                        _id: '$_id',
+                        class_name: {
+                            "$first": "$class_doc.name"
+                        },
+                        teacher_name: {
+                            "$first": "$teacher_doc.teacher_name"
                         },
                         section_name: {
                             "$first": "$section_doc.name"

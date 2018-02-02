@@ -130,16 +130,16 @@ router.route('/addorupdatesubjectstoteacher/:school_id/:section_id')
         var school_id = req.params.school_id;
         var teacher_id = req.body.teacher_id;
         var subject_id = req.body.subject_id;
-
         var section_id = req.params.section_id;
-        subjects = [];
+
+        var subjects = [];
         var item = {
             teacher_subject_id: 'getauto',
             school_id: school_id,
             teacher_id: req.body.teacher_id,
             status: status,
         };
-        var subjects = {
+        subjects = {
             section_id: section_id,
             subject_id: req.body.subject_id,
             teacher_id: teacher_id,
@@ -261,8 +261,6 @@ router.route('/deleteassignedsubjects/:subject_id/:teacher_id')
                         res.send('false')
 
                     }
-
-
                 });
 
         });
@@ -323,6 +321,52 @@ router.route('/listsubjectstoteacher/:school_id')
                 }
             ]);
 
+            cursor.forEach(function (doc, err) {
+                assert.equal(null, err);
+                resultArray.push(doc);
+            }, function () {
+                db.close();
+                res.send({
+                    teachers: resultArray
+                });
+            });
+        });
+    });
+
+router.route('/listsubjectstoteacher_by_subjectId/:subject_id')
+    .get(function (req, res, next) {
+        var subject_id = req.params.subject_id;
+        var status = 1;
+        var resultArray = [];
+        mongo.connect(url, function (err, db) {
+            assert.equal(null, err);
+            //  var cursor = db.collection('teacher_subjects').find({ subjects: { $elemMatch: { subject_id: subject_id } } });
+            var cursor = db.collection('teacher_subjects').aggregate([
+                {
+                    $match: {
+                        'subjects': {
+                            $elemMatch: { subject_id: subject_id }
+                        }
+
+                    }
+                },
+                {
+                    $lookup: {
+                        from: "teachers",
+                        localField: "teacher_id",
+                        foreignField: "teacher_id",
+                        as: "teacher_doc"
+                    }
+                },
+                { "$unwind": "$teacher_doc" },
+                {
+                    "$project": {
+                        "_id": "$_id",
+                        "teacher_id": "$teacher_id",
+                        "teacher_name": "$teacher_doc.teacher_name",
+                    }
+                }
+            ]);
             cursor.forEach(function (doc, err) {
                 assert.equal(null, err);
                 resultArray.push(doc);
@@ -436,10 +480,7 @@ router.route('/delete_subject_teacher/:teacher_id/:subject_id')
                     } else {
                         db.close();
                         res.send('false')
-
                     }
-
-
                 });
         });
     });
@@ -465,4 +506,5 @@ router.route('/employeeId_by_teacherId/:teacher_id')
             });
         });
     });
+
 module.exports = router;

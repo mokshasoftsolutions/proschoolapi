@@ -127,7 +127,8 @@ router.route('/quote_word/:school_id')
                 }, {
                         unique: true
                     }, function (err, result) {
-                        if (item.quote == null || item.word == null) {
+                       // console.log(item.quote+"  "+item.word);
+                        if (item.quote == "" || item.word == "") {
                             res.end('null');
                         } else {
                             collection.insertOne(item, function (err, result) {

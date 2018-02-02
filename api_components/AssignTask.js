@@ -24,7 +24,7 @@ router.route('/task/:school_id')
     .post(function (req, res, next) {
         var date = new Date();
         var school_id = req.params.school_id;
-        var assigned_to = [];
+      //  var assigned_to = [];
         var item = {
             task_id: 'getauto',
             task: req.body.task,
@@ -122,10 +122,75 @@ router.route('/tasks_manager/:school_id')
                         "priority": "$priority",
                         "assigned_to": "$assigned_to",
                         "status": "$status",
-                        "assigned_on":"$assigned_on"
+                        "assigned_on": "$assigned_on"
                     }
                 }
             ]);
+            cursor.forEach(function (doc, err) {
+                assert.equal(null, err);
+                resultArray.push(doc);
+            }, function () {
+                db.close();
+                res.send({
+                    tasks: resultArray
+                });
+            });
+        });
+    });
+
+
+
+router.route('/currentDay_task/:select_date/:school_id')
+    .get(function (req, res, next) {
+        var resultArray = [];
+        var school_id = req.params.school_id;
+        var select_date = new Date(req.params.select_date);
+        var endDate = new Date(select_date);
+        endDate.setDate(endDate.getDate() + 1)
+        mongo.connect(url, function (err, db) {
+            assert.equal(null, err);
+            var cursor = db.collection('tasks').find({
+                assigned_on: {
+                    $gte: new Date(select_date.toISOString()),
+                    $lt: new Date(endDate.toISOString())
+                },
+                school_id: school_id
+            });
+            // var cursor = db.collection('tasks').aggregate([
+            //     {
+            //         $match: {
+
+            //             'assigned_on': {
+            //                 $gte: new Date(select_date.toISOString()),
+            //                 $lt: new Date(endDate.toISOString())
+            //             },
+            //             school_id: school_id
+
+            //         }
+            //     },
+            //     {
+            //         $lookup: {
+            //             from: "employee",
+            //             localField: "employee_id",
+            //             foreignField: "employee_id",
+            //             as: "employee_doc"
+            //         }
+            //     },
+            //     {
+            //         "$project": {
+            //             "_id": "$_id",
+            //             "task_id": "$task_id",
+            //             "task": "$task",
+            //             "employee_id": "$employee_doc.employee_id",
+            //             "school_id": "$school_id",
+            //             "department": "$department",
+            //             "priority": "$priority",
+            //             "assigned_to": "$assigned_to",
+            //             "status": "$status",
+            //             "assigned_on": "$assigned_on"
+            //         }
+            //     }
+            // ]);
             cursor.forEach(function (doc, err) {
                 assert.equal(null, err);
                 resultArray.push(doc);
