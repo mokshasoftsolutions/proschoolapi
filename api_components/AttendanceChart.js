@@ -32,27 +32,27 @@ router.route('/attendancechartbydate/:select_date/:class_id/:section_id')
         var resultArray = [];
         mongo.connect(url, function (err, db) {
             assert.equal(null, err);
-            var data = db.collection('attendance').find({
-                date: { $gte: new Date(select_date.toISOString()), $lt: new Date(endDate.toISOString()) },
-                section_id: section_id
-            })
-            dataCount = data.count(function (e, triggerCount) {
-                if (triggerCount > 0) {
-                    count = triggerCount;
-                }
-            });
+            // var data = db.collection('attendance').find({
+            //     date: { $gte: new Date(select_date.toISOString()), $lt: new Date(endDate.toISOString()) },
+            //     section_id: section_id
+            // })
+            // dataCount = data.count(function (e, triggerCount) {
+            //     if (triggerCount > 0) {
+            //         count = triggerCount;
+            //     }
+            // });
 
-            data.forEach(function (doc, err) {
-                if (doc.status == "Present") {
-                    present += 1;
-                }
-                else if (doc.status == "Absent") {
-                    absent += 1;
-                }
-                else if (doc.status == "On Leave") {
-                    onLeave += 1;
-                }
-            })
+            // data.forEach(function (doc, err) {
+            //     if (doc.status == "Present") {
+            //         present += 1;
+            //     }
+            //     else if (doc.status == "Absent") {
+            //         absent += 1;
+            //     }
+            //     else if (doc.status == "On Leave") {
+            //         onLeave += 1;
+            //     }
+            // })
 
             var cursor = db.collection('attendance').aggregate([
                 {
@@ -131,10 +131,25 @@ router.route('/attendancechartbydate/:select_date/:class_id/:section_id')
                 assert.equal(null, err);
                 resultArray.push(doc);
             }, function () {
+                // console.log(resultArray);
+                length = resultArray.length;
+                for (i = 0; i < resultArray.length; i++) {
+
+                    if (resultArray[i].status == "Present") {
+                        present += 1;
+                    }
+                    else if (resultArray[i].status == "Absent") {
+                        absent += 1;
+                    }
+                    else if (resultArray[i].status == "On Leave") {
+                        onLeave += 1;
+                    }
+                }
+
                 db.close();
                 res.send({
                     donutchart: resultArray,
-                    count: count,
+                    count: length,
                     present: present,
                     onleave: onLeave,
                     absent: absent
@@ -154,27 +169,27 @@ router.route('/attendancechartbyStudentAndDate/:select_date/:student_id')
         var resultArray = [];
         mongo.connect(url, function (err, db) {
             assert.equal(null, err);
-            var data = db.collection('attendance').find({
-                date: { $gte: new Date(select_date.toISOString()), $lt: new Date(endDate.toISOString()) },
-                student_id: student_id
-            })
-            dataCount = data.count(function (e, triggerCount) {
-                if (triggerCount > 0) {
-                    count = triggerCount;
-                }
-            });
+            // var data = db.collection('attendance').find({
+            //     date: { $gte: new Date(select_date.toISOString()), $lt: new Date(endDate.toISOString()) },
+            //     student_id: student_id
+            // })
+            // dataCount = data.count(function (e, triggerCount) {
+            //     if (triggerCount > 0) {
+            //         count = triggerCount;
+            //     }
+            // });
 
-            data.forEach(function (doc, err) {
-                if (doc.status == "Present") {
-                    present += 1;
-                }
-                else if (doc.status == "Absent") {
-                    absent += 1;
-                }
-                else if (doc.status == "On Leave") {
-                    onLeave += 1;
-                }
-            })
+            // data.forEach(function (doc, err) {
+            //     if (doc.status == "Present") {
+            //         present += 1;
+            //     }
+            //     else if (doc.status == "Absent") {
+            //         absent += 1;
+            //     }
+            //     else if (doc.status == "On Leave") {
+            //         onLeave += 1;
+            //     }
+            // })
 
             var cursor = db.collection('attendance').aggregate([
                 {
@@ -240,10 +255,23 @@ router.route('/attendancechartbyStudentAndDate/:select_date/:student_id')
                 assert.equal(null, err);
                 resultArray.push(doc);
             }, function () {
+                length = resultArray.length;
+                for (i = 0; i < resultArray.length; i++) {
+
+                    if (resultArray[i].status == "Present") {
+                        present += 1;
+                    }
+                    else if (resultArray[i].status == "Absent") {
+                        absent += 1;
+                    }
+                    else if (resultArray[i].status == "On Leave") {
+                        onLeave += 1;
+                    }
+                }
                 db.close();
                 res.send({
                     donutchart: resultArray,
-                    count: count,
+                    count: length,
                     present: present,
                     onleave: onLeave,
                     absent: absent
@@ -268,27 +296,27 @@ router.route('/attendancechartbymonth/:select_month/:student_id')
         var resultArray = [];
         mongo.connect(url, function (err, db) {
             assert.equal(null, err);
-            var data = db.collection('attendance').find({
-                date: { $gt: firstDay, $lte: lastDay },
-                student_id: student_id
-            })
-            dataCount = data.count(function (e, triggerCount) {
-                if (triggerCount > 0) {
-                    count = triggerCount;
-                }
-            });
+            // var data = db.collection('attendance').find({
+            //     date: { $gt: firstDay, $lte: lastDay },
+            //     student_id: student_id
+            // })
+            // dataCount = data.count(function (e, triggerCount) {
+            //     if (triggerCount > 0) {
+            //         count = triggerCount;
+            //     }
+            // });
 
-            data.forEach(function (doc, err) {
-                if (doc.status == "Present") {
-                    present += 1;
-                }
-                else if (doc.status == "Absent") {
-                    absent += 1;
-                }
-                else if (doc.status == "On Leave") {
-                    onLeave += 1;
-                }
-            })
+            // data.forEach(function (doc, err) {
+            //     if (doc.status == "Present") {
+            //         present += 1;
+            //     }
+            //     else if (doc.status == "Absent") {
+            //         absent += 1;
+            //     }
+            //     else if (doc.status == "On Leave") {
+            //         onLeave += 1;
+            //     }
+            // })
 
             var cursor = db.collection('attendance').aggregate([
                 {
@@ -364,10 +392,23 @@ router.route('/attendancechartbymonth/:select_month/:student_id')
                 assert.equal(null, err);
                 resultArray.push(doc);
             }, function () {
+                length = resultArray.length;
+                for (i = 0; i < resultArray.length; i++) {
+
+                    if (resultArray[i].status == "Present") {
+                        present += 1;
+                    }
+                    else if (resultArray[i].status == "Absent") {
+                        absent += 1;
+                    }
+                    else if (resultArray[i].status == "On Leave") {
+                        onLeave += 1;
+                    }
+                }
                 db.close();
                 res.send({
                     donutchart: resultArray,
-                    count: count,
+                    count: length,
                     present: present,
                     onleave: onLeave,
                     absent: absent

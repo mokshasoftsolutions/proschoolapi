@@ -31,7 +31,7 @@ router.route('/employee_attendancebydate/:select_date/:school_id')
         var resultArray = [];
         mongo.connect(url, function (err, db) {
             assert.equal(null, err);
-           
+
             var cursor = db.collection('employee_attendance').find({ date: new Date(select_date), school_id: school_id });
             cursor.forEach(function (doc, err) {
                 assert.equal(null, err);
@@ -61,27 +61,27 @@ router.route('/employee_attendance_by_date/:select_date/:school_id')
         var resultArray = [];
         mongo.connect(url, function (err, db) {
             assert.equal(null, err);
-            var data = db.collection('employee_attendance').find({
-                date: { $gte: new Date(select_date.toISOString()), $lt: new Date(endDate.toISOString()) },
-                school_id: school_id
-            })
-            dataCount = data.count(function (e, triggerCount) {
-                if (triggerCount > 0) {
-                    count = triggerCount;
-                }
-            });
+            // var data = db.collection('employee_attendance').find({
+            //     date: { $gte: new Date(select_date.toISOString()), $lt: new Date(endDate.toISOString()) },
+            //     school_id: school_id
+            // })
+            // dataCount = data.count(function (e, triggerCount) {
+            //     if (triggerCount > 0) {
+            //         count = triggerCount;
+            //     }
+            // });
 
-            data.forEach(function (doc, err) {
-                if (doc.status == "Present") {
-                    present += 1;
-                }
-                else if (doc.status == "Absent") {
-                    absent += 1;
-                }
-                else if (doc.status == "On Leave") {
-                    onLeave += 1;
-                }
-            })
+            // data.forEach(function (doc, err) {
+            //     if (doc.status == "Present") {
+            //         present += 1;
+            //     }
+            //     else if (doc.status == "Absent") {
+            //         absent += 1;
+            //     }
+            //     else if (doc.status == "On Leave") {
+            //         onLeave += 1;
+            //     }
+            // })
             var cursor = db.collection('employee_attendance').aggregate([
                 {
                     $match: {
@@ -120,9 +120,23 @@ router.route('/employee_attendance_by_date/:select_date/:school_id')
                 assert.equal(null, err);
                 resultArray.push(doc);
             }, function () {
+                length = resultArray.length;
+                for (i = 0; i < resultArray.length; i++) {
+
+                    if (resultArray[i].status == "Present") {
+                        present += 1;
+                    }
+                    else if (resultArray[i].status == "Absent") {
+                        absent += 1;
+                    }
+                    else if (resultArray[i].status == "On Leave") {
+                        onLeave += 1;
+                    }
+                }
                 db.close();
                 res.send({
-                    donutchart: resultArray, count: count,
+                    donutchart: resultArray,
+                    count: length,
                     present: present,
                     onleave: onLeave,
                     absent: absent
@@ -152,28 +166,28 @@ router.route('/employee_attendance_by_month/:select_month/:employee_id/:school_i
         var resultArray = [];
         mongo.connect(url, function (err, db) {
             assert.equal(null, err);
-            var data = db.collection('employee_attendance').find({
-                date: { $gt:firstDay, $lte: lastDay },
-                school_id: school_id,
-                employee_id:employee_id
-            })
-            dataCount = data.count(function (e, triggerCount) {
-                if (triggerCount > 0) {
-                    count = triggerCount;
-                }
-            });
+            // var data = db.collection('employee_attendance').find({
+            //     date: { $gt: firstDay, $lte: lastDay },
+            //     school_id: school_id,
+            //     employee_id: employee_id
+            // })
+            // dataCount = data.count(function (e, triggerCount) {
+            //     if (triggerCount > 0) {
+            //         count = triggerCount;
+            //     }
+            // });
 
-            data.forEach(function (doc, err) {
-                if (doc.status == "Present") {
-                    present += 1;
-                }
-                else if (doc.status == "Absent") {
-                    absent += 1;
-                }
-                else if (doc.status == "On Leave") {
-                    onLeave += 1;
-                }
-            })
+            // data.forEach(function (doc, err) {
+            //     if (doc.status == "Present") {
+            //         present += 1;
+            //     }
+            //     else if (doc.status == "Absent") {
+            //         absent += 1;
+            //     }
+            //     else if (doc.status == "On Leave") {
+            //         onLeave += 1;
+            //     }
+            // })
             // var cursor = db.collection('employee_attendance').find({ date: { $gte: firstDay, $lt: lastDay }, school_id: school_id });
             var cursor = db.collection('employee_attendance').aggregate([
                 {
@@ -183,7 +197,7 @@ router.route('/employee_attendance_by_month/:select_month/:employee_id/:school_i
                             $lt: lastDay
                         },
                         'school_id': school_id,
-                        'employee_id':employee_id
+                        'employee_id': employee_id
                     }
                 },
                 {
@@ -204,7 +218,7 @@ router.route('/employee_attendance_by_month/:select_month/:employee_id/:school_i
                         "first_name": "$employee_doc.first_name",
                         "last_name": "$employee_doc.last_name",
                         "status": "$status",
-                        "date":"$date",
+                        "date": "$date",
                         "gender": "$employee_doc.gender",
                         "employee_type": "$employee_doc.job_category",
 
@@ -215,10 +229,23 @@ router.route('/employee_attendance_by_month/:select_month/:employee_id/:school_i
                 assert.equal(null, err);
                 resultArray.push(doc);
             }, function () {
+                length = resultArray.length;
+                for (i = 0; i < resultArray.length; i++) {
+
+                    if (resultArray[i].status == "Present") {
+                        present += 1;
+                    }
+                    else if (resultArray[i].status == "Absent") {
+                        absent += 1;
+                    }
+                    else if (resultArray[i].status == "On Leave") {
+                        onLeave += 1;
+                    }
+                }
                 db.close();
                 res.send({
                     donutchart: resultArray,
-                    count: count,
+                    count: length,
                     present: present,
                     onleave: onLeave,
                     absent: absent

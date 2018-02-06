@@ -304,6 +304,23 @@ router.route('/search_student/:academic_year/:class_id/:section/:search_key')
         });
     });
 
+router.route('/totalStudents_in_school/:school_id')
+    .get(function (req, res, next) {       
+        var school_id = req.params.school_id;       
+        var resultArray = [];
+        mongo.connect(url, function (err, db) {
+            assert.equal(null, err);
+            var cursor = db.collection('students').find({ school_id:school_id });
+            cursor.forEach(function (doc, err) {
+                resultArray.push(doc);
+            }, function () {
+                length = resultArray.length;
+                db.close();
+                res.send({students:length});
+            });
+        });
+    });
+
 router.route('/add_parent/:student_id')
     .post(function (req, res, next) {
         parents = [];
@@ -697,7 +714,7 @@ router.route('/bulk_upload_students/:section_id')
                                                         var requestData = {}
                                                         requestData.parent_account_create = parent_account_details.parent_account_create;
                                                         requestData.parent_account_new = parent_account_details.parent_account_new;
-                                                       // requestData.parent_account_create = parent_account_details.parent_account_create;
+                                                        // requestData.parent_account_create = parent_account_details.parent_account_create;
                                                         requestData.name = parent_father.parent_name;
                                                         requestData.student_id = class_id + '-STD-' + autoIndex;
                                                         requestData.parent_id = parent_account_details.parent_id;
@@ -705,7 +722,7 @@ router.route('/bulk_upload_students/:section_id')
                                                         requestData.class_id = parent_account_details.class_id;
                                                         requestData.section_id = parent_account_details.section_id;
                                                         //  console.log(requestData);
-                                                          parents_account.push(requestData);
+                                                        parents_account.push(requestData);
                                                         //  console.log(parent_account_details.parent_account_new);
                                                         // if (parent_account_details.parent_account_new == true || parent_account_details.parent_account_new == 'true' || parent_account_details.parent_account_new == 'TRUE') {
                                                         //     //  console.log("newaccount")
@@ -722,7 +739,7 @@ router.route('/bulk_upload_students/:section_id')
 
                                                     if (count == test.length) {
                                                         //  console.log(parents_account);
-                                                          parentModule.parent(parents_account);
+                                                        parentModule.parent(parents_account);
                                                         res.end('true');
                                                     }
 
