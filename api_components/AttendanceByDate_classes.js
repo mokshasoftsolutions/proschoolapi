@@ -172,11 +172,11 @@ router.route('/all_cses_att_date_testing/:select_date/:school_id')
                                                 }
                                                 percent = present + absent + onLeave;
                                                 prePercent = (100 * present) / percent;
-                                                prePercent = Math.round(prePercent);
+                                                // prePercent = Math.round(prePercent);
                                                 abPercent = (100 * absent) / percent;
-                                                abPercent = Math.round(abPercent);
+                                                // abPercent = Math.round(abPercent);
                                                 onPercent = (100 * onLeave) / percent;
-                                                onPercent = Math.round(onPercent);
+                                                // onPercent = Math.round(onPercent);
                                                 //  console.log(prePercent);
                                                 preAtt.present = present;
                                                 preAtt.absent = absent;
@@ -321,11 +321,11 @@ router.route('/student_tillDate_attendence/:student_id')
                     }
                     percent = present + absent + onLeave;
                     prePercent = (100 * present) / percent;
-                    prePercent = Math.round(prePercent);
+                    // prePercent = Math.round(prePercent);
                     abPercent = (100 * absent) / percent;
-                    abPercent = Math.round(abPercent);
+                    // abPercent = Math.round(abPercent);
                     onPercent = (100 * onLeave) / percent;
-                    onPercent = Math.round(onPercent);
+                    // onPercent = Math.round(onPercent);
                     monthAttendence.present = present;
                     monthAttendence.absent = absent;
                     monthAttendence.onLeave = onLeave;
@@ -555,11 +555,11 @@ router.route('/employee_tillDate_attendence/:employee_id')
                     }
                     percent = present + absent + onLeave;
                     prePercent = (100 * present) / percent;
-                    prePercent = Math.round(prePercent);
+                    // prePercent = Math.round(prePercent);
                     abPercent = (100 * absent) / percent;
-                    abPercent = Math.round(abPercent);
+                    // abPercent = Math.round(abPercent);
                     onPercent = (100 * onLeave) / percent;
-                    onPercent = Math.round(onPercent);
+                    // onPercent = Math.round(onPercent);
                     monthAttendence.present = present;
                     monthAttendence.absent = absent;
                     monthAttendence.onLeave = onLeave;
@@ -787,11 +787,11 @@ router.route('/section_monthly_attendence/:select_month/:section_id')
                                 totalAbsent += absent;
                                 totalOnLeave += onLeave;
                                 prePercent = (100 * present) / percent;
-                                prePercent = Math.round(prePercent);
+                                // prePercent = Math.round(prePercent);
                                 abPercent = (100 * absent) / percent;
-                                abPercent = Math.round(abPercent);
+                                // abPercent = Math.round(abPercent);
                                 onPercent = (100 * onLeave) / percent;
-                                onPercent = Math.round(onPercent);
+                                // onPercent = Math.round(onPercent);
                                 monthAttendence.present = present;
                                 monthAttendence.absent = absent;
                                 monthAttendence.onLeave = onLeave;
@@ -939,11 +939,11 @@ router.route('/employee_monthly_attendence/:select_month/:school_id')
                                 totalAbsent += absent;
                                 totalOnLeave += onLeave;
                                 prePercent = (100 * present) / percent;
-                                prePercent = Math.round(prePercent);
+                                // prePercent = Math.round(prePercent);
                                 abPercent = (100 * absent) / percent;
-                                abPercent = Math.round(abPercent);
+                                // abPercent = Math.round(abPercent);
                                 onPercent = (100 * onLeave) / percent;
-                                onPercent = Math.round(onPercent);
+                                // onPercent = Math.round(onPercent);
                                 monthAttendence.present = present;
                                 monthAttendence.absent = absent;
                                 monthAttendence.onLeave = onLeave;

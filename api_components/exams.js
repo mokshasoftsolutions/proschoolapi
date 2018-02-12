@@ -172,7 +172,6 @@ router.route('/examsbysectionid/:exam_sch_id/:section_id')
             {
                 $group: {
                     _id: '$_id',
-
                     "exam_paper_id": { "$first": "$exam_paper_id" },
                     "subject_id": { "$first": "$subject_id" },
                     "exam_sch_id": { "$first": "$exam_sch_id" },

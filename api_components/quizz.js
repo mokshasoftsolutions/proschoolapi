@@ -34,6 +34,7 @@ router.route('/questions/:class_id')
             class_id: class_id,
             question: req.body.question,
             subject_id: req.body.subject_id,
+            chapter_id: req.body.chapter_id,
             answer: req.body.answer,
             school_id: school_id,
             status: status,

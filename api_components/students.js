@@ -305,18 +305,38 @@ router.route('/search_student/:academic_year/:class_id/:section/:search_key')
     });
 
 router.route('/totalStudents_in_school/:school_id')
-    .get(function (req, res, next) {       
-        var school_id = req.params.school_id;       
+    .get(function (req, res, next) {
+        var school_id = req.params.school_id;
         var resultArray = [];
         mongo.connect(url, function (err, db) {
             assert.equal(null, err);
-            var cursor = db.collection('students').find({ school_id:school_id });
+            var cursor = db.collection('students').find({ school_id: school_id });
             cursor.forEach(function (doc, err) {
                 resultArray.push(doc);
             }, function () {
                 length = resultArray.length;
                 db.close();
-                res.send({students:length});
+                res.send({ students: length });
+            });
+        });
+    });
+
+router.route('/totalNewStudents_in_school_by_Date/:select_date/:school_id')
+    .get(function (req, res, next) {
+        var school_id = req.params.school_id;
+        var select_date = new Date(req.params.select_date);
+        var endDate = new Date(select_date);
+        endDate.setDate(endDate.getDate() + 1)
+        var resultArray = [];
+        mongo.connect(url, function (err, db) {
+            assert.equal(null, err);
+            var cursor = db.collection('students').find({ admission_date: { $gte: new Date(select_date.toISOString()), $lt: new Date(endDate.toISOString()) }, school_id: school_id });
+            cursor.forEach(function (doc, err) {
+                resultArray.push(doc);
+            }, function () {
+                length = resultArray.length;
+                db.close(); 
+                res.send({ students: length });
             });
         });
     });

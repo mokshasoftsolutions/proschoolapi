@@ -113,9 +113,11 @@ router.route('/quote_word/:school_id')
         var date = new Date();
         var item = {
             quote_id: 'getauto',
-            quote: req.body.quote, 
+            quote: req.body.quote,
+            quoteWritten: req.body.quoteWritten,
             school_id: school_id,
             word: req.body.word,
+            wordWritten: req.body.wordWritten,
             date: date,
             status: status
         };
@@ -127,7 +129,7 @@ router.route('/quote_word/:school_id')
                 }, {
                         unique: true
                     }, function (err, result) {
-                       // console.log(item.quote+"  "+item.word);
+                        // console.log(item.quote+"  "+item.word);
                         if (item.quote == "" || item.word == "") {
                             res.end('null');
                         } else {
@@ -160,7 +162,7 @@ router.route('/quote_word/:school_id')
         school_id = req.params.school_id,
             mongo.connect(url, function (err, db) {
                 assert.equal(null, err);
-                var cursor = db.collection('quote').find({ school_id: school_id }).sort({"date": -1}).limit(1);
+                var cursor = db.collection('quote').find({ school_id: school_id }).sort({ "date": -1 }).limit(1);
                 cursor.forEach(function (doc, err) {
                     assert.equal(null, err);
                     resultArray.push(doc);

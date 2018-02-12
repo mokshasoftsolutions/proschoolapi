@@ -10,6 +10,7 @@ var multer = require('multer');
 var port = process.env.PORT || 4005;
 var router = express.Router();
 var url = 'mongodb://' + config.dbhost + ':27017/s_erp_data';
+var loginUrl = 'mongodb://' + config.dbhost + ':27017/auth';
 var number = 0;
 
 var cookieParser = require('cookie-parser');
@@ -252,6 +253,31 @@ router.route('/get_section_name/:section_id')
         });
     });
 
+router.route('/class_section_school/:class')
+    .delete(function (req, res, next) {
+        var myquery = { school_id: req.params.class };
+        mongo.connect(url, function (err, db) {
+            db.collection('schools').deleteOne(myquery, function (err, result) {
+                assert.equal(null, err);
+                if (err) {
+                    res.send('false');
+                } else {
+                    mongo.connect(url, function (err, db) {
+                        db.collection('users').deleteOne(myquery, function (err, result) {
+                            assert.equal(null, err);
+                            if (err) {
+                                res.send('students false');
+                            }
+                        });
+                    });
+                }
+                db.close();
+                res.send('true');
+            });
+        });
+    });
+
+
 router.route('/class_sections_edit/:section_id/:name/:value')
     .post(function (req, res, next) {
         var section_id = req.params.section_id;
@@ -372,6 +398,7 @@ router.route('/multiplephotos')
         });
         res.end("hello");
     });
+
 
 
 
