@@ -18,30 +18,35 @@ router.use(function (req, res, next) {
     next(); // make sure we go to the next routes and don't stop here
 });
 
-// Add School Events
-router.route('/schoolevents/:school_id')
+
+router.route('/pay_details/:school_id')
     .post(function (req, res, next) {
         var status = 1;
         var school_id = req.params.school_id;
 
         var item = {
-            school_event_id: 'getauto',
+            pay_id: 'getauto',
             school_id: school_id,
-            event_title: req.body.event_title,
-            date: req.body.date,
-            time: req.body.time,
-            description: req.body.description,
+            Basic: req.body.Basic,
+            DA: req.body.DA,
+            HRA: req.body.HRA,
+            CA: req.body.CA,
+            ARR: req.body.ARR,
+            ALOW: req.body.ALOW,
+            EPF: req.body.EPF,
+            ESIC: req.body.ESIC,
+            TDS: req.body.TDS,
             status: status
         };
         mongo.connect(url, function (err, db) {
-            autoIncrement.getNextSequence(db, 'schoolevents', function (err, autoIndex) {
-                var collection = db.collection('schoolevents');
+            autoIncrement.getNextSequence(db, 'pay_details', function (err, autoIndex) {
+                var collection = db.collection('pay_details');
                 collection.ensureIndex({
-                    "school_event_id": 1,
+                    "pay_id": 1,
                 }, {
                         unique: true
                     }, function (err, result) {
-                        if (item.event_title == null) {
+                        if (item.Basic == null || item.HRA == null) {
                             res.end('null');
                         } else {
                             collection.insertOne(item, function (err, result) {
@@ -56,7 +61,7 @@ router.route('/schoolevents/:school_id')
                                     _id: item._id
                                 }, {
                                         $set: {
-                                            school_event_id: 'SCHOOL_EVENT-' + autoIndex
+                                            pay_id: 'PAY-' + autoIndex
                                         }
                                     }, function (err, result) {
                                         db.close();
@@ -68,91 +73,53 @@ router.route('/schoolevents/:school_id')
             });
         });
     })
+
+router.route('/pay_details/:school_id')
     .get(function (req, res, next) {
         var resultArray = [];
         var school_id = req.params.school_id;
 
         mongo.connect(url, function (err, db) {
             assert.equal(null, err);
-            var cursor = db.collection('schoolevents').find({ school_id });
+            var cursor = db.collection('pay_details').find({ school_id });
             cursor.forEach(function (doc, err) {
                 assert.equal(null, err);
                 resultArray.push(doc);
             }, function () {
                 db.close();
                 res.send({
-                    school_events: resultArray
+                    pay_details: resultArray
                 });
             });
         });
     });
 
-
-// Modified
-// Get SchoolEvents Details By school_event_Id
-
-router.route('/school_events_details/:school_event_id')
-    .get(function (req, res, next) {
-        var school_event_id = req.params.school_event_id;
-        var status = 1;
-        var resultArray = [];
-        mongo.connect(url, function (err, db) {
-            assert.equal(null, err);
-            var cursor = db.collection('schoolevents').find({ school_event_id });
-            cursor.forEach(function (doc, err) {
-                assert.equal(null, err);
-                resultArray.push(doc);
-            }, function () {
-                db.close();
-                res.send({
-                    schoolevents: resultArray
-                });
-            });
-        });
-    });
-
-// Edit School Events
-
-router.route('/edit_school_events/:school_event_id')
-    .put(function (req, res, next) {
-        var myquery = { school_event_id: req.params.school_event_id };
-        var event_title = req.body.event_title;
-
-        mongo.connect(url, function (err, db) {
-            db.collection('schoolevents').update(myquery, {
-                $set: {
-                    event_title: event_title,
-                }
-            }, function (err, result) {
-                assert.equal(null, err);
-                if (err) {
-                    res.send('false');
-                }
-                db.close();
-                res.send('true');
-            });
-        });
-    });
     
-// delete School Events
+router.route('/pay_details_by_basic/:basic')
+.get(function (req, res, next) {
+    var resultArray = [];
+    var basic = req.params.basic;
 
-router.route('/delete_school_events/:school_event_id')
-    .delete(function (req, res, next) {
-        var myquery = { school_event_id: req.params.school_event_id };
-
-        mongo.connect(url, function (err, db) {
-            db.collection('schoolevents').deleteOne(myquery, function (err, result) {
-                assert.equal(null, err);
-                if (err) {
-                    res.send('false');
-                }
-                db.close();
-                res.send('true');
+    mongo.connect(url, function (err, db) {
+        assert.equal(null, err);
+        var cursor = db.collection('pay_details').find({ Basic:basic });
+        cursor.forEach(function (doc, err) {
+            assert.equal(null, err);
+            resultArray.push(doc);
+        }, function () {
+            db.close();
+            res.send({
+                pay_details: resultArray
             });
         });
     });
+});
+
+
 
 
 
 
 module.exports = router;
+
+
